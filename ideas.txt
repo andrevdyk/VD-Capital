@@ -1,0 +1,22 @@
+VMAP - Tracks vessels with fuel, any delays, cargo tracking
+WMap - Shows natural disasters around the world, fires, crops burning relate tht to commodities
+FMOD - Financial Modelling
+
+ANR - Analyst recommendations.
+BETA - Calculate BETA.
+BILL - US government legislation by industry.
+CFAPRO - Maps the learning goals of the CFA ("Chartered Financial Analyst") test to 387 Bloomberg terminal functions.
+EQS - Equity screener - Build lists of stocks that meet specific financial criteria.
+ESG - Environmental, social, and governance data portal, used for finding sustainability information.
+GC3D - "Graph Curve Surface": An impressive visualization that plots the term structure of a curve over time in a 3D chart, allowing you to observe its evolution.
+GP - Plot security pricing and related market variables on a chart. Great for easily visualizing "key events".
+LEAG - Create league tables.
+PEOP - People search that includes functionality for finding NYU and Stern alumni.
+PIB - "Public Information Books": Quickly gather publicly accessible documents, data, and Bloomberg reports on a specific company and download as a single PDF.
+PORT - Create and track a portfolio.
+SPLC - Supply chain analysis portal.
+WACC - Weighted average cost of capital.
+
+Farmers sentiment - get it from twitter or something
+
+currency strength chart
