@@ -20,13 +20,13 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
           <SheetTrigger className="min-[1024px]:hidden p-2 transition">
             <HamburgerMenuIcon />
             <Link href="/dashboard">
-              <span className="sr-only">Home</span>
+              <span className="sr-only">Dashboard</span>
             </Link>
           </SheetTrigger>
           <SheetContent side="left">
             <SheetHeader>
               <Link href="/">
-                <SheetTitle>Nextjs Starter Kit</SheetTitle>
+                <SheetTitle>VD Capital</SheetTitle>
               </Link>
             </SheetHeader>
             <div className="flex flex-col space-y-3 mt-[1rem]">
