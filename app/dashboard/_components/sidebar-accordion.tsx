@@ -58,7 +58,7 @@ export default function DashboardAccordion() {
           </div>
           <span className="hidden lg:block">Home</span>
         </AccordionTrigger>
-        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen">
+        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25">
           <ul>
             <li>
               <Link
@@ -159,7 +159,7 @@ export default function DashboardAccordion() {
           </div>
           <span className="hidden lg:block">Technicals</span>
         </AccordionTrigger>
-        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen">
+        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25">
           <ul>
             <li>
               <Link

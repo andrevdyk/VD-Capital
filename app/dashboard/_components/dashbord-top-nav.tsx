@@ -11,11 +11,12 @@ import { HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Banknote, Folder, HomeIcon, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { ReactNode } from 'react'
+import Image from 'next/image'
 
 export default function DashboardTopNav({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-col">
-      <header className="flex h-14 lg:h-[55px] items-center gap-4 border-b px-3">
+    <div className="flex flex-col ">
+      <header className="flex h-14 lg:h-[55px] gap-4 border-b px-3">
         <Dialog>
           <SheetTrigger className="min-[1024px]:hidden p-2 transition">
             <HamburgerMenuIcon />
@@ -25,9 +26,24 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
           </SheetTrigger>
           <SheetContent side="left">
             <SheetHeader>
-              <Link href="/">
-                <SheetTitle>VD Capital</SheetTitle>
-              </Link>
+            <Link className="flex items-center gap-1 font-semibold ml-1" href="/">
+            {/* Light Mode Image */}
+            <Image 
+              src="https://github.com/andrevdyk/Photos/blob/main/Design%201%20(2).png?raw=true"
+              alt="VD Capital Light Mode"
+              width={30}
+              height={30}
+              className="dark:hidden block ml-3 items-center" // Show in light mode, hide in dark mode
+            />
+            {/* Dark Mode Image */}
+            <Image
+              src="https://github.com/andrevdyk/Photos/blob/main/Design%201%20(3).png?raw=true"
+              alt="VD Capital Dark Mode"
+              width={30}
+              height={30}
+              className="hidden dark:block ml-3 flex flex-col" // Show in dark mode, hide in light mode
+            />
+          </Link>
             </SheetHeader>
             <div className="flex flex-col space-y-3 mt-[1rem]">
               <DialogClose asChild>
