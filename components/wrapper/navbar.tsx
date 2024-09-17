@@ -12,6 +12,7 @@ import config from "@/config";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/nextjs";
 import { Dialog, DialogClose } from "@radix-ui/react-dialog";
+import Image from 'next/image'
 
 const components: { title: string; href: string; description: string }[] = [
     {
@@ -60,7 +61,14 @@ export default function NavBar() {
                             <DialogClose asChild>
                                 <Link href="/dashboard" legacyBehavior passHref className="cursor-pointer">
                                     <Button variant="outline">
-                                        Dashboard
+                                        Trading Terminal
+                                    </Button>
+                                </Link>
+                            </DialogClose>
+                            <DialogClose asChild>
+                                <Link href="/education" legacyBehavior passHref className="cursor-pointer">
+                                    <Button variant="outline">
+                                        University
                                     </Button>
                                 </Link>
                             </DialogClose>
@@ -71,10 +79,42 @@ export default function NavBar() {
             </div>
             <NavigationMenu>
                 <NavigationMenuList className="max-[825px]:hidden flex gap-3 w-[100%] justify-between">
-                    <Link href="/" className="pl-2 flex items-center" aria-label="Home">
-                        <BlocksIcon aria-hidden="true" />
-                        <span className="sr-only">Home</span>
-                    </Link>
+                <Link className="flex items-center gap-1 font-semibold ml-1" href="/">
+            {/* Light Mode Image */}
+            <Image 
+              src="https://github.com/andrevdyk/Photos/blob/main/Design%201%20(2).png?raw=true"
+              alt="VD Capital Light Mode"
+              width={30}
+              height={30}
+              className="dark:hidden block ml-3" // Show in light mode, hide in dark mode
+            />
+            {/* Dark Mode Image */}
+            <Image
+              src="https://github.com/andrevdyk/Photos/blob/main/Design%201%20(3).png?raw=true"
+              alt="VD Capital Dark Mode"
+              width={30}
+              height={30}
+              className="hidden dark:block ml-3" // Show in dark mode, hide in light mode
+            />
+          </Link>
+                <Link className="flex items-center gap-1 font-semibold ml-1" href="/">
+            {/* Light Mode Image */}
+            <Image 
+              src="https://github.com/andrevdyk/Photos/blob/main/Design%201.png?raw=true"
+              alt="VD Capital Light Mode"
+              width={100}
+              height={40}
+              className="dark:hidden block mt-1" // Show in light mode, hide in dark mode
+            />
+            {/* Dark Mode Image */}
+            <Image
+              src="https://github.com/andrevdyk/Photos/blob/main/Design%201%20(1).png?raw=true"
+              alt="VD Capital Dark Mode"
+              width={100}
+              height={40}
+              className="hidden dark:block mt-1 ml--1" // Show in dark mode, hide in light mode
+            />
+          </Link>
                 </NavigationMenuList>
                 <NavigationMenuList>
                     <NavigationMenuItem className="max-[825px]:hidden ml-5">
@@ -98,7 +138,14 @@ export default function NavBar() {
                     <NavigationMenuItem className="max-[825px]:hidden">
                         <Link href="/dashboard" legacyBehavior passHref>
                             <Button variant="ghost">
-                                Dashboard
+                                Trading Terminal
+                            </Button>
+                        </Link>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem className="max-[825px]:hidden">
+                        <Link href="/dashboard" legacyBehavior passHref>
+                            <Button variant="ghost">
+                                University
                             </Button>
                         </Link>
                     </NavigationMenuItem>

@@ -20,3 +20,4 @@ WACC - Weighted average cost of capital.
 Farmers sentiment - get it from twitter or something
 
 currency strength chart
+trading journal

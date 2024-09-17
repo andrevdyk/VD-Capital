@@ -54,10 +54,19 @@ export default function Footer() {
 
                                 <ul className="mt-6 space-y-4 text-sm">
                                     <li>
-                                        <a href="https://twitter.com/rasmickyy" target="_blank" className="transition hover:opacity-75"> Twitter </a>
+                                        <a href="https://twitter.com/" target="_blank" className="transition hover:opacity-75"> X </a>
                                     </li>
                                     <li>
-                                        <a href="https://www.youtube.com/@rasmic" target="_blank" className="  transition hover:opacity-75"> YouTube </a>
+                                        <a href="https://www.youtube.com/" target="_blank" className="  transition hover:opacity-75"> YouTube </a>
+                                    </li>
+                                    <li>
+                                        <a href="https://www.youtube.com/" target="_blank" className="  transition hover:opacity-75"> TikTok </a>
+                                    </li>
+                                    <li>
+                                        <a href="https://www.youtube.com/" target="_blank" className="  transition hover:opacity-75"> Instagram </a>
+                                    </li>
+                                    <li>
+                                        <a href="https://www.youtube.com/" target="_blank" className="  transition hover:opacity-75"> Facebook </a>
                                     </li>
                                 </ul>
                             </div>
@@ -87,7 +96,7 @@ export default function Footer() {
                                 </li>
                             </ul>
 
-                            <p className="mt-8 text-xs  ">&copy; 2024. SomeCompany LLC. All rights reserved.</p>
+                            <p className="mt-8 text-xs  ">&copy; 2024. VD Capital LTD. All rights reserved.</p>
                         </div>
                     </div>
                 </div>
