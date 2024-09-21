@@ -58,7 +58,7 @@ export default function DashboardAccordion() {
           </div>
           <span className="hidden lg:block">Home</span>
         </AccordionTrigger>
-        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25">
+        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25 hover:max-h-screen">
           <ul>
             <li>
               <Link
@@ -144,22 +144,22 @@ export default function DashboardAccordion() {
         </AccordionContent>
       </AccordionItem>
 
-      <AccordionItem value="technicals" className="group flex flex-col">
+      <AccordionItem value="home" className="group flex flex-col">
         <AccordionTrigger
           className={clsx(
             "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
             {
-              "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white w-full":
+              "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white w-full": 
                 pathname === "/dashboard/technicals",
             }
           )}
         >
-          <div className="p-1 bg-transparent">
+          <div className="p-1 bg-transparent ">
             <ChartCandlestick className="h-5 w-5" />
           </div>
           <span className="hidden lg:block">Technicals</span>
         </AccordionTrigger>
-        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25">
+        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25 ">
           <ul>
             <li>
               <Link
@@ -254,7 +254,7 @@ export default function DashboardAccordion() {
         </AccordionContent>
       </AccordionItem>
 
-      <AccordionItem value="fundamentals" className="group flex flex-col">
+      <AccordionItem value="home" className="group flex flex-col">
         <AccordionTrigger
           className={clsx(
             "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
@@ -269,7 +269,7 @@ export default function DashboardAccordion() {
           </div>
           <span className="hidden lg:block">Fundamentals</span>
         </AccordionTrigger>
-        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen">
+        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25">
           <ul>
           <li>
               <Link
@@ -360,7 +360,7 @@ export default function DashboardAccordion() {
         </AccordionContent>
       </AccordionItem>
 
-      <AccordionItem value="algorithms" className="group flex flex-col">
+      <AccordionItem value="home" className="group flex flex-col">
         <AccordionTrigger
           className={clsx(
             "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
@@ -375,7 +375,7 @@ export default function DashboardAccordion() {
           </div>
           <span className="hidden lg:block">Algorithms</span>
         </AccordionTrigger>
-        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen">
+        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25">
           <ul>
           <li>
               <Link
