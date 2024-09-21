@@ -53,7 +53,7 @@ export default function DashboardAccordion() {
             }
           )}
         >
-          <div className="p-1 bg-transparent">
+          <div className="p--1 pr-1 pt-1 pb-1 bg-transparent">
             <HomeIcon className="h-5 w-5" />
           </div>
           <span className="hidden lg:block">Home</span>
@@ -63,7 +63,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/page1",
@@ -80,7 +80,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/page2",
@@ -96,7 +96,7 @@ export default function DashboardAccordion() {
             </li>
             <li>
               <Link
-                className={clsx("flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                className={clsx("flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {"bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":pathname === "/dashboard/page3",})}
                 href="/dashboard/page3"
               >
@@ -109,7 +109,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/page4",
@@ -126,7 +126,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/page5",
@@ -154,7 +154,7 @@ export default function DashboardAccordion() {
             }
           )}
         >
-          <div className="p-1 bg-transparent ">
+          <div className="p--1 pr-1 pt-1 pb-1 bg-transparent ">
             <ChartCandlestick className="h-5 w-5" />
           </div>
           <span className="hidden lg:block">Technicals</span>
@@ -164,7 +164,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/technicals/page1",
@@ -182,7 +182,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/technicals/page2",
@@ -200,7 +200,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/technicals/page3",
@@ -218,7 +218,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/technicals/page4",
@@ -236,7 +236,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/technicals/page5",
@@ -264,7 +264,7 @@ export default function DashboardAccordion() {
             }
           )}
         >
-          <div className="p-1 bg-transparent">
+          <div className="p--1 pr-1 pt-1 pb-1 bg-transparent">
             <Newspaper className="h-5 w-5" />
           </div>
           <span className="hidden lg:block">Fundamentals</span>
@@ -274,7 +274,7 @@ export default function DashboardAccordion() {
           <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/fundamentals/page1",
@@ -291,7 +291,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/fundamentals/page2",
@@ -308,7 +308,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/fundamentals/page3",
@@ -325,7 +325,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/fundamentals/page4",
@@ -342,7 +342,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/fundamentals/page5",
@@ -370,7 +370,7 @@ export default function DashboardAccordion() {
             }
           )}
         >
-          <div className="p-1 bg-transparent">
+          <div className="p--1 pr-1 pt-1 pb-1 bg-transparent">
             <BrainCircuit className="h-5 w-5" />
           </div>
           <span className="hidden lg:block">Algorithms</span>
@@ -380,7 +380,7 @@ export default function DashboardAccordion() {
           <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/algorithms/page1",
@@ -397,7 +397,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/algorithms/page2",
@@ -414,7 +414,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/algorithms/page3",
@@ -431,7 +431,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/algorithms/page4",
@@ -448,7 +448,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/algorithms/page5",
@@ -465,7 +465,7 @@ export default function DashboardAccordion() {
             <li>
               <Link
                 className={clsx(
-                  "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
                       pathname === "/dashboard/algorithms/page6",
