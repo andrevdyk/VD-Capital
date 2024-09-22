@@ -21,7 +21,7 @@ export default function DashboardSideBar() {
   const pathname = usePathname();
 
   return (
-    <div className="lg:block hidden border-r h-full w-[60px] hover:w-[250px] transition-all duration-300 ease-in-out overflow-x-hidden">
+    <div className="fixed lg:block hidden border-r h-full w-[60px] hover:w-[250px] transition-all duration-300 ease-in-out overflow-x-hidden bg-white dark:bg-black">
       <div className="flex h-full max-h-screen flex-col gap-2 ">
         <div className="flex h-[55px] items-center justify-center lg:justify-between border-b px-0 w-full "> {/* VDC Area */}
           <Link className="flex items-center gap-1 font-semibold ml-1" href="/">

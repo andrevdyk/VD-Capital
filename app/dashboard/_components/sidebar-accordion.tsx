@@ -44,20 +44,22 @@ export default function DashboardAccordion() {
   return (
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="home" className="group flex flex-col">
-        <AccordionTrigger
-          className={clsx(
-            "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
-            {
-              "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white w-full":
-                pathname === "/dashboard",
-            }
-          )}
-        >
-          <div className="p--1 pr-1 pt-1 pb-1 bg-transparent">
-            <HomeIcon className="h-5 w-5" />
-          </div>
-          <span className="hidden lg:block">Home</span>
-        </AccordionTrigger>
+        <Link href="/dashboard" passHref>
+          <AccordionTrigger
+            className={clsx(
+              "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+              {
+                "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white w-full":
+                  pathname === "/dashboard",
+              }
+            )}
+          >
+            <div className="p--1 pr-1 pt-1 pb-1 bg-transparent">
+              <HomeIcon className="h-5 w-5" />
+            </div>
+            <span className="hidden lg:block">Home</span>
+          </AccordionTrigger>
+        </Link>
         <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25 hover:max-h-screen">
           <ul>
             <li>
@@ -66,10 +68,10 @@ export default function DashboardAccordion() {
                   "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
-                      pathname === "/dashboard/page1",
+                      pathname === "/dashboard/Currencies",
                   }
                 )}
-                href="/dashboard/page1"
+                href="/dashboard/Currencies"
               >
                 <div className="p-1 bg-transparent">
                   <CircleDollarSign className="h-4 w-4" />
@@ -83,10 +85,10 @@ export default function DashboardAccordion() {
                   "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
-                      pathname === "/dashboard/page2",
+                      pathname === "/dashboard/Stocks",
                   }
                 )}
-                href="/dashboard/page2"
+                href="/dashboard/Stocks"
               >
                 <div className="p-1 bg-transparent">
                   <TrendingUpDown className="h-4 w-4" />

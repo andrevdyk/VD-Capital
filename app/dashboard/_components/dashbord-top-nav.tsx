@@ -16,7 +16,7 @@ import Image from 'next/image'
 export default function DashboardTopNav({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col ">
-      <header className="flex h-14 lg:h-[55px] gap-4 border-b px-3">
+      <header className="flex h-14 lg:h-[55px] gap-4 border-b w-full bg-white dark:bg-black">
         <Dialog>
           <SheetTrigger className="min-[1024px]:hidden p-2 transition">
             <HamburgerMenuIcon />
