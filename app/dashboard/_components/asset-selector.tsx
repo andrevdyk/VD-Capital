@@ -31,9 +31,7 @@ export default async function SelectCurrency() {
               {asset.symbol}
             </SelectItem>
           ))
-        ) : (
-          <SelectItem disabled>No assets available</SelectItem>
-        )}
+        ): null }
       </SelectContent>
     </Select>
   );
