@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/react"
 import { GeistSans } from 'geist/font/sans'
 import type { Metadata } from 'next'
 import './globals.css'
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://starter.rasmic.xyz"),
@@ -63,6 +64,7 @@ export default function RootLayout({
             </ThemeProvider>
           </Provider>
           <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </AuthWrapper>
