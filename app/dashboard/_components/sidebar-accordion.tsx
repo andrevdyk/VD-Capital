@@ -68,10 +68,10 @@ export default function DashboardAccordion() {
                   "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
-                      pathname === "/dashboard/Currencies",
+                      pathname === "/dashboard/currencies",
                   }
                 )}
-                href="/dashboard/Currencies"
+                href="/dashboard/currencies"
               >
                 <div className="p-1 bg-transparent">
                   <CircleDollarSign className="h-4 w-4" />
@@ -85,10 +85,10 @@ export default function DashboardAccordion() {
                   "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
-                      pathname === "/dashboard/Stocks",
+                      pathname === "/dashboard/stocks",
                   }
                 )}
-                href="/dashboard/Stocks"
+                href="/dashboard/stocks"
               >
                 <div className="p-1 bg-transparent">
                   <TrendingUpDown className="h-4 w-4" />
