@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { createClient } from "@/utils/supabase/server";
 
-export default async function SelectCurrency() {
+export async function SelectCurrency() {
   const supabase = createClient();
   const { data: assets, error } = await supabase
     .from("cftc_assets")
