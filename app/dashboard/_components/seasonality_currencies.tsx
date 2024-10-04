@@ -1,6 +1,8 @@
+"use client"
+
 import { useEffect, useState } from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@supabase/supabase-js"
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
   Card,
   CardContent,
@@ -16,14 +18,19 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-interface ChartData {
+// Define Chart Data type
+type ChartData = {
   date: string;
   close: number;
   percentage_change: number;
-}
+};
 
-export async function Seasonality() {
-  const supabase = createClient()
+// Supabase setup
+const supabaseUrl = "https://nobtgazxiggvkrwxugpq.supabase.co"
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vYnRnYXp4aWdndmtyd3h1Z3BxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2Nzk5OTIsImV4cCI6MjA0MjI1NTk5Mn0.SWmzkATJ5uUNhCrFdXB-FeCEL3wcVk6p_eDqXpOD-qg" // Replace this with your key
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+export function Seasonality() {
   const [chartData, setChartData] = useState<ChartData[]>([])
 
   useEffect(() => {
@@ -37,7 +44,7 @@ export async function Seasonality() {
       if (error) {
         console.error("Error fetching data:", error)
       } else {
-        const formattedData = data.map((item) => ({
+        const formattedData: ChartData[] = data.map((item) => ({
           date: new Date(item.date).toLocaleDateString("en-US", { month: "short", year: "numeric" }),
           close: item.close,
           percentage_change: item.percentage_change,
@@ -80,6 +87,7 @@ export async function Seasonality() {
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} horizontal={false} />
+            <YAxis domain={[-100, 100]} tickLine={false} axisLine={false} hide />
             <XAxis
               dataKey="date"
               tickLine={false}
