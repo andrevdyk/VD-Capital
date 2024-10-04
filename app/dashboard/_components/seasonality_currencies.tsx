@@ -16,9 +16,15 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
+interface ChartData {
+  date: string;
+  close: number;
+  percentage_change: number;
+}
+
 export async function Seasonality() {
   const supabase = createClient()
-  const [chartData, setChartData] = useState([])
+  const [chartData, setChartData] = useState<ChartData[]>([])
 
   useEffect(() => {
     const fetchPredictionData = async () => {
