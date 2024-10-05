@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, LabelList } from "recharts";
 import {
   Card,
   CardContent,
@@ -20,11 +20,7 @@ import {
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { TooltipProps } from 'recharts';
 
-interface CustomPayload extends Payload<number, string> {
-  close: number; // Add the `close` property
-}
 
-// Define your custom tooltip component
 const CustomTooltip = ({
   active,
   payload,
@@ -32,19 +28,30 @@ const CustomTooltip = ({
 }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-background border rounded p-2 shadow-md">
-        <p className="font-semibold">{label}</p>
-        {payload.map((entry: CustomPayload, index: number) => (
-          <p key={index} style={{ color: entry.color }}>
-            % Change: {entry.value}%
+      <div className="custom-tooltip grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+        <p className="label font-semibold">{label}</p> {/* Set label color to gray */}
+        
+        {/* Space out the tooltip and align values to the right */}
+        <div className="flex justify-between">
+          <p className="desc text-muted-foreground" style={{ color: payload[0].color }}>
+            % Change: 
           </p>
-        ))}
-        {/* Accessing the close value from the first entry */}
-        <p>Close: {payload[0].payload.close}</p>
-        <p>Probability: {payload[0].payload.probability}%</p>
+          <p className="desc">{payload[0].value}%</p>
+        </div>
+        
+        <div className="flex justify-between">
+          <p className="desc text-muted-foreground">Close: </p>
+          <p className="desc">{payload[0].payload.close}</p>
+        </div>
+
+        <div className="flex justify-between">
+          <p className="desc text-muted-foreground">Probability: </p>
+          <p className="desc">{payload[0].payload.probability}%</p>
+        </div>
       </div>
     );
   }
+
   return null;
 };
 
@@ -203,7 +210,7 @@ export function Seasonality() {
             </linearGradient>
             </defs>
             <CartesianGrid vertical={false} horizontal={false} />
-            <YAxis domain={[Math.min( minPercentageChange) - (Math.min(minPercentageChange) * 0.1), Math.max( maxPercentageChange) +  - (Math.min(minPercentageChange) * 0.1)]} tickLine={false} axisLine={false}  />
+            <YAxis domain={[Math.min( minPercentageChange) - (Math.min(minPercentageChange) * 0.3), Math.max( maxPercentageChange) +  - (Math.min(minPercentageChange) * 0.3)]} tickLine={false} axisLine={false} hide />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -223,24 +230,20 @@ export function Seasonality() {
               dataKey="percentage_change"
               type="natural"
               fill="url(#fillPercentageChange)"
-              stroke="url(#strokePercentageChange)" 
+              stroke="url(#strokePercentageChange)"
               stackId="a"
-            />
+            >
+              <LabelList
+                dataKey="percentage_change"
+                position="top"
+                formatter={(value: number) => `${value}%`}
+                fill="gray" // Label color
+                offset={10} // Adjusts the distance between label and the point
+              />
+            </Area>
           </AreaChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter>
-        <div className="flex w-full items-start gap-2 text-sm">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 font-medium leading-none">
-              Trending up in predictions
-            </div>
-            <div className="flex items-center gap-2 leading-none text-muted-foreground">
-              Predictions based on seasonal analysis
-            </div>
-          </div>
-        </div>
-      </CardFooter>
     </Card>
   );
 }
