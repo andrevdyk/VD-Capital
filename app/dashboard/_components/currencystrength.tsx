@@ -124,9 +124,6 @@ const chartData = [
 ]
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
   EUR: {
     label: "EUR",
     color: "hsl(var(--chart-1))",
