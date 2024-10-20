@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BarChartBetter } from './_components/bar-chart-better'
-import { CurrencyStrength } from './_components/currencystrength'
+import { CurrencyStrength } from './currencies/_components/currencystrength'
 
 export default async function Dashboard() {
 

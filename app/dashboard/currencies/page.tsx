@@ -1,10 +1,12 @@
 import React from 'react'
-import { CurrencyStrength } from '../_components/currencystrength'
+import { CurrencyStrength } from './_components/currencystrength'
 import { SelectCurrency } from '../_components/asset-selector'
-import { Seasonality } from '../_components/seasonality_currencies'
-import { CFTCChart } from '../_components/cftc-area-chart'
-import { CurrencySelector } from '../_components/currency-selector'
-import { BaseDealerDonut } from '../_components/base-dealer-donut'
+import { Seasonality } from './_components/seasonality_currencies'
+import { CFTCChart } from './_components/cftc-area-chart'
+import { CurrencySelector } from './_components/currency-selector'
+import { DealerDonut } from './_components/dealer-donut'
+import { AssetDonut } from './_components/asset-donut'
+import { LeveragedDonut } from './_components/leveraged-donut'
 
 
 export default function CurrenciesPage() {
@@ -17,7 +19,9 @@ export default function CurrenciesPage() {
           <CurrencyStrength/>
           <Seasonality/>
           <CFTCChart/>
-          <BaseDealerDonut />
+          <DealerDonut />
+          <AssetDonut />
+          <LeveragedDonut />
         </div>
       </div>
         )
