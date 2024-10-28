@@ -1,6 +1,6 @@
 "use client"; 
 import * as React from "react";
-import { Pie, PieChart, Label } from "recharts";
+import { Pie, PieChart, Label, Cell } from "recharts";
 import {
   Card,
   CardContent,
@@ -33,7 +33,7 @@ const CustomTooltip = ({
 
     return (
       <div className="custom-tooltip grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-        <p className="label font-semibold">Dealer Positions</p>
+        <p className="label font-semibold">Dealer Intermediary Positions</p>
 
         <div className="flex justify-between">
           <p className="desc text-muted-foreground" style={{ color: payload[0]?.color }}>
@@ -52,11 +52,11 @@ export function DealerDonut() {
   const [data, setData] = React.useState<CFTCData[]>([]);
   const [chartData, setChartData] = React.useState([
     { pair: "Long Positions", volume: 0, fill: "#03b198" },
-    { pair: "Short Positions", volume: 0, fill: "#ff2f67" },
+    { pair: "Short Positions", volume: 0, fill: "rgb(255,47,103, 0.5)" },
   ]);
   const [secondChartData, setSecondChartData] = React.useState([
     { pair: "Long Positions", volume: 0, fill: "#03b198" },
-    { pair: "Short Positions", volume: 0, fill: "#ff2f67" },
+    { pair: "Short Positions", volume: 0, fill: "rgb(255,47,103, 0.5)" },
   ]);
   const [contractMarkets, setContractMarkets] = React.useState<string[]>([]);
   const [selectedContract, setSelectedContract] = React.useState<string | undefined>(undefined);
@@ -72,10 +72,16 @@ export function DealerDonut() {
         const result: CFTCData[] = await response.json();
         setData(result);
 
+        console.log("Fetched CFTC Data:", result);
+
         const markets = Array.from(
           new Set(
             result
-              .filter(item => item.commodity_subgroup_name === "CURRENCY")
+              .filter(
+                item =>
+                  item.commodity_subgroup_name === "CURRENCY" ||
+                  item.commodity_subgroup_name === "CURRENCY(NON-MAJOR)"
+              )
               .map(item => item.contract_market_name)
           )
         );
@@ -154,17 +160,19 @@ export function DealerDonut() {
     // Add any chart configuration here if needed
   };
 
+  
+
   return (
-    <Card className="flex flex-col w-[600px]">
+    <Card className="flex flex-col w-[400px] h-[225px]">
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-2 sm:flex-row">
         <div className="grid flex-1 gap-1 text-left text-sm">
-          <span>Dealer Intermediary</span>
+          <span>Dealer Intermediaries</span>
         </div>
       </CardHeader>
       <div className="flex flex-row">
-        <div className="w-[50%] flexbox justify-center pb-0 border-r">
+        <div className="w-[50%] flexbox justify-center pb-0 border-r h-[185px]">
         <Select value={selectedContract ?? undefined} onValueChange={setSelectedContract}>
-          <SelectTrigger className="w-[160px] rounded-lg ml-[25%]" aria-label="Select Currency">
+          <SelectTrigger className="w-[160px] rounded-lg ml-[10%]" aria-label="Select Currency">
             <SelectValue placeholder="Select Contract Market" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
@@ -181,10 +189,10 @@ export function DealerDonut() {
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : (
-            <ChartContainer className="aspect-square max-h-[250px]" config={chartConfig}>
+            <ChartContainer className="mx-auto aspect-square " config={chartConfig}>
               <PieChart>
                 <ChartTooltip cursor={false} content={<CustomTooltip />} />
-                <Pie data={chartData} dataKey="volume" nameKey="pair" innerRadius={60} strokeWidth={0}>
+                <Pie data={chartData} dataKey="volume" nameKey="pair" innerRadius={45} fillOpacity={0.5} >
                   <Label
                     content={({ viewBox }) => {
                       if (viewBox && "cx" in viewBox && "cy" in viewBox) {
@@ -198,7 +206,7 @@ export function DealerDonut() {
                             <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-xl font-bold">
                               {netLongPercentage}%
                             </tspan>
-                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
+                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 20} className="fill-muted-foreground">
                               Net Long
                             </tspan>
                           </text>
@@ -206,17 +214,27 @@ export function DealerDonut() {
                       }
                     }}
                   />
-                </Pie>
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.fill} // Use the fill color from your data
+                    stroke={entry.fill} // Outline color matching the fill
+                    strokeWidth={1.5} // Set outline width
+                    fillOpacity={0.5} // Fill opacity for each segment
+                  />
+                ))}
+              </Pie>
               </PieChart>
             </ChartContainer>
           )}
         </CardContent>
         </div>
-
+        
+        <div className="w-[50%] justify-center ">
         <CardContent className="flex-1 pb-0">
-          <div className="mr-0">
+          <div className=" mr-0">
           <Select value={secondSelectedContract ?? undefined} onValueChange={setSecondSelectedContract}>
-              <SelectTrigger className="w-[160px] rounded-lg ml-[25%]" aria-label="Select Currency">
+              <SelectTrigger className="w-[160px] rounded-lg ml-[1%]" aria-label="Select Currency">
                 <SelectValue placeholder="Select Contract Market" />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
@@ -233,36 +251,46 @@ export function DealerDonut() {
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : (
-            <ChartContainer className="mx-auto aspect-square max-h-[250px]" config={chartConfig}>
+            <ChartContainer className="mx-auto aspect-square" config={chartConfig}>
               <PieChart>
                 <ChartTooltip cursor={false} content={<CustomTooltip />} />
-                <Pie data={secondChartData} dataKey="volume" nameKey="pair" innerRadius={60} strokeWidth={0}>
-                  <Label
-                    content={({ viewBox }) => {
-                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                        return (
-                          <text
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                          >
-                            <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-xl font-bold">
-                              {secondNetLongPercentage}%
-                            </tspan>
-                            <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
-                              Net Long
-                            </tspan>
-                          </text>
-                        );
-                      }
-                    }}
+                <Pie data={secondChartData} dataKey="volume" nameKey="pair" innerRadius={45} fillOpacity={0.5}>
+                <Label
+                  content={({ viewBox }) => {
+                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                      return (
+                        <text
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                        >
+                          <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-xl font-bold">
+                            {secondNetLongPercentage}%
+                          </tspan>
+                          <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 20} className="fill-muted-foreground">
+                            Net Long
+                          </tspan>
+                        </text>
+                      );
+                    }
+                  }}
+                />
+                {secondChartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.fill} // Use the fill color from your data
+                    stroke={entry.fill} // Outline color matching the fill
+                    strokeWidth={1.5} // Set outline width
+                    fillOpacity={0.5} // Fill opacity for each segment
                   />
-                </Pie>
+                ))}
+              </Pie>
               </PieChart>
             </ChartContainer>
           )}
         </CardContent>
+        </div>
       </div>
     </Card>
   );

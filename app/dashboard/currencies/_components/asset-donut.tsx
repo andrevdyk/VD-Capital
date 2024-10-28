@@ -75,7 +75,11 @@ export function AssetDonut() {
         const markets = Array.from(
           new Set(
             result
-              .filter(item => item.commodity_subgroup_name === "CURRENCY")
+              .filter(
+                item =>
+                  item.commodity_subgroup_name === "CURRENCY" ||
+                  item.commodity_subgroup_name === "CURRENCY(NON-MAJOR)"
+              )
               .map(item => item.contract_market_name)
           )
         );
@@ -155,14 +159,14 @@ export function AssetDonut() {
   };
 
   return (
-    <Card className="flex flex-col w-[400px] h-fit">
+    <Card className="flex flex-col w-[400px] h-[225px]">
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-2 sm:flex-row">
         <div className="grid flex-1 gap-1 text-left text-sm">
           <span>Asset Managers</span>
         </div>
       </CardHeader>
       <div className="flex flex-row">
-        <div className="w-[50%] flexbox justify-center pb-0 border-r">
+        <div className="w-[50%] flexbox justify-center pb-0 border-r h-[185px]">
         <Select value={selectedContract ?? undefined} onValueChange={setSelectedContract}>
           <SelectTrigger className="w-[160px] rounded-lg ml-[10%]" aria-label="Select Currency">
             <SelectValue placeholder="Select Contract Market" />

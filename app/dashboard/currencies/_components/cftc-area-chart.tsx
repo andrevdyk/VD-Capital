@@ -84,7 +84,8 @@ export function CFTCChart() {
         const markets = Array.from(
           new Set(
             result
-              .filter(item => item.commodity_subgroup_name === "CURRENCY")
+              .filter(item => item.commodity_subgroup_name === "CURRENCY" ||
+                item.commodity_subgroup_name === "CURRENCY(NON-MAJOR)")
               .map(item => item.contract_market_name)
           )
         );
@@ -102,7 +103,7 @@ export function CFTCChart() {
     const filteredData = data.filter(item => {
       const reportDate = new Date(item.report_date);
       return (
-        item.commodity_subgroup_name === "CURRENCY" &&
+        item.commodity_subgroup_name === "CURRENCY" || item.commodity_subgroup_name === "CURRENCY(NON-MAJOR)" &&
         (selectedContract ? item.contract_market_name === selectedContract : true) &&
         reportDate >= sixMonthsAgo // Filter for the last 6 months
       );
