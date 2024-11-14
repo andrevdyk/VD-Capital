@@ -18,9 +18,8 @@ import { Info } from 'lucide-react';
 
 const RealtimeChart = () => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [chart, setChart] = useState<IChartApi | null>(null); // Set state type to `IChartApi | null`
+  const [chart, setChart] = useState<IChartApi | null>(null);
 
-  // Helper functions for data generation
   const randomFactor = 25 + Math.random() * 25;
   const samplePoint = (i: number) =>
     i *
@@ -75,17 +74,15 @@ const RealtimeChart = () => {
     const container = chartContainerRef.current;
     if (!container) return;
 
-    // Create chart and series setup
     const newChart = createChart(container, {
       layout: { textColor: "gray", background: { color: 'transparent' }, },
-     
       grid: {
         vertLines: { color: 'transparent' },
         horzLines: { color: 'transparent' },
       }
     });
 
-    setChart(newChart); // Set chart in state
+    setChart(newChart);
 
     const series = newChart.addCandlestickSeries({
       upColor: "#03b198",
@@ -111,14 +108,9 @@ const RealtimeChart = () => {
       },
     });
 
-    // Tooltip setup
-    const toolTipWidth = 80;
-    const toolTipHeight = 80;
-    const toolTipMargin = 15;
-
     const toolTip = document.createElement('div');
     toolTip.style.background = 'white';
-    toolTip.style.borderColor = 'rgba( 38, 166, 154, 1)';
+    toolTip.style.borderColor = 'rgba(38, 166, 154, 1)';
     toolTip.style.position = 'absolute';
     toolTip.style.display = 'none';
     toolTip.style.padding = '8px';
@@ -133,7 +125,6 @@ const RealtimeChart = () => {
     toolTip.style.fontFamily = "-apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
     container.appendChild(toolTip);
 
-    // Stream new data updates
     const streamingDataProvider = (function* () {
       for (const dataPoint of data.realtimeUpdates) yield dataPoint;
     })();
@@ -147,55 +138,50 @@ const RealtimeChart = () => {
       series.update(update.value);
     }, 100);
 
-    // Tooltip logic on crosshair move
     newChart.subscribeCrosshairMove(param => {
-        if (
-          param.point === undefined ||
-          !param.time ||
-          param.point.x < 0 ||
-          param.point.x > container.clientWidth ||
-          param.point.y < 0 ||
-          param.point.y > container.clientHeight
-        ) {
-          toolTip.style.display = 'none';
-        } else {
-          // Convert timestamp to Date object
-          const dateObj = new Date(param.time * 1000); // Convert timestamp to Date
-      
-          // Format date as dd/mm/yyyy hh:mm
-          const day = String(dateObj.getDate()).padStart(2, '0');
-          const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // getMonth() returns 0-11, so we add 1
-          const year = dateObj.getFullYear();
-          const hours = String(dateObj.getHours()).padStart(2, '0');
-          const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-      
-          const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
-      
-          toolTip.style.display = 'block';
-          const data = param.seriesData.get(series);
-      
-          if (data) { // Check if 'data' is not undefined
-            const price = data.value !== undefined ? data.value : data.close;
-            toolTip.innerHTML = `<div style="color: ${'rgba( 0,0,0, 1)'}">APPLE</div><div style="font-size: 24px; margin: 4px 0px;">
-                    ${Math.round(100 * price) / 100}
-                    </div><div>
-                    ${formattedDate}
-                    </div>`;
-      
-            // Determine the candle color (green for up, red for down)
-            const isBullish = data.close >= data.open; // Check if the close is greater than or equal to open (bullish candle)
-            const candleColor = isBullish ? '#03b198' : '#ff2f67'; // Green for bullish, Red for bearish
-      
-            // Set the tooltip's border and text color based on the candle color
-            toolTip.style.border = `1px solid ${candleColor}`;
-            toolTip.style.color = candleColor; // Apply the same color for the text as the border
-      
+      if (
+        param.point === undefined ||
+        !param.time ||
+        param.point.x < 0 ||
+        param.point.x > container.clientWidth ||
+        param.point.y < 0 ||
+        param.point.y > container.clientHeight
+      ) {
+        toolTip.style.display = 'none';
+      } else {
+        const dateObj = new Date((param.time as number) * 1000);
+        const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${
+          (dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()} ${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+
+        toolTip.style.display = 'block';
+        const data = param.seriesData.get(series);
+
+        if (data) {
+          let price;
+          if ('value' in data) price = data.value;
+          else if ('close' in data) price = data.close;
+
+          if (price !== undefined) {
+            toolTip.innerHTML = `<div style="color: ${'rgba(0,0,0,1)'}">APPLE</div>
+              <div style="font-size: 24px; margin: 4px 0px;">${Math.round(100 * price) / 100}</div>
+              <div>${formattedDate}</div>`;
+
+            if ('open' in data && 'close' in data) {
+              const isBullish = data.close >= data.open;
+              const candleColor = isBullish ? '#03b198' : '#ff2f67';
+
+              toolTip.style.border = `1px solid ${candleColor}`;
+              toolTip.style.color = candleColor;
+            }
+
+            const toolTipWidth = 80;
+            const toolTipHeight = 80;
+            const toolTipMargin = 15;
             const y = param.point.y;
             let left = param.point.x + toolTipMargin;
             if (left > container.clientWidth - toolTipWidth) {
               left = param.point.x - toolTipMargin - toolTipWidth;
             }
-      
             let top = y + toolTipMargin;
             if (top > container.clientHeight - toolTipHeight) {
               top = y - toolTipHeight - toolTipMargin;
@@ -204,11 +190,9 @@ const RealtimeChart = () => {
             toolTip.style.top = top + 'px';
           }
         }
-      });
-      
-      
+      }
+    });
 
-    // Handle chart cleanup on unmount
     return () => {
       clearInterval(intervalID);
       newChart.remove();
@@ -235,7 +219,6 @@ const RealtimeChart = () => {
         
         <Button className=""
           variant="outline"
-          size="10px"
           onClick={() => chart && chart.timeScale().scrollToRealTime()} // Use `chart` state here
         >
           <ChevronRight />
