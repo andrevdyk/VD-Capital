@@ -10,7 +10,8 @@ import {
   BrainCircuit,
   ChartCandlestick,
   Newspaper,
-  University
+  University,
+  AreaChart
 } from "lucide-react"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -50,7 +51,20 @@ export default function DashboardSideBar() {
             <DashboardAccordionHome /> {/* Add Accordion Component */}
             
             <Link
-              className={clsx("flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
+              className={clsx("flex items-center gap-2 rounded-lg px-2 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
+                "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white": pathname === "/dashboard/chart"
+              })}
+              href="/dashboard/chart"
+            >
+              <div className="p-1 bg-transparent">
+                <AreaChart className="h-5 w-5" />
+              </div>
+              <span className="hidden lg:block">Chart</span>
+            </Link>
+
+
+            <Link
+              className={clsx("flex items-center gap-2 rounded-lg px-2 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
                 "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white": pathname === "/dashboard/projects"
               })}
               href="/dashboard/projects"
@@ -62,7 +76,7 @@ export default function DashboardSideBar() {
             </Link>
 
             <Link
-              className={clsx("flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
+              className={clsx("flex items-center gap-2 rounded-lg px-2 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
                 "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white": pathname === "/dashboard/finance"
               })}
               href="/dashboard/finance"

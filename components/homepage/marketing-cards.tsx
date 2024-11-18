@@ -10,9 +10,7 @@ const ProjectsData = [
     name: "Technicals",
     description:
       "Dive deep into market trends with powerful tools that help you predict price movements using charts, patterns and technical indicators.",
-    image: "https://utfs.io/f/a8df6965-e6df-417a-ab0b-b3ad33d701d7-hcfblw.png",
-    imageDark:
-      "https://utfs.io/f/c5588304-c7ff-43f9-b164-3b9c78474b73-rv0oux.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxI1c8LVIPwZy3fln6B4sMjK5HIS9FJvaGXikd2",
     url: "https://nextjs.org/",
   },
   {
@@ -20,7 +18,7 @@ const ProjectsData = [
     name: "Fundamentals",
     description:
       "Uncover the real valye of assets by analyzing macroeconomic events, earnings reports, and financial statements giving you isnights to make informed decisions.",
-    image: "https://utfs.io/f/5b51351d-218b-4931-a296-0a9275030aaf-8myeez.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIowzLl5PSUbfXN7zPi3lgu9dJkAqI8hor4Zmp",
     url: "https://www.typescriptlang.org/",
   },
   {
@@ -28,16 +26,14 @@ const ProjectsData = [
     name: "Algorithms",
     description:
       "Automate your trading strategies with cutting edge algos that execute trades based on sophisticated market patterns and your custom parameters.",
-    image: "https://utfs.io/f/666774c0-dc3a-4d5a-84b7-cc96e682db61-bhgw4o.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxI94TU3dcOHU81TZe79Y6RVJBXWGn5mxANS0gi",
     url: "https://tailwindui.com/",
   },
   {
     id: 4,
     name: "Artificial Intelligence",
     description: "Harness AI to gain predictive insights, optimize your trades, and stay aheadf of market changes with smart, data-driven decisions.",
-    image: "https://utfs.io/f/bc4c7cdb-dc42-452c-8744-0ad2c3232e7f-exyul9.png",
-    imageDark:
-      "https://github.com/andrevdyk/Photos/blob/main/BrainCircuit.jpg?raw=true",
+    image: "https://utfs.io/f/uZI7cs6PPAxIeXiAkynY376uGLCrfi0ENlhp9IJWOa5kdnmv",
     url: "/",
   },
   {
@@ -45,7 +41,7 @@ const ProjectsData = [
     name: "Trade Journal",
     description:
       "Plan, execute and reflect on your trades with our comprehensive journal, helping you track performance and refine strategies for future success.",
-    image: "https://utfs.io/f/aee7360d-54f1-4ed1-a4b4-49a56b455bf4-1ker11.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxILNojmMFgQOtesYLP0Wvbk9RxrNap1SDcGhBI",
     url: "https://clerk.com/",
   },
   {
@@ -53,7 +49,7 @@ const ProjectsData = [
     name: "Financial Analysis",
     description:
       "Get a complete picture of a companies financial health and the broader economy by using our financial models to make better investment choices and forecast growth trends",
-    image: "https://utfs.io/f/c62a5d13-91e4-476f-9d36-786d9995c97f-rqpuxo.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxI89gEBO20qGRwV2vrZOjJ6cFhQ1uNWTslLp5f",
     url: "https://supabase.com/",
   },
   {
@@ -61,7 +57,7 @@ const ProjectsData = [
     name: "Weather Factors",
     description:
       "Track critical weather data that affects crop production, giving you an edge in commodity trading by staying informed about potential supply changes.",
-    image: "https://utfs.io/f/c3933696-cd5c-4de7-a24e-1822df8c4215-g7gclc.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIXK7Q9UgEtewxDgFVn7b6UzsZiLm4ISrKPp2k",
     url: "https://prisma.io/",
   },
   {
@@ -69,49 +65,49 @@ const ProjectsData = [
     name: "Shipping Insights",
     description:
       "Monitor global shipping routes to keep an eye on vessel movements and commodity shipments, ensuring you are always up to date with logistical information.",
-    image: "https://utfs.io/f/a2fbe9db-35f8-4738-a4c4-0b9a29f4efc7-er2coj.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIgDKpCJ8zqPLB7TMisUk1pw29myGbuK6ofFj4",
     url: "https://stripe.com",
   },
   {
     id: 9,
     name: "Mining Resources",
     description: "Gain insights into the production rates and efficiency of mining operations to better predict supply levels and potential market impacts for various commoditites.",
-    image: "https://utfs.io/f/ee162388-f998-4740-bfc4-9d9a7050f485-90gb5l.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIWnveLGoVih7RQ1efZ6AqKjuHX54Y38NU0sJE",
     url: "https://tanstack.com/query/v5",
   },
   {
     id: 10,
     name: "Real-Time News Feed",
     description: "Stay on top of market-moving headlines with real-time news, curated from top financial sources, giving you the edge to act quickly on breaking developments.",
-    image: "https://utfs.io/f/c01790c1-7c12-4a5e-b50f-a44358124853-3mzznq.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIvSmrIMMWNiCLGTSsr3D0HdmAO5t8BzQwxvVu",
     url: "https://upstash.com/",
   },
   {
     id: 11,
     name: "University",
     description: "Master real trading through technical, fundamental, contextual, political and financial analysis, earning certificates as you progress through the program.",
-    image: "https://utfs.io/f/c01790c1-7c12-4a5e-b50f-a44358124853-3mzznq.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIoPegQ2SUbfXN7zPi3lgu9dJkAqI8hor4Zmpv",
     url: "https://upstash.com/",
   },
   {
     id: 12,
     name: "Insider Trading",
     description: "Get notified of insider trading activities from corporate executives and large stakeholders, offering insight into market shifts.",
-    image: "https://utfs.io/f/c01790c1-7c12-4a5e-b50f-a44358124853-3mzznq.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIO9NYRsDcEm5ohJZTWge9VGirBHfXt48IdPOp",
     url: "https://upstash.com/",
   },
   {
     id: 13,
     name: "Portfolio Manager",
     description: "Track and manage your investments in real time with performance metrics, risk assesments and rebalancing tools to optimize your portfolio.",
-    image: "https://utfs.io/f/c01790c1-7c12-4a5e-b50f-a44358124853-3mzznq.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIc1maeLpYjf3V9PLQkbvNUonmdpcRghqlr8sD",
     url: "https://upstash.com/",
   },
   {
     id: 14,
     name: "Risk Management Tools",
     description: "Gain access to sophisticated risk analysis and position sizing tools to manage exposure and protect your capital.",
-    image: "https://utfs.io/f/c01790c1-7c12-4a5e-b50f-a44358124853-3mzznq.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxI8lsfxQ20qGRwV2vrZOjJ6cFhQ1uNWTslLp5f",
     url: "https://upstash.com/",
   },
   {
@@ -119,14 +115,14 @@ const ProjectsData = [
     name: "Backtesting",
     description:
       "Test your trading strategies to give you confidence in the real markets.",
-    image: "https://utfs.io/f/c01790c1-7c12-4a5e-b50f-a44358124853-3mzznq.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxIr0K8Nxhsgyd0mCaOl3VujZoHMevtFWk4pG2P",
     url: "https://upstash.com/",
   },
   {
     id: 16,
     name: "Community",
     description: "Connect with other traders, share strategies, designed to foster a collaborative learning and social environment.",
-    image: "https://utfs.io/f/c01790c1-7c12-4a5e-b50f-a44358124853-3mzznq.png",
+    image: "https://utfs.io/f/uZI7cs6PPAxI1c8smQ1wZy3fln6B4sMjK5HIS9FJvaGXikd2",
     url: "https://upstash.com/",
   },
 ];
@@ -141,8 +137,7 @@ const SpringAnimatedFeatures = () => {
           Trading Toolkit for Success.
         </h2>
         <p className="mx-auto max-w-[500px] text-gray-600 dark:text-gray-400 text-center mt-2 ">
-          Your customers deserve a product built with the best technologies in
-          our Nextjs Starter Kit
+            Crafted with the Best Technologies to Deliver Powerful and Reliable Solutions for Every Trader's Journey
         </p>
       </div>
       <div className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -165,7 +160,7 @@ const SpringAnimatedFeatures = () => {
                 rel="noopener noreferrer"
               >
                 <Image
-                  src={project?.imageDark ? project?.imageDark : project.image}
+                  src={project.image}
                   width={40}
                   height={30}
                   className="mb-3 rounded"

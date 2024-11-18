@@ -1,22 +1,26 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { BarChartComponent } from './_components/bar-chart'
-import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { BarChartBetter } from './_components/bar-chart-better'
-import { CurrencyStrength } from './currencies/_components/currencystrength'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { BarChartComponent } from "./components/bar-chart";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChartBetter } from "./components/bar-chart-better";
+import { CurrencyStrength } from "./currencies/components/currencystrength";
 
 export default async function Dashboard() {
-
   return (
-    <div className='flex flex-col justify-center items-start flex-wrap px-4 pt-4 gap-4'>
-      <div>
-
-      </div>
-      <Card className='w-[15rem]'>
+    <div className="flex flex-col justify-center items-start flex-wrap px-4 pt-4 gap-4">
+      <div></div>
+      <Card className="w-[15rem]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
-            Welcome to Nextjs Starter Kit
+            Welcome to Nextjs Starter
+            Kit
           </CardTitle>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -32,17 +36,19 @@ export default async function Dashboard() {
           </svg>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">100</div>
+          <div className="text-2xl font-bold">
+            100
+          </div>
           <p className="text-xs text-muted-foreground">
             Enter your subtitle here
           </p>
         </CardContent>
       </Card>
-      <div className='flex flex-wrap gap-2'>
+      <div className="flex flex-wrap gap-2">
         {/*<MarketDataWidget />
         <BarChartComponent />
         <BarChartBetter />*/}
-        <CurrencyStrength/>
+        <CurrencyStrength />
       </div>
       {/*<div className='grid md:grid-cols-2 sm:grid-cols-1 w-full gap-3'>
         <Card className="">
@@ -79,5 +85,5 @@ export default async function Dashboard() {
         </Card>
       </div>*/}
     </div>
-  )
+  );
 }

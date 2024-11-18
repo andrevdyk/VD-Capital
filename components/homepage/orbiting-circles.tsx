@@ -19,22 +19,22 @@ export function OrbitingCirclesComponent() {
         <Icons.typescript />
       </OrbitingCircles>
       <OrbitingCircles
-        className="h-[30px] w-[30px] border-none bg-transparent"
+        className="h-[60px] w-[70px] border-none bg-transparent"
         duration={20}
         delay={10}
         radius={80}
       >
-        <Icons.tailwind />
+        <Icons.Yahoo />
       </OrbitingCircles>
 
       {/* Outer Circles (reverse) */}
       <OrbitingCircles
-        className="h-[50px] w-[50px] border-none bg-transparent"
+        className="h-[90px] w-[90px] border-none bg-transparent"
         reverse
         radius={190}
         duration={20}
       >
-        <Icons.nextjs />
+        <Icons.tradingview />
       </OrbitingCircles>
       <OrbitingCircles
         className="h-[50px] w-[50px] border-none bg-transparent"
@@ -43,7 +43,7 @@ export function OrbitingCirclesComponent() {
         duration={20}
         delay={20}
       >
-        <Icons.supabase />
+        <Icons.spotware />
       </OrbitingCircles>
     </div>
   );
@@ -56,25 +56,25 @@ const Icons = {
       height={100}
     />
   ),
-  tailwind: (props: IconProps) => (
-    <Image src="https://utfs.io/f/666774c0-dc3a-4d5a-84b7-cc96e682db61-bhgw4o.png" alt=""
+  Yahoo: (props: IconProps) => (
+    <Image src="https://utfs.io/f/uZI7cs6PPAxINjkX3eYwqSaiDEIlumY9o12tVjZpxvFJK08X" alt=""
       width={100}
       height={100}
     // className="bg-black p-2 rounded"
     />
   ),
-  supabase: (props: IconProps) => (
-    <Image src="https://utfs.io/f/c62a5d13-91e4-476f-9d36-786d9995c97f-rqpuxo.png" alt=""
+  spotware: (props: IconProps) => (
+    <Image src="https://utfs.io/f/uZI7cs6PPAxIBel2yDVtR29G1gxCrnMluz0mZNkXbeDVHyFU" alt=""
       width={100}
       height={100}
     // className="bg-black p-2 rounded"
     />
   ),
-  nextjs: (props: IconProps) => (
-    <Image src="https://utfs.io/f/a8df6965-e6df-417a-ab0b-b3ad33d701d7-hcfblw.png" alt=""
-      width={100}
-      height={100}
-      className="bg-white p-1 rounded"
+  tradingview: (props: IconProps) => (
+    <Image src="https://utfs.io/f/uZI7cs6PPAxIhEWq8LRT45UkbFMiSKnm0d7D3ylcCaArEIJZ" alt=""
+      width={200}
+      height={200}
+      className="bg-black p-1 rounded"
     />
   ),
 };

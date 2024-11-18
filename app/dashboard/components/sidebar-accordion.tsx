@@ -35,7 +35,8 @@ import {
   Activity,
   BrainCog,
   Network,
-  UserRoundX
+  UserRoundX,
+  ChartArea
 } from "lucide-react";
 
 export default function DashboardAccordion() {

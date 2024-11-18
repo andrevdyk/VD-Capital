@@ -22,7 +22,7 @@ export default function HeroSection() {
                 </Link>
 
                 <Link
-                    href="https://discord.gg/HUcHdrrDgY"
+                    href="https://discord.gg/xP9CdQ6w"
                     target='_blank'
                     className="mt-5"
                     aria-label="Join Discord (opens in a new tab)"
@@ -33,10 +33,10 @@ export default function HeroSection() {
                     </Button>
                 </Link>
                 <Link
-                    href="https://github.com/michaelshimeles/nextjs14-starter-template"
+                    href=""
                     target='_blank'
                     className='animate-buttonheartbeat border p-2 rounded-full mt-5 hover:dark:bg-black hover:cursor-pointer'
-                    aria-label="View NextJS 14 Starter Template on GitHub"
+                    aria-label="View VD Capital on GitHub"
                 >
                     <Github className='w-5 h-5' aria-hidden="true" />
                 </Link>
@@ -45,7 +45,7 @@ export default function HeroSection() {
                 <div className="relative flex max-w-6xl justify-center overflow-hidden mt-7">
                     <div className="relative rounded-xl">
                         <Image
-                            src="https://utfs.io/f/31dba2ff-6c3b-4927-99cd-b928eaa54d5f-5w20ij.png"
+                            src="https://utfs.io/f/uZI7cs6PPAxIQbw6qSeJTsAEGma2B0wtXobxyS5vFLjPOkN6"
                             alt="Nextjs Starter Kit Dashboard Preview"
                             width={1100}
                             height={550}
@@ -53,10 +53,10 @@ export default function HeroSection() {
                             className="block rounded-[inherit] border object-contain shadow-lg dark:hidden"
                         />
                         <Image
-                            src="https://utfs.io/f/69a12ab1-4d57-4913-90f9-38c6aca6c373-1txg2.png"
+                            src="https://utfs.io/f/uZI7cs6PPAxIt7QykmfTX72QNHDGzs8gLOyUkixRMYJd16rZ"
                             width={1100}
                             height={550}
-                            alt="Nextjs Starter Kit Dark Mode Dashboard Preview"
+                            alt="VD Capital Currencies Page Preview"
                             priority={true}
                             className="dark:block rounded-[inherit] border object-contain shadow-lg hidden"
                         />

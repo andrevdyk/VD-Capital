@@ -1,7 +1,7 @@
 import React from 'react'
-import TabsNavbar from './_components/tabs-navbar'
-import MarketTrendsAllTable from './_components/all-table'
-import RealtimeChart from './_components/adx-chart'
+import TabsNavbar from './components/tabs-navbar'
+import MarketTrendsAllTable from './components/all-table'
+import RealtimeChart from './components/adx-chart'
 
 
 export default function TrendsPage() {

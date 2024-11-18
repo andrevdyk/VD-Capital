@@ -11,7 +11,6 @@ ESG - Environmental, social, and governance data portal, used for finding sustai
 GC3D - "Graph Curve Surface": An impressive visualization that plots the term structure of a curve over time in a 3D chart, allowing you to observe its evolution.
 GP - Plot security pricing and related market variables on a chart. Great for easily visualizing "key events".
 LEAG - Create league tables.
-PEOP - People search that includes functionality for finding NYU and Stern alumni.
 PIB - "Public Information Books": Quickly gather publicly accessible documents, data, and Bloomberg reports on a specific company and download as a single PDF.
 PORT - Create and track a portfolio.
 SPLC - Supply chain analysis portal.

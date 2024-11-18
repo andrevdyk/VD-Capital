@@ -6,28 +6,28 @@ import { Analytics } from "@vercel/analytics/react"
 import { GeistSans } from 'geist/font/sans'
 import type { Metadata } from 'next'
 import './globals.css'
-import { SpeedInsights } from "@vercel/speed-insights/next"
+
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://starter.rasmic.xyz"),
+  metadataBase: new URL("https://vdcapital.org"),
   title: {
     default: 'VD Capital',
-    template: `%s | Nextjs Starter Kit`
+    template: `%s | VD Capital Trading Hub`
   },
-  description: 'The Ultimate Nextjs 14 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters',
+  description: 'VD Capital: Your ultimate trading hub with a powerful trading terminal, in-depth market analysis, and accurate market predictions. Learn, trade, and grow your portfolio with expert tools and education.',
   openGraph: {
-    description: 'The Ultimate Nextjs 14 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters',
-    images: ['https://utfs.io/f/8a428f85-ae83-4ca7-9237-6f8b65411293-eun6ii.png'],
-    url: 'https://starter.rasmic.xyz/'
+    description: 'VD Capital: Your ultimate trading hub with a powerful trading terminal, in-depth market analysis, and accurate market predictions. Learn, trade, and grow your portfolio with expert tools and education.',
+    images: ['https://utfs.io/f/uZI7cs6PPAxIo50tgiSUbfXN7zPi3lgu9dJkAqI8hor4Zmpv'],
+    url: 'https://vdcapital.org/'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nextjs Starter Kit',
-    description: 'The Ultimate Nextjs 14 Starter Kit for quickly building your SaaS, giving you time to focus on what really matters',
+    title: 'VD Capital',
+    description: 'VD Capital: Your ultimate trading hub with a powerful trading terminal, in-depth market analysis, and accurate market predictions. Learn, trade, and grow your portfolio with expert tools and education.',
     siteId: "",
-    creator: "@rasmic",
+    creator: "@vdcapital",
     creatorId: "",
-    images: ['https://utfs.io/f/8a428f85-ae83-4ca7-9237-6f8b65411293-eun6ii.png'],
+    images: ['https://utfs.io/f/uZI7cs6PPAxIo50tgiSUbfXN7zPi3lgu9dJkAqI8hor4Zmpv'],
   },
 }
 
@@ -47,12 +47,12 @@ export default function RootLayout({
           />
           <link
             rel="preload"
-            href="https://utfs.io/f/69a12ab1-4d57-4913-90f9-38c6aca6c373-1txg2.png"
+            href="https://utfs.io/f/uZI7cs6PPAxIt7QykmfTX72QNHDGzs8gLOyUkixRMYJd16rZ"
             as="image"
           />
         </head>
         <body className={GeistSans.className}>
-          <Provider>
+        <Provider>
             <ThemeProvider
               attribute="class"
               defaultTheme="system"
@@ -62,10 +62,9 @@ export default function RootLayout({
               {children}
               <Toaster />
             </ThemeProvider>
-          </Provider>
-          <Analytics />
-          <SpeedInsights />
-        </body>
+        </Provider>
+        <Analytics />
+      </body>
       </html>
     </AuthWrapper>
   )

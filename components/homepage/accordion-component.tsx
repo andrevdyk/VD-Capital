@@ -14,9 +14,23 @@ export function AccordionComponent() {
             </h2>
             <Accordion type="single" collapsible className="w-full mt-2">
                 <AccordionItem value="item-1">
-                    <AccordionTrigger><span className="font-medium">Do I get access to this landing page in the starter kit?</span></AccordionTrigger>
+                    <AccordionTrigger><span className="font-medium">When will VD Capital be available for use?</span></AccordionTrigger>
                     <AccordionContent>
-                        <p>Yes, this page isn&apos;t even a real landing page more so a template for you to build on</p>
+                        <p>No bullshit, planning to go live late 2025. Goal is before GTA 6</p>
+                    </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-2">
+                    <AccordionTrigger><span className="font-medium">Will this make me a better trader?</span></AccordionTrigger>
+                    <AccordionContent>
+                        <p>Probably, dedpends if you are on that grindset mentality. </p>
+                    </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-3">
+                    <AccordionTrigger><span className="font-medium">Pricing?</span></AccordionTrigger>
+                    <AccordionContent>
+                        <p>Will be the price of a Netflix subscription, you'll get better stuff than whats on Netflix anyway. </p>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>

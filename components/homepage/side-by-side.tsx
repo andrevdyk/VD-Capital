@@ -5,19 +5,19 @@ import { TITLE_TAILWIND_CLASS } from '@/utils/constants'
 
 const features = [
   {
-    name: 'Build faster.',
+    name: 'Get started in no time.',
     description:
-      'Get up and running in no time with pre-configured settings and best practices. Say goodbye to setup and focus on what truly matters - building your application.',
+      'Dive right in with tools and strategies that are ready to go. No complicated setup—just log in and start trading.',
     icon: Computer,
   },
   {
-    name: 'Focus on business logic.',
-    description: 'Concentrate on solving business problems instead of dealing with the repetitive setup.',
+    name: 'Focus on what matters.',
+    description: "Spend your time making moves in the market, not dealing with boring tech stuff. We've got that covered for you.",
     icon: FaBusinessTime,
   },
   {
-    name: 'Ready for scale.',
-    description: 'Prepare for growth from day one. With built-in optimizations and scalable architecture, your application will be ready to handle increased traffic and complexity.',
+    name: 'Ready to scale.',
+    description: "Whether you're scaling your skills or your portfolio, our platform is built to handle your next big step with ease.",
     icon: Network,
   },
 ]
@@ -33,7 +33,7 @@ export default function SideBySide() {
                 VD Capital: Accelerate your path to profitability.
               </p>
               <p className="mt-6 leading-8 text-gray-600 dark:text-gray-400">
-                Accelerate your learning with this powerful trading terminal and education.
+              Learn fast, trade smart, and level up with our all-in-one trading hub.
               </p>
               <dl className="mt-10 max-w-xl space-y-8 leading-7 text-gray-600 lg:max-w-none">
                 {features.map((feature) => (

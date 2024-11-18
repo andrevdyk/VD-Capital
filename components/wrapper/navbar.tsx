@@ -42,12 +42,17 @@ export default function NavBar() {
                     </SheetTrigger>
                     <SheetContent side="left">
                         <SheetHeader>
-                            <SheetTitle>Next Starter</SheetTitle>
+                            <SheetTitle>VD Capital</SheetTitle>
                         </SheetHeader>
                         <div className="flex flex-col space-y-3 mt-[1rem]">
                             <DialogClose asChild>
                                 <Link href="/">
                                     <Button variant="outline" className="w-full">Home</Button>
+                                </Link>
+                            </DialogClose>
+                            <DialogClose asChild>
+                                <Link href="/marketing-page">
+                                    <Button variant="outline" className="w-full">About</Button>
                                 </Link>
                             </DialogClose>
                             <DialogClose asChild>
@@ -61,6 +66,13 @@ export default function NavBar() {
                                 <Link href="/education" legacyBehavior passHref className="cursor-pointer">
                                     <Button variant="outline">
                                         University
+                                    </Button>
+                                </Link>
+                            </DialogClose>
+                            <DialogClose asChild>
+                                <Link href="/login" legacyBehavior passHref className="cursor-pointer">
+                                    <Button variant="outline">
+                                        Login
                                     </Button>
                                 </Link>
                             </DialogClose>
