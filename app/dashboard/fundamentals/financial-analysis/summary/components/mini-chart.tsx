@@ -21,8 +21,8 @@ export default function MiniChart() {
           ]
         ],
         "chartOnly": false,
-        "width": "100%",
-        "height": "100%",
+        "width": "98%",
+        "height": "110%",
         "locale": "en",
         "colorTheme": "dark",
         "autosize": true,
@@ -30,7 +30,7 @@ export default function MiniChart() {
         "showMA": false,
         "hideDateRanges": false,
         "hideMarketStatus": false,
-        "hideSymbolLogo": false,
+        "hideSymbolLogo": true,
         "scalePosition": "right",
         "scaleMode": "Normal",
         "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
@@ -42,7 +42,7 @@ export default function MiniChart() {
         "maLineColor": "#2962FF",
         "maLineWidth": 1,
         "maLength": 9,
-        "headerFontSize": "medium",
+        "headerFontSize": "small",
         "lineWidth": 2,
         "lineType": 0,
         "dateRanges": [
@@ -76,11 +76,9 @@ export default function MiniChart() {
     <div
       className="tradingview-widget-container p-0"
       ref={containerRef}
-      style={{ position: "relative", height: "100%" }}
     >
       <div
         className="tv-widget-chart tv-widget-chart--no-border"
-        style={{ height: "100%" }}
       ></div>
       <div className="tradingview-widget-copyright">
         <a
