@@ -30,7 +30,7 @@ export function AccordionComponent() {
                 <AccordionItem value="item-3">
                     <AccordionTrigger><span className="font-medium">Pricing?</span></AccordionTrigger>
                     <AccordionContent>
-                        <p>Will be the price of a Netflix subscription, you'll get better stuff than whats on Netflix anyway. </p>
+                        <p>Will be the price of a Netflix subscription, you will get better stuff than what is on Netflix anyway. </p>
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>

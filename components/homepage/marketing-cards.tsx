@@ -137,7 +137,7 @@ const SpringAnimatedFeatures = () => {
           Trading Toolkit for Success.
         </h2>
         <p className="mx-auto max-w-[500px] text-gray-600 dark:text-gray-400 text-center mt-2 ">
-            Crafted with the Best Technologies to Deliver Powerful and Reliable Solutions for Every Trader's Journey
+            Crafted with the Best Technologies to Deliver Powerful and Reliable Solutions for Every Traders Journey
         </p>
       </div>
       <div className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
