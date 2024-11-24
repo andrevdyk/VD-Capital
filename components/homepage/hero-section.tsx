@@ -4,6 +4,8 @@ import { BorderBeam } from "../magicui/border-beam";
 import { Button } from "../ui/button";
 import Image from 'next/image';
 import { TITLE_TAILWIND_CLASS } from '@/utils/constants';
+import { RainbowButton } from "@/components/magicui/rainbow-button";
+
 
 export default function HeroSection() {
     return (
@@ -16,9 +18,9 @@ export default function HeroSection() {
             </p>
             <div className="flex justify-center items-center gap-3">
                 <Link href="/dashboard" className="mt-5">
-                    <Button className="animate-buttonheartbeat rounded-md bg-blue-600 hover:bg-blue-500 text-sm font-semibold text-white">
+                    <RainbowButton>
                         Get Started
-                    </Button>
+                    </RainbowButton>
                 </Link>
 
                 <Link
@@ -46,7 +48,7 @@ export default function HeroSection() {
                     <div className="relative rounded-xl">
                         <Image
                             src="https://utfs.io/f/uZI7cs6PPAxIQbw6qSeJTsAEGma2B0wtXobxyS5vFLjPOkN6"
-                            alt="Nextjs Starter Kit Dashboard Preview"
+                            alt="Trading Terminal Dashboard Preview"
                             width={1100}
                             height={550}
                             priority={true}
@@ -60,7 +62,7 @@ export default function HeroSection() {
                             priority={true}
                             className="dark:block rounded-[inherit] border object-contain shadow-lg hidden"
                         />
-                        <BorderBeam size={250} duration={12} delay={9} />
+                        <BorderBeam size={450} duration={12} delay={9} />
                     </div>
                 </div>
             </div>

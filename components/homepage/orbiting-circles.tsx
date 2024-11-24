@@ -5,18 +5,18 @@ import Image from "next/image";
 export function OrbitingCirclesComponent() {
   return (
     <div className="relative flex h-[500px] w-full max-w-[32rem] items-center justify-center overflow-hidden rounded-lg">
-      <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-black to-gray-500/80 bg-clip-text text-center text-8xl font-semibold leading-none text-transparent dark:from-white dark:to-slate-900/10">
+      <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-black to-gray-500/80 bg-clip-text text-center text-5xl font-semibold leading-none text-transparent dark:from-white dark:to-slate-900/10">
         Trade Smart
       </span>
 
       {/* Inner Circles */}
       <OrbitingCircles
-        className="h-[30px] w-[30px] border-none bg-transparent"
+        className="h-[50px] w-[50px] border-none bg-transparent"
         duration={20}
         delay={20}
         radius={80}
       >
-        <Icons.typescript />
+        <Icons.autochartist />
       </OrbitingCircles>
       <OrbitingCircles
         className="h-[60px] w-[70px] border-none bg-transparent"
@@ -37,7 +37,7 @@ export function OrbitingCirclesComponent() {
         <Icons.tradingview />
       </OrbitingCircles>
       <OrbitingCircles
-        className="h-[50px] w-[50px] border-none bg-transparent"
+        className="h-[60px] w-[60px] border-none bg-transparent"
         reverse
         radius={190}
         duration={20}
@@ -50,10 +50,10 @@ export function OrbitingCirclesComponent() {
 }
 
 const Icons = {
-  typescript: (props: IconProps) => (
-    <Image src="https://utfs.io/f/5b51351d-218b-4931-a296-0a9275030aaf-8myeez.png" alt=""
-      width={100}
-      height={100}
+  autochartist: (props: IconProps) => (
+    <Image src="https://utfs.io/f/uZI7cs6PPAxI0kr8P0spO8voV6KndDLRl5WczQbs2BaieSXF" alt=""
+      width={200}
+      height={200}
     />
   ),
   Yahoo: (props: IconProps) => (
