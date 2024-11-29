@@ -36,6 +36,10 @@ import {
   BrainCog,
   Network,
   UserRoundX,
+  NotebookPen,
+  CircleAlert,
+  BriefcaseBusiness,
+  Play,
   ChartArea
 } from "lucide-react";
 
@@ -480,6 +484,94 @@ export default function DashboardAccordion() {
                   <UserRoundX className="h-4 w-4" />
                 </div>
                 LIQ Sentiment
+              </Link>
+            </li>
+          </ul>
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="home" className="group flex flex-col">
+        <AccordionTrigger
+          className={clsx(
+            "flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+            {
+              "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white w-full":
+                pathname === "/dashboard/improvements",
+            }
+          )}
+        >
+          <div className="p--1 pr-1 pt-1 pb-1 bg-transparent">
+            <NotebookPen className="h-5 w-5" />
+          </div>
+          <span className="hidden lg:block">Improvements</span>
+        </AccordionTrigger>
+        <AccordionContent className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-screen bg-gray-500/25">
+          <ul>
+          <li>
+              <Link
+                className={clsx(
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  {
+                    "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
+                      pathname === "/dashboard/improvements/journal",
+                  }
+                )}
+                href="/dashboard/improvements/journal"
+              >
+                <div className="p-1 bg-transparent">
+                  <NotebookPen className="h-4 w-4" />
+                </div>
+                Journal & Plan
+              </Link>
+            </li>
+            <li>
+              <Link
+                className={clsx(
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  {
+                    "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
+                      pathname === "/dashboard/improvements/risk-management",
+                  }
+                )}
+                href="/dashboard/improvements/risk-management"
+              >
+                <div className="p-1 bg-transparent">
+                  <CircleAlert className="h-4 w-4" />
+                </div>
+                Risk Management
+              </Link>
+            </li>
+            <li>
+              <Link
+                className={clsx(
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  {
+                    "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
+                      pathname === "/dashboard/improvements/replay",
+                  }
+                )}
+                href="/dashboard/improvements/replay"
+              >
+                <div className="p-1 bg-transparent">
+                  <Play className="h-4 w-4" />
+                </div>
+                Market Replay
+              </Link>
+            </li>
+            <li>
+              <Link
+                className={clsx(
+                  "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
+                  {
+                    "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
+                      pathname === "/dashboard/improvements/portfolio",
+                  }
+                )}
+                href="/dashboard/improvements/portfolio"
+              >
+                <div className="p-1 bg-transparent">
+                  <BriefcaseBusiness className="h-4 w-4" />
+                </div>
+                Portfolio Manager
               </Link>
             </li>
           </ul>
