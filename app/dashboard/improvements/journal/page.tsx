@@ -1,19 +1,44 @@
-import { Button } from '@/components/ui/button'
-import React from 'react'
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import { AddTradesButton } from "./components/add-trades-button";
+import { JournalNavigation } from "./components/journal-navigation";
 
-export default function ProjectsPage() {
+export default async function TradingUploadPage() {
+  const supabase = createClient();
+
+  const { data, error } =
+    await supabase.auth.getUser();
+  if (error || !data?.user) {
+    redirect("/login");
+  }
+
   return (
-    <main className="flex flex-col gap-2 lg:gap-2 min-h-[90vh] w-full">
-      <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
-        <div className="flex flex-col items-center text-center">
-          <h1 className="text-2xl font-bold tracking-tight">
-            You have no projects
-          </h1>
-          <p className="text-sm text-muted-foreground mb-3">
-            Projects will show when you start using Nextjs Starter Kit
-          </p>
-          <Button>Create Project</Button>
+    <div>
+      <div className="h-14 lg:h-[55px] border-b w-full bg-white dark:bg-black flex items-center gap-4 z-1">
+        <div className="px-4">
+            <JournalNavigation/>
         </div>
+        <div className="justify-end px-2 ml-auto">
+            <AddTradesButton />
+        </div>
+        
       </div>
-    </main>)
+      <div className="container mx-auto p-4 max-w-xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Trade Journal
+            </CardTitle>
+          </CardHeader>
+          <CardContent></CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }

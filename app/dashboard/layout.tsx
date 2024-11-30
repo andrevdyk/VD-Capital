@@ -9,7 +9,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[40px_1fr] ">
-      <div className="static z-10">
+      <div className="static z-20">
         <DashboardSideBar />
       </div>
       <DashboardTopNav>
