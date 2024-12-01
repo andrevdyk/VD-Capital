@@ -22,6 +22,17 @@ import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TimezoneSelect } from './TimezoneSelect'
 
+type Question = {
+  question: string;
+  type: 'timezone' | 'checkbox' | 'radio';
+  options?: string[];
+};
+
+type Category = {
+  category: string;
+  questions: Question[];
+};
+
 interface MarketInfo {
   name: string;
   description: string;
@@ -87,7 +98,7 @@ const marketInfo: Record<string, MarketInfo> = {
   },
 }
 
-const questions = [
+const questions: Category[] = [
   {
     category: 'Trading Availability',
     questions: [
@@ -132,6 +143,8 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
   const [isCurrentCategoryComplete, setIsCurrentCategoryComplete] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [timezoneSuggestions, setTimezoneSuggestions] = useState<string | null>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false) // Added state for drawer
+  const [showQuiz, setShowQuiz] = useState(!selectedMarkets.length) // Added state variable
   const { toast } = useToast()
 
   useEffect(() => {
@@ -172,6 +185,7 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
         description: "Your preferred markets have been determined.",
       })
       displayTimezoneSuggestions(result.timezone, result.markets)
+      setShowQuiz(false) // Set showQuiz to false after successful submission
     } catch (error) {
       console.error('Error submitting quiz:', error)
       toast({
@@ -201,6 +215,8 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
     setSelectedMarkets([])
     setCurrentCategoryIndex(0)
     onMarketChange(null)
+    setTimezoneSuggestions(null)
+    setShowQuiz(true) // Added to show the quiz after retaking
   }
 
   useEffect(() => {
@@ -275,10 +291,14 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
         <div className="text-3xl font-semibold text-left pl-4 pt-1 pr-4">
           {selectedMarkets.length > 0 ? Array.from(new Set(selectedMarkets)).join(', ') : "Start Quiz"}
         </div>
-        <Drawer>
+        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}> {/* Updated Drawer component */}
           <DrawerTrigger asChild>
-            <Button variant="ghost" className="text-muted-foreground text-left pl-4">
-              {selectedMarkets.length > 0 ? "Learn More" : "Take Quiz"}
+            <Button
+              variant="ghost"
+              className="text-muted-foreground text-left pl-4"
+              onClick={() => { setIsDrawerOpen(true); setShowQuiz(!selectedMarkets.length); }}
+            >
+              {selectedMarkets.length > 0 ? (showQuiz ? "View Markets" : "Learn More") : "Take Quiz"}
             </Button>
           </DrawerTrigger>
           <DrawerContent className="h-full">
@@ -298,27 +318,7 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
                 </DrawerDescription>
               </DrawerHeader>
               <div className="flex-1 overflow-y-auto p-4">
-                {selectedMarkets.length > 0 ? (
-                  <div className="prose dark:prose-invert">
-                    {selectedMarkets.map((market) => {
-                      const info = marketInfo[market as keyof typeof marketInfo]
-                      return (
-                        <div key={market} className="mb-8">
-                          <h2 className="text-4xl font-bold mb-2">{info.name}</h2>
-                          <p className="mb-4 text-2xl text-foreground">{info.description}</p>
-                          <h3 className="text-3xl font-bold mb-2">Trading Hours</h3>
-                          <p className="mb-4 text-xl text-foreground">{info.tradingHours}</p>
-                          <h3 className="text-3xl font-bold mb-2">Key Characteristics</h3>
-                          <ul className="mb-4 text-xl text-foreground">
-                            {info.keyCharacteristics.map((char, index) => (
-                              <li key={index}>{char}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
+                {showQuiz ? (
                   <form onSubmit={handleSubmit}>
                     <div className="space-y-8">
                       <div className="space-y-4">
@@ -337,7 +337,7 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
                                     }))
                                   }}
                                 />
-                              ) : q.type === 'checkbox' ? (
+                              ) : q.type === 'checkbox' && q.options ? (
                                 <div className="space-y-2">
                                   {q.options.map((option) => (
                                     <div key={option} className="flex items-center space-x-2">
@@ -363,7 +363,7 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
                                     </div>
                                   ))}
                                 </div>
-                              ) : (
+                              ) : q.options ? (
                                 <RadioGroup
                                   onValueChange={(value) => {
                                     setAnswers(prev => ({
@@ -380,7 +380,7 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
                                     </div>
                                   ))}
                                 </RadioGroup>
-                              )}
+                              ) : null}
                             </div>
                           </div>
                         ))}
@@ -401,11 +401,31 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
                       )}
                     </div>
                   </form>
+                ) : (
+                  <div className="prose dark:prose-invert">
+                    {selectedMarkets.map((market) => {
+                      const info = marketInfo[market as keyof typeof marketInfo]
+                      return (
+                        <div key={market} className="mb-8">
+                          <h2 className="text-4xl font-bold mb-2">{info.name}</h2>
+                          <p className="mb-4 text-2xl text-foreground">{info.description}</p>
+                          <h3 className="text-3xl font-bold mb-2">Trading Hours</h3>
+                          <p className="mb-4 text-xl text-foreground">{info.tradingHours}</p>
+                          <h3 className="text-3xl font-bold mb-2">Key Characteristics</h3>
+                          <ul className="mb-4 text-xl text-foreground">
+                            {info.keyCharacteristics.map((char, index) => (
+                              <li key={index}>{char}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )
+                    })}
+                  </div>
                 )}
               </div>
               <DrawerFooter>
                 {selectedMarkets.length > 0 && (
-                  <Button onClick={handleRedoQuiz} className="w-full">Retake Quiz</Button>
+                  <Button onClick={() => { handleRedoQuiz(); setShowQuiz(true); }} className="w-full">Retake Quiz</Button>
                 )}
               </DrawerFooter>
             </div>
