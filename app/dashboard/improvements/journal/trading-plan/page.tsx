@@ -1,17 +1,25 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
-import { TraderTypeQuiz } from "./components/TraderTypeQuiz";
-import { Toaster } from "@/components/ui/toaster";
-import { AddTradesButton } from "../components/add-trades-button";
-import { JournalNavigation } from "../components/journal-navigation";
+'use client'
 
-export default async function TradingQuizPage() {
-  const supabase = createClient();
+import { useState } from 'react'
+import { redirect } from "next/navigation"
+import { createClient } from "@/utils/supabase/server"
+import { TraderTypeCard } from "./components/TraderTypeCard"
+import { Toaster } from "@/components/ui/toaster"
+import { AddTradesButton } from "../components/add-trades-button"
+import { JournalNavigation } from "../components/journal-navigation"
+import { TradeSetupTemplate } from "./components/TradeSetupTemplate"
+import { MarketTypesCard } from "./components/MarketTypesCard"
 
-  const { data, error } =
-    await supabase.auth.getUser();
-  if (error || !data?.user) {
-    redirect("/login");
+export default function TradingQuizPage() {
+  const [traderType, setTraderType] = useState<string | null>(null)
+  const [selectedMarkets, setSelectedMarkets] = useState<string[] | null>(null)
+
+  const handleTraderTypeChange = (newTraderType: string | null) => {
+    setTraderType(newTraderType)
+  }
+
+  const handleMarketChange = (newMarkets: string[] | null) => {
+    setSelectedMarkets(newMarkets)
   }
 
   return (
@@ -25,10 +33,15 @@ export default async function TradingQuizPage() {
         </div>
       </div>
 
-      <main className=" my-auto flex p-4">
-        <TraderTypeQuiz />
+      <main className="my-auto flex flex-col md:flex-row p-4 gap-4">
+        <div className="flex flex-col gap-4">
+          <TraderTypeCard initialTraderType={null} onTraderTypeChange={handleTraderTypeChange} />
+          <MarketTypesCard initialMarkets={null} onMarketChange={handleMarketChange} />
+        </div>
+        {traderType && <TradeSetupTemplate traderType={traderType} />}
         <Toaster />
       </main>
     </div>
-  );
+  )
 }
+
