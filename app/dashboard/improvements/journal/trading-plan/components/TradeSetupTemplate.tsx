@@ -6,6 +6,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import {
   Select,
@@ -18,8 +21,20 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
-import { ChevronDown, Bold, Italic, Underline } from 'lucide-react'
+import { ChevronDown, Bold, Italic, Underline, Plus } from 'lucide-react'
 import { Input } from "@/components/ui/input"
+import { tradeSetupTemplates } from '../utils/tradeSetupTemplates';
+import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 
 interface TradeSetupTemplateProps {
   traderType: string
@@ -27,34 +42,7 @@ interface TradeSetupTemplateProps {
 
 interface DropdownItem {
   category: string;
-  items: string[];
-}
-
-const dropdownItems: DropdownItem[] = [
-  {
-    category: 'Indicators',
-    items: ['Moving Average', 'RSI', 'MACD', 'Bollinger Bands', 'Stochastic Oscillator'],
-  },
-  {
-    category: 'Patterns',
-    items: ['Head and Shoulders', 'Double Top', 'Double Bottom', 'Triangle', 'Flag'],
-  },
-  {
-    category: 'Profiles',
-    items: ['Volume Profile', 'Market Profile', 'Order Flow'],
-  },
-  {
-    category: 'Fundamentals',
-    items: ['Economic Calendar', 'Interest Rates', 'GDP', 'Unemployment Rate', 'Inflation'],
-  },
-]
-
-const getTagColor = (tag: string): string => {
-  if (dropdownItems[0].items.includes(tag)) return 'bg-blue-500'
-  if (dropdownItems[1].items.includes(tag)) return 'bg-green-500'
-  if (dropdownItems[2].items.includes(tag)) return 'bg-red-500'
-  if (dropdownItems[3].items.includes(tag)) return 'bg-purple-500'
-  return 'bg-primary'
+  items: { [key: string]: string[] };
 }
 
 const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px']
@@ -64,7 +52,8 @@ const fontOptions = [
   { value: 'font-mono', label: 'Monospace' },
 ]
 
-export function TradeSetupTemplate({ traderType }: TradeSetupTemplateProps) {
+
+export default function TradeSetupTemplate({ traderType }: TradeSetupTemplateProps) {
   const [setupName, setSetupName] = useState('')
   const [setupText, setSetupText] = useState('')
   const [tags, setTags] = useState<string[]>([])
@@ -74,126 +63,265 @@ export function TradeSetupTemplate({ traderType }: TradeSetupTemplateProps) {
   const [isItalic, setIsItalic] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
   const textareaRef = useRef<HTMLDivElement>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newIndicatorCategory, setNewIndicatorCategory] = useState('');
+  const [newIndicatorSubCategory, setNewIndicatorSubCategory] = useState('');
+  const [newIndicatorName, setNewIndicatorName] = useState('');
+  const [dropdownItems, setDropdownItems] = useState<DropdownItem[]>([
+    {
+      category: 'Indicators',
+      items: {
+        'Trend Indicators': [
+          'Moving Averages (SMA, EMA, WMA)', 'Parabolic SAR', 'Average Directional Index (ADX)', 
+          'Ichimoku Cloud', 'Moving Average Convergence Divergence (MACD)', 'Aroon Indicator', 'Trendlines'
+        ],
+        'Momentum Indicators': [
+          'Relative Strength Index (RSI)', 'Stochastic Oscillator', 'Rate of Change (ROC)', 
+          'Williams %R', 'Momentum Indicator', 'Commodity Channel Index (CCI)'
+        ],
+        'Volatility Indicators': [
+          'Bollinger Bands', 'Average True Range (ATR)', 'Keltner Channels', 
+          'Donchian Channels', 'Chaikin Volatility'
+        ],
+        'Volume Indicators': [
+          'On-Balance Volume (OBV)', 'Chaikin Money Flow (CMF)', 'Accumulation/Distribution Line (A/D Line)', 
+          'Money Flow Index (MFI)', 'Volume Weighted Average Price (VWAP)', 'Volume Oscillator'
+        ],
+        'Price Oscillators': [
+          'MACD Histogram', 'Percentage Price Oscillator (PPO)', 'Detrended Price Oscillator (DPO)'
+        ],
+        'Support and Resistance Tools': [
+          'Fibonacci Retracement', 'Pivot Points', 'Gann Levels', 'Horizontal Support/Resistance Lines'
+        ],
+        'Custom and Advanced Indicators': [
+          'Relative Vigor Index (RVI)', 'Elder\'s Force Index', 'Trix Indicator', 
+          'Connors RSI', 'Chande Momentum Oscillator', 'Ultimate Oscillator'
+        ],
+        'Composite Indicators': [
+          'Vortex Indicator', 'True Strength Index (TSI)', 'Klinger Oscillator', 'Balance of Power (BOP)'
+        ],
+      },
+    },
+    {
+      category: 'Fundamentals',
+      items: {
+        'Economic Indicators': [
+          'Economic Calendar', 'Interest Rates', 'GDP', 'Unemployment Rate', 'Inflation'
+        ],
+        'Company-Specific': [
+          'Company Earnings', 'Financial Statements', 'Dividend Yield', 'P/E Ratio', 'Market Cap'
+        ],
+        'Market Sentiment': [
+          'Market Sentiment Indicators', 'Analyst Ratings', 'Insider Trading', 'Short Interest'
+        ],
+        'Global Factors': [
+          'Geopolitical Events', 'Sector Analysis', 'Supply and Demand', 'Commodity Prices'
+        ],
+      },
+    },
+    {
+      category: 'Profiles',
+      items: {
+        'Market Structure': [
+          'Volume Profile', 'Market Profile', 'Order Flow', 'Footprint Charts', 'Delta Volume', 'Time and Sales'
+        ],
+      },
+    },
+    {
+      category: 'Patterns',
+      items: {
+        'Reversal Patterns': [
+          'Bullish Reversal Patterns',
+          'Head and Shoulders (Inverted)',
+          'Double Bottom',
+          'Triple Bottom',
+          'Falling Wedge',
+          'Bullish Engulfing Pattern',
+          'Piercing Line',
+          'Morning Star',
+          'Bearish Reversal Patterns',
+          'Head and Shoulders',
+          'Double Top',
+          'Triple Top',
+          'Rising Wedge',
+          'Bearish Engulfing Pattern',
+          'Dark Cloud Cover',
+          'Evening Star',
+        ],
+        'Continuation Patterns': [
+          'Bullish Continuation Patterns',
+          'Bullish Flag',
+          'Bullish Pennant',
+          'Ascending Triangle',
+          'Bearish Continuation Patterns',
+          'Bearish Flag',
+          'Bearish Pennant',
+          'Descending Triangle',
+        ],
+        'Neutral Patterns': [
+          'Symmetrical Triangle',
+          'Rectangle',
+          'Diamond',
+        ],
+        'Candlestick Patterns': [
+          'Single Candlestick Patterns',
+          'Hammer (Bullish)',
+          'Hanging Man (Bearish)',
+          'Doji',
+          'Spinning Top',
+          'Marubozu',
+          'Multiple Candlestick Patterns',
+          'Bullish/Bearish Engulfing',
+          'Morning/Evening Star',
+          'Harami (Bullish/Bearish)',
+          'Three White Soldiers (Bullish)',
+          'Three Black Crows (Bearish)',
+          'Rising/Falling Three Methods',
+        ],
+        'Exotic Patterns': [
+          'Broadening Wedges',
+          'Cup and Handle (Bullish)',
+          'Inverse Cup and Handle (Bearish)',
+          'Diamond Top/Bottom',
+          'Bump and Run Reversal',
+          'Rounded Bottom (Saucer)',
+        ],
+      },
+    },
+    {
+      category: 'Other',
+      items: {
+        'Advanced Concepts': [
+          'Accumulation, Manipulation, and Distribution',
+          'Buy Side Imbalance, Sell Side Inefficiency',
+          'Sell Side Imbalance, Buy Side Inefficiency',
+          'Balanced Price Range',
+          'Buy Side Liquidity',
+          'Sell Side Liquidity',
+          'Break-Even',
+          'Break of Structure',
+          'Consequent Encroachment',
+          'Fair Value Gap',
+          'Inversion Fair Value Gap',
+          'Higher Time Frame',
+          'Lower Time Frame',
+          'Interbank Price Delivery Algorithm',
+          'Short-Term High',
+          'Intermediate-Term High',
+          'Long-Term High',
+          'Short-Term Low',
+          'Intermediate-Term Low',
+          'Long-Term Low',
+          'Market Structure Shift',
+          'Mean Threshold',
+          'Order Block',
+          'Optimal Trade Entry',
+          'Previous Day Low',
+          'Previous Day High',
+          'Power of Three',
+          'External Range Liquidity',
+          'Internal Range Liquidity',
+          'Premium & Discount Arrangement',
+          'Breaker Block',
+          'Mitigation Block',
+          'New Week Opening Gap',
+          'Liquidity Pool'
+        ],
+      },
+    },
+    {
+      category: 'Entry and Exit Rules',
+      items: {
+        'Clear Entry Criteria': [
+          'Moving Average Crossover',
+          'RSI Oversold/Overbought',
+          'Key Support/Resistance Touch',
+          'Chart Pattern Completion',
+          'Breakout Candle Close',
+        ],
+        'Timeframe Alignment': [
+          '1H, 4H, Daily Signal Match',
+          '5M Entry with Daily Trend',
+          '15M Exit Signals',
+          'Weekly Trend Confirmation',
+        ],
+        'Risk-to-Reward Ratio': [
+          'Minimum 1:2 Ratio',
+          'Reject Poor Risk Profiles',
+        ],
+        'Confirmation': [
+          'Engulfing Candle',
+          'Volume Spike',
+          'MACD Cross',
+        ],
+        'Breakout Rules': [
+          'Candle Close Beyond Breakout',
+          'Volume Spike Confirmation',
+          'Stop Below Breakout Level',
+        ],
+        'Reversal Rules': [
+          'Fibonacci Retracement Entry',
+          'RSI Divergence',
+          'Hammer/Shooting Star',
+        ],
+        'Stop-Loss Placement': [
+          '1-2 ATR Below/Above Structure',
+          'Last 3 Candles\' High/Low',
+        ],
+        'Profit Targeting': [
+          'Previous High/Low',
+          'Fixed % Target',
+          'Fibonacci Extensions',
+        ],
+        'Time-Based Exits': [
+          'Close After 4 Hours Unprofitability',
+          'Exit at Day\'s End',
+        ],
+        'Partial Profit-Taking': [
+          '50% Off at Halfway Point',
+          'Trail Remaining Position',
+        ],
+        'Market Conditions': [
+          'Low Liquidity',
+          'High Volatility',
+          'Trending Up',
+          'Trending Down',
+        ],
+      },
+    },
+  ])
 
-  const templates = {
-    'Scalper': `Trade Setup for Scalper:
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState<string[]>([]);
 
-1. Indicators:
- - Example: 1-minute chart with 5 and 10 period EMAs
- - [Your indicators here]
-
-2. Fundamentals:
- - Example: Monitor economic calendar for high-impact news
- - [Your fundamental analysis approach]
-
-3. Entry Rules:
- - Example: Enter long when price crosses above 10 EMA with increasing volume
- - [Your entry rules]
-
-4. Exit Rules:
- - Example: Exit when price touches 5 EMA or 1:1 risk-reward ratio is reached
- - [Your exit rules]
-
-5. Patterns:
- - Example: Look for bullish engulfing patterns on 1-minute chart
- - [Patterns you look for]
-
-Example Trade:
-Currency Pair: EUR/USD
-Entry: Buy at 1.1850 when price crosses above 10 EMA with increased volume
-Stop Loss: 1.1845 (5 pips)
-Take Profit: 1.1855 (5 pips, 1:1 risk-reward)
-Result: Price moved to 1.1855, take profit hit for 5 pip gain`,
-
-    'Day Trader': `Trade Setup for Day Trader:
-
-1. Indicators:
- - Example: 15-minute chart with 20 and 50 period SMAs, RSI
- - [Your indicators here]
-
-2. Fundamentals:
- - Example: Review pre-market movers and sector news
- - [Your fundamental analysis approach]
-
-3. Entry Rules:
- - Example: Enter long when price breaks above previous day's high with RSI above 50
- - [Your entry rules]
-
-4. Exit Rules:
- - Example: Exit half position at 1:1 risk-reward, move stop to breakeven
- - [Your exit rules]
-
-5. Patterns:
- - Example: Look for bull flag patterns on 15-minute chart
- - [Patterns you look for]
-
-Example Trade:
-Stock: AAPL
-Entry: Buy at $150.50 on breakout above previous day's high
-Stop Loss: $149.50 (1% risk)
-Take Profit: Partial at $151.50, rest at end of day
-Result: Price moved to $152.00, exited for 1% gain`,
-
-    'Swing Trader': `Trade Setup for Swing Trader:
-
-1. Indicators:
- - Example: Daily chart with 50 and 200 day EMAs, MACD
- - [Your indicators here]
-
-2. Fundamentals:
- - Example: Analyze quarterly earnings reports and industry trends
- - [Your fundamental analysis approach]
-
-3. Entry Rules:
- - Example: Enter long when price is above 200 EMA and MACD crosses above signal line
- - [Your entry rules]
-
-4. Exit Rules:
- - Example: Exit when price closes below 50 EMA or target is reached
- - [Your exit rules]
-
-5. Patterns:
- - Example: Look for cup and handle patterns on daily chart
- - [Patterns you look for]
-
-Example Trade:
-Stock: TSLA
-Entry: Buy at $700 when MACD crosses above signal line
-Stop Loss: $665 (5% risk)
-Take Profit: $770 (10% gain, 1:2 risk-reward)
-Result: Price reached $770 after 2 weeks, exited for 10% gain`,
-
-    'Position Trader/Investor': `Trade Setup for Position Trader/Investor:
-
-1. Indicators:
- - Example: Weekly chart with 50 and 200 week EMAs, Relative Strength Index (RSI)
- - [Your indicators here]
-
-2. Fundamentals:
- - Example: Analyze company financials, competitive advantage, and long-term industry trends
- - [Your fundamental analysis approach]
-
-3. Entry Rules:
- - Example: Enter when stock is undervalued based on P/E ratio and has strong growth prospects
- - [Your entry rules]
-
-4. Exit Rules:
- - Example: Exit when investment thesis is no longer valid or better opportunities arise
- - [Your exit rules]
-
-5. Patterns:
- - Example: Look for long-term trend reversals or breakouts from multi-year consolidation
- - [Patterns you look for]
-
-Example Trade:
-Stock: AMZN
-Entry: Buy at $3000 based on strong e-commerce growth and cloud computing dominance
-Stop Loss: No hard stop, reevaluate if drops below 200 week EMA
-Take Profit: Hold for long-term growth, reassess annually
-Result: After 2 years, price reached $3600, continuing to hold based on strong fundamentals`
+  const getTagColor = (tag: string): string => {
+    if (dropdownItems[0].items['Trend Indicators'].includes(tag)) return 'bg-blue-500'
+    if (dropdownItems[0].items['Momentum Indicators'].includes(tag)) return 'bg-green-500'
+    if (dropdownItems[0].items['Volatility Indicators'].includes(tag)) return 'bg-red-500'
+    if (dropdownItems[0].items['Volume Indicators'].includes(tag)) return 'bg-purple-500'
+    if (dropdownItems[1].items['Economic Indicators'].includes(tag)) return 'bg-yellow-500'
+    if (dropdownItems[1].items['Company-Specific'].includes(tag)) return 'bg-orange-500'
+    if (dropdownItems[2].items['Market Structure'].includes(tag)) return 'bg-pink-500'
+    if (dropdownItems[3].items['Reversal Patterns'].includes(tag)) return 'bg-teal-500'
+    if (dropdownItems[3].items['Continuation Patterns'].includes(tag)) return 'bg-indigo-500'
+    if (dropdownItems[3].items['Candlestick Patterns'].includes(tag)) return 'bg-cyan-500'
+    if (dropdownItems[4].items['Advanced Concepts'].includes(tag)) return 'bg-green-500'
+    if (dropdownItems[5].items['Clear Entry Criteria'].includes(tag) ||
+        dropdownItems[5].items['Timeframe Alignment'].includes(tag) ||
+        dropdownItems[5].items['Risk-to-Reward Ratio'].includes(tag) ||
+        dropdownItems[5].items['Confirmation'].includes(tag) ||
+        dropdownItems[5].items['Breakout Rules'].includes(tag) ||
+        dropdownItems[5].items['Reversal Rules'].includes(tag) ||
+        dropdownItems[5].items['Stop-Loss Placement'].includes(tag) ||
+        dropdownItems[5].items['Profit Targeting'].includes(tag) ||
+        dropdownItems[5].items['Time-Based Exits'].includes(tag) ||
+        dropdownItems[5].items['Partial Profit-Taking'].includes(tag) ||
+        dropdownItems[5].items['Market Conditions'].includes(tag)) return 'bg-amber-500'
+    return 'bg-primary'
   }
 
   useEffect(() => {
+    console.log('TradeSetupTemplate rendered');
     if (textareaRef.current) {
       const selection = window.getSelection();
       let range = selection?.rangeCount ? selection.getRangeAt(0) : null;
@@ -297,6 +425,7 @@ Result: After 2 years, price reached $3600, continuing to hold based on strong f
   };
 
   useEffect(() => {
+    console.log('TradeSetupTemplate rendered');
     if (textareaRef.current) {
       const applyActiveFormatting = () => {
         const selection = window.getSelection();
@@ -324,8 +453,48 @@ Result: After 2 years, price reached $3600, continuing to hold based on strong f
     }
   }, [isBold, isItalic, isUnderline])
 
+  useEffect(() => {
+    console.log('TradeSetupTemplate rendered');
+    setCategoryOptions(dropdownItems.map(item => item.category));
+  }, [dropdownItems]);
+
+  useEffect(() => {
+    console.log('TradeSetupTemplate rendered');
+    if (newIndicatorCategory) {
+      const category = dropdownItems.find(item => item.category === newIndicatorCategory);
+      if (category) {
+        setSubcategoryOptions(Object.keys(category.items));
+      }
+    } else {
+      setSubcategoryOptions([]);
+    }
+  }, [newIndicatorCategory, dropdownItems]);
+
+  const handleAddCustomIndicator = () => {
+    if (newIndicatorCategory && newIndicatorSubCategory && newIndicatorName) {
+      setDropdownItems(prevItems => {
+        const newItems = [...prevItems];
+        const categoryIndex = newItems.findIndex(item => item.category === newIndicatorCategory);
+        if (categoryIndex !== -1) {
+          if (newItems[categoryIndex].items[newIndicatorSubCategory]) {
+            if (!newItems[categoryIndex].items[newIndicatorSubCategory].includes(newIndicatorName)) {
+              newItems[categoryIndex].items[newIndicatorSubCategory].push(newIndicatorName);
+            }
+          } else {
+            newItems[categoryIndex].items[newIndicatorSubCategory] = [newIndicatorName];
+          }
+        }
+        return newItems;
+      });
+      setNewIndicatorCategory('');
+      setNewIndicatorSubCategory('');
+      setNewIndicatorName('');
+      setIsDialogOpen(false);
+    }
+  };
+
   return (
-    <Card className="w-half ml-auto">
+    <Card className="w-full">
       <CardHeader>
         <Input
           type="text"
@@ -336,7 +505,7 @@ Result: After 2 years, price reached $3600, continuing to hold based on strong f
         />
       </CardHeader>
       <CardContent>
-        <div className="flex space-x-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           {dropdownItems.map((dropdown) => (
             <DropdownMenu key={dropdown.category}>
               <DropdownMenuTrigger asChild>
@@ -344,15 +513,92 @@ Result: After 2 years, price reached $3600, continuing to hold based on strong f
                   {dropdown.category} <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {dropdown.items.map((item) => (
-                  <DropdownMenuItem key={item} onSelect={() => handleItemClick(item)}>
-                    {item}
-                  </DropdownMenuItem>
+              <DropdownMenuContent className="w-56 h-[50vh] overflow-y-auto ">
+                {Object.entries(dropdown.items).map(([subCategory, items], index) => (
+                  <React.Fragment key={subCategory}>
+                    {index > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuLabel>{subCategory}</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      {items.map((item) => (
+                        <DropdownMenuItem key={item} onSelect={() => handleItemClick(item)}>
+                          {item}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </React.Fragment>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           ))}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" className="ml-2">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Custom Indicator</DialogTitle>
+                <DialogDescription>Enter the details for your custom indicator.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="category" className="text-right">
+                    Category
+                  </Label>
+                  <Select
+                    value={newIndicatorCategory}
+                    onValueChange={setNewIndicatorCategory}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="subcategory" className="text-right">
+                    Subcategory
+                  </Label>
+                  <Select
+                    value={newIndicatorSubCategory}
+                    onValueChange={setNewIndicatorSubCategory}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select subcategory" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subcategoryOptions.map((subcategory) => (
+                        <SelectItem key={subcategory} value={subcategory}>
+                          {subcategory}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Indicator Name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={newIndicatorName}
+                    onChange={(e) => setNewIndicatorName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleAddCustomIndicator}>Add Indicator</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
         <div className="flex items-center space-x-2 mb-4">
           <ToggleGroup type="multiple" variant="outline">
@@ -417,14 +663,14 @@ Result: After 2 years, price reached $3600, continuing to hold based on strong f
             contentEditable
             suppressContentEditableWarning
             onInput={handleInput}
-            className={`min-h-[500px] text-sm pt-10 p-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-white whitespace-pre-wrap [&_span]:user-select-none ${fontFamily}`}
+            className={`min-h-[500px] text-sm pt-10 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap [&_span]:user-select-none ${fontFamily}`}
             style={{ fontSize }}
           />
         </div>
         <div className="flex justify-end mt-4">
           <Button
             onClick={() => {
-              setSetupText(templates[traderType as keyof typeof templates])
+              setSetupText(tradeSetupTemplates[traderType as keyof typeof tradeSetupTemplates])
               setTags([])
             }}
           >
