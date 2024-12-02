@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, Suspense, lazy, useEffect, useCallback } from 'react'
-import { redirect } from "next/navigation"
-import { createClient } from "@/utils/supabase/server"
 import { TraderTypeCard } from "./components/TraderTypeCard"
 import { Toaster } from "@/components/ui/toaster"
 import { AddTradesButton } from "../components/add-trades-button"
@@ -12,11 +10,12 @@ const TradeSetupTemplate = lazy(() => import("./components/TradeSetupTemplate"))
 import { MarketTypesCard } from "./components/MarketTypesCard"
 
 export default function TradingQuizPage() {
-  const [traderType, setTraderType] = useState<string | null>(null)
+  //const [traderType, setTraderType] = useState<string | null>(null)
   const [selectedMarkets, setSelectedMarkets] = useState<string[] | null>(null)
 
   const handleTraderTypeChange = useCallback((newTraderType: string | null) => {
-    setTraderType(newTraderType)
+    console.log('Trader type changed:', newTraderType);
+    // You can add any other logic here if needed
   }, []);
 
   const handleMarketChange = useCallback((newMarkets: string[] | null) => {
@@ -43,11 +42,9 @@ export default function TradingQuizPage() {
           <TraderTypeCard initialTraderType={null} onTraderTypeChange={handleTraderTypeChange} />
           <MarketTypesCard initialMarkets={null} onMarketChange={handleMarketChange} />
         </div>
-        {traderType && (
-          <Suspense fallback={<TradeSetupTemplateSkeleton />}>
-            <TradeSetupTemplate traderType={traderType} />
-          </Suspense>
-        )}
+        <Suspense fallback={<TradeSetupTemplateSkeleton />}>
+          <TradeSetupTemplate />
+        </Suspense>
         <Toaster />
       </main>
     </div>

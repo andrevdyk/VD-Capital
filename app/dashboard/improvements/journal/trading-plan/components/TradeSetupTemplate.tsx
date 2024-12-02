@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react'
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
@@ -36,9 +36,6 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 
-interface TradeSetupTemplateProps {
-  traderType: string
-}
 
 interface DropdownItem {
   category: string;
@@ -53,7 +50,7 @@ const fontOptions = [
 ]
 
 
-export default function TradeSetupTemplate({ traderType }: TradeSetupTemplateProps) {
+export default function TradeSetupTemplate() {
   const [setupName, setSetupName] = useState('')
   const [setupText, setSetupText] = useState('')
   const [tags, setTags] = useState<string[]>([])
@@ -294,7 +291,7 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [subcategoryOptions, setSubcategoryOptions] = useState<string[]>([]);
 
-  const getTagColor = (tag: string): string => {
+  const getTagColor = useMemo(() => (tag: string): string => {
     if (dropdownItems[0].items['Trend Indicators'].includes(tag)) return 'bg-blue-500'
     if (dropdownItems[0].items['Momentum Indicators'].includes(tag)) return 'bg-green-500'
     if (dropdownItems[0].items['Volatility Indicators'].includes(tag)) return 'bg-red-500'
@@ -318,7 +315,7 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
         dropdownItems[5].items['Partial Profit-Taking'].includes(tag) ||
         dropdownItems[5].items['Market Conditions'].includes(tag)) return 'bg-amber-500'
     return 'bg-primary'
-  }
+  }, [dropdownItems]);
 
   useEffect(() => {
     console.log('TradeSetupTemplate rendered');
@@ -344,7 +341,7 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
     }
   }, [setupText]);
 
-  const handleItemClick = (item: string) => {
+  const handleItemClick = useCallback((item: string) => {
     if (textareaRef.current) {
       const selection = window.getSelection()
       const range = selection?.getRangeAt(0)
@@ -361,13 +358,13 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
         selection?.removeAllRanges()
         selection?.addRange(range)
       }
-      setTags([...tags, item])
+      setTags(prevTags => [...prevTags, item])
       setSetupText(textareaRef.current.innerHTML)
     }
-  }
+  }, [getTagColor]);
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove))
+  const removeTag = useCallback((tagToRemove: string) => {
+    setTags(prevTags => prevTags.filter(tag => tag !== tagToRemove))
     if (textareaRef.current) {
       const spans = textareaRef.current.getElementsByTagName('span')
       for (let i = spans.length - 1; i >= 0; i--) {
@@ -377,7 +374,7 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
       }
       setSetupText(textareaRef.current.innerHTML)
     }
-  }
+  }, []);
 
   const applyTextFormatting = useCallback((format: 'bold' | 'italic' | 'underline') => {
     if (textareaRef.current) {
@@ -397,32 +394,13 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
         setIsUnderline(prev => !prev)
         break
     }
-  }, [])
+  }, []);
 
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+  const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML;
     setSetupText(content);
     e.currentTarget.className = e.currentTarget.className.replace(/font-(sans|serif|mono)/g, fontFamily);
-  };
-
-  const applyActiveFormatting = () => {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      if (range && range.collapsed) {
-        const span = document.createElement('span');
-        if (isBold) span.style.fontWeight = 'bold';
-        if (isItalic) span.style.fontStyle = 'italic';
-        if (isUnderline) span.style.textDecoration = 'underline';
-        span.appendChild(document.createTextNode('\u200B')); // Zero-width space
-        range.insertNode(span);
-        range.setStart(span.firstChild!, 1);
-        range.setEnd(span.firstChild!, 1);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-    }
-  };
+  }, [fontFamily]);
 
   useEffect(() => {
     console.log('TradeSetupTemplate rendered');
@@ -470,7 +448,7 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
     }
   }, [newIndicatorCategory, dropdownItems]);
 
-  const handleAddCustomIndicator = () => {
+  const handleAddCustomIndicator = useCallback(() => {
     if (newIndicatorCategory && newIndicatorSubCategory && newIndicatorName) {
       setDropdownItems(prevItems => {
         const newItems = [...prevItems];
@@ -491,7 +469,7 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
       setNewIndicatorName('');
       setIsDialogOpen(false);
     }
-  };
+  }, [newIndicatorCategory, newIndicatorSubCategory, newIndicatorName]);
 
   return (
     <Card className="w-full">
@@ -670,11 +648,11 @@ export default function TradeSetupTemplate({ traderType }: TradeSetupTemplatePro
         <div className="flex justify-end mt-4">
           <Button
             onClick={() => {
-              setSetupText(tradeSetupTemplates[traderType as keyof typeof tradeSetupTemplates])
-              setTags([])
+              setSetupText('');
+              setTags([]);
             }}
           >
-            Reset to Template
+            Reset Template
           </Button>
         </div>
       </CardContent>
