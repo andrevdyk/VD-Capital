@@ -14,12 +14,12 @@ export function TraderTypeQuiz() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [traderType, markets] = await Promise.all([
+        const [traderType, marketsData] = await Promise.all([
           getUserTraderType(),
           getUserMarkets()
         ])
         setInitialTraderType(traderType)
-        setInitialMarkets(markets)
+        setInitialMarkets(marketsData?.markets || null)
       } catch (error) {
         console.error('Error fetching user data:', error)
       }
@@ -34,8 +34,8 @@ export function TraderTypeQuiz() {
         <CardDescription className="text-lg">Determine your trading style and preferred markets.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <TraderTypeCard initialTraderType={initialTraderType} />
-        <MarketTypesCard initialMarkets={initialMarkets} />
+        <TraderTypeCard initialTraderType={initialTraderType} onTraderTypeChange={() => {}} />
+        <MarketTypesCard initialMarkets={initialMarkets} onMarketChange={() => {}} />
       </CardContent>
     </Card>
   )
