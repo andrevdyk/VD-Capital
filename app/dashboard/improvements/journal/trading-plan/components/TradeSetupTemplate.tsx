@@ -38,7 +38,7 @@ import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { saveSetup } from '../actions/save-setup'
 import { useToast } from "@/components/ui/use-toast"
-import { UserSetup } from '@/types/user';
+import { UserSetup } from '@/app/types/user';
 
 
 interface DropdownItem {
