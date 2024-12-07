@@ -346,10 +346,10 @@ export function TraderTypeCard({ initialTraderType, onTraderTypeChange }: Trader
   return (
     <Card className="w-full min-w-fit max-w-[300px] overflow-hidden">
       <CardContent className="p-2">
-        <div className="text-muted-foreground pl-4">
+        <div className="text-muted-foreground pl-4 cursor-default">
           {traderType ? "You are a" : "Trader Type Quiz"}
         </div>
-        <div className="text-3xl font-semibold text-left pl-4 pt-1 pr-4">
+        <div className="text-3xl font-semibold text-left pl-4 pt-1 pr-4 cursor-default">
           {traderType ? info?.title : "Start Quiz"}
         </div>
         <Drawer>
@@ -378,9 +378,9 @@ export function TraderTypeCard({ initialTraderType, onTraderTypeChange }: Trader
                 {traderType ? (
                   <div className="prose dark:prose-invert">
                     <h2 className="text-4xl font-bold mb-2">Description</h2>
-                    <p className="mb-4 text-2xl text-foreground">{info?.description}</p>
+                    <p className="mb-4 text-2xl text-foreground cursor-default">{info?.description}</p>
 
-                    <h2 className="text-4xl font-bold mb-2">Characteristics</h2>
+                    <h2 className="text-4xl font-bold mb-2 cursor-default">Characteristics</h2>
                     <ul className="mb-4 text-2xl text-foreground">
                       {info?.characteristics.map((char, index) => (
                         <li key={index}>{char}</li>

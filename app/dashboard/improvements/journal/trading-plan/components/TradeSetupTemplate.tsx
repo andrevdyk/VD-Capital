@@ -21,7 +21,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
-import { ChevronDown, Bold, Italic, Underline, Plus } from 'lucide-react'
+import { ChevronDown, Bold, Italic, Underline, Plus, Save } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { tradeSetupTemplates } from '../utils/tradeSetupTemplates';
 import { cn } from "@/lib/utils"
@@ -29,17 +29,26 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { saveSetup } from '../actions/save-setup'
+import { useToast } from "@/components/ui/use-toast"
+import { UserSetup } from '@/types/user';
 
 
 interface DropdownItem {
   category: string;
   items: { [key: string]: string[] };
+}
+
+interface TradeSetupTemplateProps {
+  onSetupSaved: () => void;
+  setupToEdit: UserSetup | null;
 }
 
 const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px']
@@ -50,7 +59,7 @@ const fontOptions = [
 ]
 
 
-export default function TradeSetupTemplate() {
+export default function TradeSetupTemplate({ onSetupSaved, setupToEdit }: TradeSetupTemplateProps) {
   const [setupName, setSetupName] = useState('')
   const [setupText, setSetupText] = useState('')
   const [tags, setTags] = useState<string[]>([])
@@ -291,34 +300,69 @@ export default function TradeSetupTemplate() {
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [subcategoryOptions, setSubcategoryOptions] = useState<string[]>([]);
 
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState<boolean>(false);
+  const { toast } = useToast()
+
+  const handleAddTemplate = (traderType: string, templateIndex: number) => {
+    const template = tradeSetupTemplates[traderType as keyof typeof tradeSetupTemplates][templateIndex];
+    const newTags: string[] = [];
+
+    // Create a map of abbreviations to full names
+    const abbreviationMap = new Map(template.tags.map(tag => {
+      const fullName = Object.values(dropdownItems)
+        .flatMap(item => Object.values(item.items).flat())
+        .find(item => item.includes(tag));
+      return [tag, fullName || tag];
+    }));
+
+    const contentWithTags = template.content.replace(/^- (.+)$/gm, (match, p1) => {
+      return '- ' + p1.split(/\s+/).map((word: string) => {
+        const fullName = abbreviationMap.get(word);
+        if (fullName) {
+          const tagColor = getTagColor(fullName);
+          newTags.push(fullName);
+          return `<span class="${tagColor} text-white px-1 rounded inline-block cursor-pointer" contenteditable="false">${fullName}</span>`;
+        }
+        return word;
+      }).join(' ');
+    });
+
+    setSetupText(contentWithTags);
+    setTags(prevTags => {
+      const allTags = [...prevTags, ...newTags];
+      return Array.from(new Set(allTags));
+    });
+    setIsTemplateDialogOpen(false);
+  };
+
   const getTagColor = useMemo(() => (tag: string): string => {
-    if (dropdownItems[0].items['Trend Indicators'].includes(tag)) return 'bg-blue-500'
-    if (dropdownItems[0].items['Momentum Indicators'].includes(tag)) return 'bg-green-500'
-    if (dropdownItems[0].items['Volatility Indicators'].includes(tag)) return 'bg-red-500'
-    if (dropdownItems[0].items['Volume Indicators'].includes(tag)) return 'bg-purple-500'
-    if (dropdownItems[0].items['Custom and Advanced Indicators'].includes(tag)) return 'bg-pink-800'
-    if (dropdownItems[0].items['Composite Indicators'].includes(tag)) return 'bg-[#611C35]'
-    if (dropdownItems[1].items['Economic Indicators'].includes(tag)) return 'bg-yellow-500'
-    if (dropdownItems[1].items['Company-Specific'].includes(tag)) return 'bg-orange-500'
-    if (dropdownItems[2].items['Market Structure'].includes(tag)) return 'bg-pink-500'
-    if (dropdownItems[3].items['Reversal Patterns'].includes(tag)) return 'bg-teal-500'
-    if (dropdownItems[3].items['Continuation Patterns'].includes(tag)) return 'bg-indigo-500'
-    if (dropdownItems[3].items['Exotic Patterns'].includes(tag)) return 'bg-violet-500'
-    if (dropdownItems[3].items['Candlestick Patterns'].includes(tag)) return 'bg-cyan-500'
-    if (dropdownItems[4].items['Advanced Concepts'].includes(tag)) return 'bg-green-500'
-    if (dropdownItems[5].items['Clear Entry Criteria'].includes(tag) ||
-        dropdownItems[5].items['Timeframe Alignment'].includes(tag) ||
-        dropdownItems[5].items['Risk-to-Reward Ratio'].includes(tag) ||
-        dropdownItems[5].items['Confirmation'].includes(tag) ||
-        dropdownItems[5].items['Breakout Rules'].includes(tag) ||
-        dropdownItems[5].items['Reversal Rules'].includes(tag) ||
-        dropdownItems[5].items['Stop-Loss Placement'].includes(tag) ||
-        dropdownItems[5].items['Profit Targeting'].includes(tag) ||
-        dropdownItems[5].items['Time-Based Exits'].includes(tag) ||
-        dropdownItems[5].items['Partial Profit-Taking'].includes(tag) ||
-        dropdownItems[5].items['Market Conditions'].includes(tag)) return 'bg-amber-500'
-    return 'bg-primary'
-  }, [dropdownItems]);
+  if (dropdownItems[0].items['Trend Indicators'].includes(tag)) return 'bg-blue-500'
+  if (dropdownItems[0].items['Momentum Indicators'].includes(tag)) return 'bg-green-500'
+  if (dropdownItems[0].items['Volatility Indicators'].includes(tag)) return 'bg-red-500'
+  if (dropdownItems[0].items['Volume Indicators'].includes(tag)) return 'bg-purple-500'
+  if (dropdownItems[0].items['Custom and Advanced Indicators'].includes(tag)) return 'bg-pink-800'
+  if (dropdownItems[0].items['Composite Indicators'].includes(tag)) return 'bg-[#611C35]'
+  if (dropdownItems[1].items['Economic Indicators'].includes(tag)) return 'bg-yellow-500'
+  if (dropdownItems[1].items['Company-Specific'].includes(tag)) return 'bg-orange-500'
+  if (dropdownItems[2].items['Market Structure'].includes(tag)) return 'bg-pink-500'
+  if (dropdownItems[3].items['Reversal Patterns'].includes(tag)) return 'bg-teal-500'
+  if (dropdownItems[3].items['Continuation Patterns'].includes(tag)) return 'bg-indigo-500'
+  if (dropdownItems[3].items['Exotic Patterns'].includes(tag)) return 'bg-violet-500'
+  if (dropdownItems[3].items['Candlestick Patterns'].includes(tag)) return 'bg-cyan-500'
+  if (dropdownItems[4].items['Advanced Concepts'].includes(tag)) return 'bg-green-500'
+  if (dropdownItems[5].items['Clear Entry Criteria'].includes(tag) ||
+      dropdownItems[5].items['Timeframe Alignment'].includes(tag) ||
+      dropdownItems[5].items['Risk-to-Reward Ratio'].includes(tag) ||
+      dropdownItems[5].items['Confirmation'].includes(tag) ||
+      dropdownItems[5].items['Breakout Rules'].includes(tag) ||
+      dropdownItems[5].items['Reversal Rules'].includes(tag) ||
+      dropdownItems[5].items['Stop-Loss Placement'].includes(tag) ||
+      dropdownItems[5].items['Profit Targeting'].includes(tag) ||
+      dropdownItems[5].items['Time-Based Exits'].includes(tag) ||
+      dropdownItems[5].items['Partial Profit-Taking'].includes(tag) ||
+      dropdownItems[5].items['Market Conditions'].includes(tag)) return 'bg-amber-500'
+  return 'bg-primary'
+}, [dropdownItems]);
 
   useEffect(() => {
     console.log('TradeSetupTemplate rendered');
@@ -328,6 +372,10 @@ export default function TradeSetupTemplate() {
 
       if (textareaRef.current.innerHTML !== setupText) {
         textareaRef.current.innerHTML = setupText;
+        // Add event listeners to the newly created spans
+        textareaRef.current.querySelectorAll('span[contenteditable="false"]').forEach(span => {
+          span.addEventListener('click', () => removeTag(span.textContent || ''));
+        });
 
         if (selection && range) {
           try {
@@ -346,23 +394,29 @@ export default function TradeSetupTemplate() {
 
   const handleItemClick = useCallback((item: string) => {
     if (textareaRef.current) {
-      const selection = window.getSelection()
-      const range = selection?.getRangeAt(0)
-      if (range) {
-        const tagColor = getTagColor(item)
-        const span = document.createElement('span')
-        span.className = `${tagColor} text-white px-1 rounded inline-block cursor-pointer`
-        span.textContent = item
-        span.contentEditable = 'false'
-        span.addEventListener('click', () => removeTag(item))
-        range.deleteContents()
-        range.insertNode(span)
-        range.collapse(false)
-        selection?.removeAllRanges()
-        selection?.addRange(range)
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+
+        const tagColor = getTagColor(item);
+        const span = document.createElement('span');
+        span.className = `${tagColor} text-white px-1 rounded inline-block cursor-pointer`;
+        span.textContent = item;
+        span.contentEditable = 'false';
+        span.addEventListener('click', () => removeTag(item));
+
+        range.insertNode(span);
+        range.collapse(false);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        setTags(prevTags => [...prevTags, item]);
+        setSetupText(textareaRef.current.innerHTML);
+
+        // Ensure focus is set back to the textarea
+        textareaRef.current.focus();
       }
-      setTags(prevTags => [...prevTags, item])
-      setSetupText(textareaRef.current.innerHTML)
     }
   }, [getTagColor]);
 
@@ -474,6 +528,60 @@ export default function TradeSetupTemplate() {
     }
   }, [newIndicatorCategory, newIndicatorSubCategory, newIndicatorName]);
 
+  useEffect(() => {
+    if (setupToEdit) {
+      setSetupName(setupToEdit.setup_name);
+      setSetupText(setupToEdit.setup_description || '');
+      setTags(setupToEdit.tags);
+    }
+  }, [setupToEdit]);
+
+  const handleSaveSetup = async () => {
+    if (!setupName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a setup name before saving.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Extract tags from the setupText
+    const extractedTags = setupText.match(/<span[^>]*>(.*?)<\/span>/g)?.map(span => {
+      const match = span.match(/>([^<]+)</);
+      return match ? match[1] : null;
+    }).filter((tag): tag is string => tag !== null) || [];
+
+    // Combine extracted tags with manually added tags
+    const allTags = Array.from(new Set([...tags, ...extractedTags]));
+
+    const setupData = {
+      id: setupToEdit?.id,
+      setup_name: setupName,
+      setup_description: setupText,
+      tags: allTags,
+    }
+
+    try {
+      const result = await saveSetup(setupData)
+      toast({
+        title: "Success",
+        description: result.message,
+      })
+      onSetupSaved()
+      // Clear the form after successful save
+      setSetupName('')
+      setSetupText('')
+      setTags([])
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save the trade setup. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -482,7 +590,7 @@ export default function TradeSetupTemplate() {
           placeholder="Setup name..."
           value={setupName}
           onChange={(e) => setSetupName(e.target.value)}
-          className="text-2xl font-bold"
+          className="text-2xl font-bold cursor-default"
         />
       </CardHeader>
       <CardContent>
@@ -644,11 +752,11 @@ export default function TradeSetupTemplate() {
             contentEditable
             suppressContentEditableWarning
             onInput={handleInput}
-            className={`min-h-[500px] text-sm pt-10 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap [&_span]:user-select-none ${fontFamily}`}
+            className={`cursor-default min-h-[500px] text-sm pt-10 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
             style={{ fontSize }}
           />
         </div>
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end mt-4 space-x-2">
           <Button
             onClick={() => {
               setSetupText('');
@@ -656,6 +764,43 @@ export default function TradeSetupTemplate() {
             }}
           >
             Reset Template
+          </Button>
+          <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                Add Template
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[80vh]">
+              <DialogHeader>
+                <DialogTitle>Add Template</DialogTitle>
+                <DialogDescription>Choose a template to add to your trade setup</DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="h-[60vh] pr-4">
+                {Object.entries(tradeSetupTemplates).map(([traderType, templates]) => (
+                  <div key={traderType} className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4">{traderType} Templates</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {templates.map((template, index) => (
+                        <Card key={`${traderType}-${index}`} className="p-4">
+                          <h4 className="font-medium mb-2">{template.name}</h4>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            {template.description}
+                          </p>
+                          <Button onClick={() => handleAddTemplate(traderType, index)}>
+                            Use Template
+                          </Button>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
+          <Button onClick={handleSaveSetup}>
+            <Save className="mr-2 h-4 w-4" />
+            Save Setup
           </Button>
         </div>
       </CardContent>

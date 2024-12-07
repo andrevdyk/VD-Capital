@@ -283,7 +283,7 @@ export function MarketTypesCard({ initialMarkets, onMarketChange }: MarketTypesC
   }
 
   return (
-    <Card className="w-full min-w-fit max-w-[300px] overflow-hidden">
+    <Card className="w-full min-w-fit max-w-[300px] overflow-hidden cursor-default">
       <CardContent className="p-2">
         <div className="text-muted-foreground pl-4">
           {selectedMarkets.length > 0 ? "Your Markets" : "Market Types Quiz"}
