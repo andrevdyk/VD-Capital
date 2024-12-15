@@ -40,6 +40,12 @@ import { saveSetup } from '../actions/save-setup'
 import { useToast } from "@/components/ui/use-toast"
 import { UserSetup } from '@/app/types/user';
 
+interface Strategy {
+  id: string
+  name: string
+  description: string
+  created_at: string
+}
 
 interface DropdownItem {
   category: string;
@@ -49,6 +55,7 @@ interface DropdownItem {
 interface TradeSetupTemplateProps {
   onSetupSaved: () => void;
   setupToEdit: UserSetup | null;
+  selectedStrategy: Strategy | null;
 }
 
 const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px']
@@ -59,7 +66,7 @@ const fontOptions = [
 ]
 
 
-export default function TradeSetupTemplate({ onSetupSaved, setupToEdit }: TradeSetupTemplateProps) {
+export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selectedStrategy }: TradeSetupTemplateProps) {
   const [setupName, setSetupName] = useState('')
   const [setupText, setSetupText] = useState('')
   const [tags, setTags] = useState<string[]>([])
@@ -546,6 +553,15 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit }: TradeS
       return
     }
 
+    if (!selectedStrategy) {
+      toast({
+        title: "Error",
+        description: "Please select a strategy before saving the setup.",
+        variant: "destructive",
+      })
+      return
+    }
+
     // Extract tags from the setupText
     const extractedTags = setupText.match(/<span[^>]*>(.*?)<\/span>/g)?.map(span => {
       const match = span.match(/>([^<]+)</);
@@ -560,6 +576,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit }: TradeS
       setup_name: setupName,
       setup_description: setupText,
       tags: allTags,
+      strategy_id: selectedStrategy.id,
     }
 
     try {
@@ -583,228 +600,232 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit }: TradeS
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <Input
-          type="text"
-          placeholder="Setup name..."
-          value={setupName}
-          onChange={(e) => setSetupName(e.target.value)}
-          className="text-2xl font-bold cursor-default"
-        />
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {dropdownItems.map((dropdown) => (
-            <DropdownMenu key={dropdown.category}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  {dropdown.category} <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 h-[50vh] overflow-y-auto ">
-                {Object.entries(dropdown.items).map(([subCategory, items], index) => (
-                  <React.Fragment key={subCategory}>
-                    {index > 0 && <DropdownMenuSeparator />}
-                    <DropdownMenuLabel>{subCategory}</DropdownMenuLabel>
-                    <DropdownMenuGroup>
-                      {items.map((item) => (
-                        <DropdownMenuItem key={item} onSelect={() => handleItemClick(item)}>
-                          {item}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuGroup>
-                  </React.Fragment>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ))}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="icon" className="ml-2">
-                <Plus className="h-4 w-4" />
+    <Card className="w-full h-[calc(100vh-5px)] max-h-[768px]">
+    <CardHeader>
+      <Input
+        type="text"
+        placeholder="Setup name..."
+        value={setupName}
+        onChange={(e) => setSetupName(e.target.value)}
+        className="text-2xl font-bold cursor-default"
+      />
+    </CardHeader>
+    <CardContent>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {dropdownItems.map((dropdown) => (
+          <DropdownMenu key={dropdown.category}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                {dropdown.category} <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Custom Indicator</DialogTitle>
-                <DialogDescription>Enter the details for your custom indicator.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="category" className="text-right">
-                    Category
-                  </Label>
-                  <Select
-                    value={newIndicatorCategory}
-                    onValueChange={setNewIndicatorCategory}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryOptions.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="subcategory" className="text-right">
-                    Subcategory
-                  </Label>
-                  <Select
-                    value={newIndicatorSubCategory}
-                    onValueChange={setNewIndicatorSubCategory}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select subcategory" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subcategoryOptions.map((subcategory) => (
-                        <SelectItem key={subcategory} value={subcategory}>
-                          {subcategory}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Indicator Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newIndicatorName}
-                    onChange={(e) => setNewIndicatorName(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56 h-[50vh] overflow-y-auto ">
+              {Object.entries(dropdown.items).map(([subCategory, items], index) => (
+                <React.Fragment key={subCategory}>
+                  {index > 0 && <DropdownMenuSeparator />}
+                  <DropdownMenuLabel>{subCategory}</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    {items.map((item) => (
+                      <DropdownMenuItem key={item} onSelect={() => handleItemClick(item)}>
+                        {item}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </React.Fragment>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ))}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="icon" className="ml-2">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Custom Indicator</DialogTitle>
+              <DialogDescription>Enter the details for your custom indicator.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">
+                  Category
+                </Label>
+                <Select
+                  value={newIndicatorCategory}
+                  onValueChange={setNewIndicatorCategory}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryOptions.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <DialogFooter>
-                <Button onClick={handleAddCustomIndicator}>Add Indicator</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="flex items-center space-x-2 mb-4">
-          <ToggleGroup type="multiple" variant="outline">
-            <ToggleGroupItem 
-              value="bold" 
-              aria-label="Toggle bold" 
-              onClick={() => applyTextFormatting('bold')}
-              data-state={isBold ? "on" : "off"}
-            >
-              <Bold className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem 
-              value="italic" 
-              aria-label="Toggle italic" 
-              onClick={() => applyTextFormatting('italic')}
-              data-state={isItalic ? "on" : "off"}
-            >
-              <Italic className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem 
-              value="underline" 
-              aria-label="Toggle underline" 
-              onClick={() => applyTextFormatting('underline')}
-              data-state={isUnderline ? "on" : "off"}
-            >
-              <Underline className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <Select value={fontFamily} onValueChange={(value) => {
-            setFontFamily(value);
-            if (textareaRef.current) {
-              textareaRef.current.className = textareaRef.current.className.replace(/font-(sans|serif|mono)/g, value);
-            }
-          }}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Font" />
-            </SelectTrigger>
-            <SelectContent>
-              {fontOptions.map((font) => (
-                <SelectItem key={font.value} value={font.value}>
-                  {font.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={fontSize} onValueChange={setFontSize}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Font size" />
-            </SelectTrigger>
-            <SelectContent>
-              {fontSizes.map((size) => (
-                <SelectItem key={size} value={size}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="relative">
-          <div
-            ref={textareaRef}
-            contentEditable
-            suppressContentEditableWarning
-            onInput={handleInput}
-            className={`cursor-default min-h-[500px] text-sm pt-10 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
-            style={{ fontSize }}
-          />
-        </div>
-        <div className="flex justify-end mt-4 space-x-2">
-          <Button
-            onClick={() => {
-              setSetupText('');
-              setTags([]);
-            }}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="subcategory" className="text-right">
+                  Subcategory
+                </Label>
+                <Select
+                  value={newIndicatorSubCategory}
+                  onValueChange={setNewIndicatorSubCategory}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subcategoryOptions.map((subcategory) => (
+                      <SelectItem key={subcategory} value={subcategory}>
+                        {subcategory}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Indicator Name
+                </Label>
+                <Input
+                  id="name"
+                  value={newIndicatorName}
+                  onChange={(e) => setNewIndicatorName(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleAddCustomIndicator}>Add Indicator</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <div className="flex items-center space-x-2 mb-4">
+        <ToggleGroup type="multiple" variant="outline">
+          <ToggleGroupItem 
+            value="bold" 
+            aria-label="Toggle bold" 
+            onClick={() => applyTextFormatting('bold')}
+            data-state={isBold ? "on" : "off"}
           >
-            Reset Template
-          </Button>
-          <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                Add Template
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh]">
-              <DialogHeader>
-                <DialogTitle>Add Template</DialogTitle>
-                <DialogDescription>Choose a template to add to your trade setup</DialogDescription>
-              </DialogHeader>
-              <ScrollArea className="h-[60vh] pr-4">
-                {Object.entries(tradeSetupTemplates).map(([traderType, templates]) => (
-                  <div key={traderType} className="mb-8">
-                    <h3 className="text-lg font-semibold mb-4">{traderType} Templates</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {templates.map((template, index) => (
-                        <Card key={`${traderType}-${index}`} className="p-4">
-                          <h4 className="font-medium mb-2">{template.name}</h4>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            {template.description}
-                          </p>
-                          <Button onClick={() => handleAddTemplate(traderType, index)}>
-                            Use Template
-                          </Button>
-                        </Card>
-                      ))}
-                    </div>
+            <Bold className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="italic" 
+            aria-label="Toggle italic" 
+            onClick={() => applyTextFormatting('italic')}
+            data-state={isItalic ? "on" : "off"}
+          >
+            <Italic className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="underline" 
+            aria-label="Toggle underline" 
+            onClick={() => applyTextFormatting('underline')}
+            data-state={isUnderline ? "on" : "off"}
+          >
+            <Underline className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
+        <Select value={fontFamily} onValueChange={(value) => {
+          setFontFamily(value);
+          if (textareaRef.current) {
+            textareaRef.current.className = textareaRef.current.className.replace(/font-(sans|serif|mono)/g, value);
+          }
+        }}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Font" />
+          </SelectTrigger>
+          <SelectContent>
+            {fontOptions.map((font) => (
+              <SelectItem key={font.value} value={font.value}>
+                {font.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={fontSize} onValueChange={setFontSize}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Font size" />
+          </SelectTrigger>
+          <SelectContent>
+            {fontSizes.map((size) => (
+              <SelectItem key={size} value={size}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="relative">
+        <div
+          ref={textareaRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={handleInput}
+          className={`cursor-default h-[500px] overflow-y-auto text-sm pt-10 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
+          style={{ 
+            fontSize,
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'
+          }}
+        />
+      </div>
+      <div className="flex justify-end mt-4 space-x-2">
+        <Button variant="outline"
+          onClick={() => {
+            setSetupText('');
+            setTags([]);
+          }}
+        >
+          Reset
+        </Button>
+        <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              Add Template
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Add Template</DialogTitle>
+              <DialogDescription>Choose a template to add to your trade setup</DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="h-[60vh] pr-4">
+              {Object.entries(tradeSetupTemplates).map(([traderType, templates]) => (
+                <div key={traderType} className="mb-8">
+                  <h3 className="text-lg font-semibold mb-4">{traderType} Templates</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {templates.map((template, index) => (
+                      <Card key={`${traderType}-${index}`} className="p-4">
+                        <h4 className="font-medium mb-2">{template.name}</h4>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {template.description}
+                        </p>
+                        <Button variant="outline" onClick={() => handleAddTemplate(traderType, index)}>
+                          Use Template
+                        </Button>
+                      </Card>
+                    ))}
                   </div>
-                ))}
-              </ScrollArea>
-            </DialogContent>
-          </Dialog>
-          <Button onClick={handleSaveSetup}>
-            <Save className="mr-2 h-4 w-4" />
-            Save Setup
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+                </div>
+              ))}
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+        <Button variant="outline" onClick={handleSaveSetup}>
+          <Save className="mr-2 h-4 w-4" />
+          Save Setup
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
   )
 }
 

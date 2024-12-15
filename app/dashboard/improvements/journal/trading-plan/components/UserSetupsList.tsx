@@ -1,6 +1,5 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from 'lucide-react'
@@ -17,21 +16,16 @@ import {
 } from "@/components/ui/alert-dialog"
 import { deleteSetup } from '../actions/save-setup'
 import { useToast } from "@/components/ui/use-toast"
-
-interface UserSetup {
-  id: string
-  setup_name: string
-  tags: string[]
-  created_at: string
-}
+import { UserSetup } from '@/app/types/user'
 
 interface UserSetupsListProps {
-  setups: UserSetup[];
-  onUpdate: () => void;
-  onEdit: (setupId: string) => void;
+  setups: UserSetup[]
+  onUpdate: () => void
+  onEdit: (setupId: string) => void
+  selectedStrategyId: string | null
 }
 
-export function UserSetupsList({ setups, onUpdate, onEdit }: UserSetupsListProps) {
+const UserSetupsList: React.FC<UserSetupsListProps> = ({ setups, onUpdate, onEdit, selectedStrategyId }) => {
   const { toast } = useToast()
 
   const getTagColor = (tag: string): string => {
@@ -70,28 +64,34 @@ export function UserSetupsList({ setups, onUpdate, onEdit }: UserSetupsListProps
     }
   }
 
+  const filteredSetups = selectedStrategyId
+    ? setups.filter(setup => setup.strategy_id === selectedStrategyId)
+    : setups
+
   return (
-    <Card className="w-full mt-6">
+    <Card className="w-full h-full flex flex-col">
       <CardHeader>
         <CardTitle>Your Trade Setups</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-          {setups.length === 0 ? (
-            <p>No setups found. Create your first setup!</p>
+      <CardContent className="flex-grow overflow-hidden">
+        <div className="h-full overflow-y-auto pr-2">
+          {filteredSetups.length === 0 ? (
+            <p>No setups found for the selected strategy. Create your first setup!</p>
           ) : (
-            setups.map((setup) => (
+            filteredSetups.map((setup) => (
               <div key={setup.id} className="mb-4 p-4 border rounded-lg">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-lg font-semibold">{setup.setup_name}</h3>
                   <div className="flex space-x-2">
                     <Button variant="outline" size="sm" onClick={() => onEdit(setup.id)}>
                       <Edit className="h-4 w-4" />
+                      <span className="sr-only">Edit setup</span>
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" size="sm">
                           <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete setup</span>
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -125,9 +125,11 @@ export function UserSetupsList({ setups, onUpdate, onEdit }: UserSetupsListProps
               </div>
             ))
           )}
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   )
 }
+
+export default UserSetupsList
 

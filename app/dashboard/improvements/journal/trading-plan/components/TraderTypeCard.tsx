@@ -126,7 +126,7 @@ const traderTypeInfo: Record<string, TraderTypeInfo> = {
     ],
   },
   'Position Trader/Investor': {
-    title: 'Position Trader/Investor',
+    title: 'Position Trader',
     description: 'Position traders and investors hold positions for months to years, focusing on long-term value and trends.',
     characteristics: [
       'Long-term trading style',

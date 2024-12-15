@@ -18,5 +18,21 @@ WACC - Weighted average cost of capital.
 
 Farmers sentiment - get it from twitter or something
 
-currency strength chart
-trading journal
+Currency strength chart
+trading journal/trading plan
+ - Create Strategie (A Strategy may consist of multiple setups or 1 setup, and contains risk management and risk to reward)
+ - Week Plan Ahead on the dashboard page. Specific news events related to users interests. 
+ - Favourite Markets
+ - Allow users to create custom alerts and use pre made alerts. "No trading at x hours" 
+ - allow users to create mistakes 
+ - Adherence to your Plan
+ - What times to avoid
+ - What times to trade usually
+ - allow users to create 'mistakes' here
+
+trading journal/Testing page
+ - create mistakes along the testing
+ - Strategy issues
+ - Backtester 
+
+Become a mentor program. Need proven results for at least a year. 
