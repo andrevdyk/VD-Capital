@@ -6,7 +6,6 @@ import { AddTradesButton } from "../components/add-trades-button"
 import { JournalNavigation } from "../components/journal-navigation"
 import { TradeSetupTemplateSkeleton } from "./components/TradeSetupTemplateSkeleton"
 const TradeSetupTemplate = lazy(() => import("./components/TradeSetupTemplate"))
-import { RiskStrategiesPanel } from "./components/RiskStrategiesPanel"
 import { UserSetupsListSkeleton } from "./components/UserSetupsListSkeleton"
 const UserSetupsList = lazy(() => import("./components/UserSetupsList"))
 import { getUserSetups, getSetupById } from './actions/save-setup'
