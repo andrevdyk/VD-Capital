@@ -46,7 +46,7 @@ interface RiskStrategy {
   };
 }
 
-interface RiskPercentageCardProps {
+interface RiskStrategiesPanelProps {
   initialStrategies?: RiskStrategy[] | null;
   onStrategiesChange?: (strategies: RiskStrategy[]) => void;
   className?: string;
@@ -164,9 +164,10 @@ const predefinedStrategies: RiskStrategy[] = [
   },
 ]
 
-export function RiskPercentageCard({ initialStrategies, onStrategiesChange, className }: RiskPercentageCardProps) {
+export function RiskStrategiesPanel({ initialStrategies, onStrategiesChange, className }: RiskStrategiesPanelProps) {
   const [riskStrategies, setRiskStrategies] = useState<RiskStrategy[]>(initialStrategies || [])
   const [selectedStrategy, setSelectedStrategy] = useState<RiskStrategy | null>(null)
+  const [selectedStrategies, setSelectedStrategies] = useState<RiskStrategy[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -183,19 +184,15 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
             selected: Boolean(strategy.selected)
           })) as RiskStrategy[];
           setRiskStrategies(updatedStrategies)
-          setSelectedStrategy(updatedStrategies[0])
+          setSelectedStrategies(updatedStrategies.filter(s => s.selected))
           onStrategiesChange && onStrategiesChange(updatedStrategies)
         } else {
           console.log('No strategies fetched, using predefined strategies')
           setRiskStrategies(predefinedStrategies)
-          setSelectedStrategy(predefinedStrategies[0])
-          onStrategiesChange && onStrategiesChange(predefinedStrategies)
         }
       } catch (error) {
         console.error('Error fetching user risk strategies:', error)
         setRiskStrategies(predefinedStrategies)
-        setSelectedStrategy(predefinedStrategies[0])
-        onStrategiesChange && onStrategiesChange(predefinedStrategies)
       } finally {
         setIsLoading(false)
       }
@@ -209,7 +206,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
         selected: Boolean(strategy.selected)
       })) as RiskStrategy[];
       setRiskStrategies(updatedStrategies)
-      setSelectedStrategy(updatedStrategies[0] || null)
+      setSelectedStrategies(updatedStrategies.filter(s => s.selected))
       setIsLoading(false)
     }
   }, [initialStrategies, onStrategiesChange])
@@ -219,6 +216,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
     try {
       const result = await submitRiskStrategy(riskStrategies)
       setRiskStrategies(result)
+      setSelectedStrategies(result.filter(s => s.selected))
       if (onStrategiesChange) {
         onStrategiesChange(result)
       }
@@ -293,6 +291,21 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
             }
           : null
       )
+    }
+    
+    // Update selectedStrategies when a strategy is selected or deselected
+    if (field === 'selected') {
+      setSelectedStrategies(prevSelected => {
+        const strategy = riskStrategies.find(s => s.name === name)
+        if (strategy) {
+          if (value) {
+            return [...prevSelected, { ...strategy, selected: true }]
+          } else {
+            return prevSelected.filter(s => s.name !== name)
+          }
+        }
+        return prevSelected
+      })
     }
   }
 
@@ -662,46 +675,17 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
   }
 
   if (isLoading) {
-    return (
-      <Card className="w-full min-w-fit max-w-[300px] overflow-hidden">
-        <CardContent className="p-2">
-          <div className="pl-4">
-            <Skeleton className="h-4 w-24 mb-2" />
-          </div>
-          <div className="pl-4 pt-1 pr-4">
-            <Skeleton className="h-8 w-40 mb-2" />
-          </div>
-          <div className="pl-4">
-            <Skeleton className="h-8 w-28" />
-          </div>
-        </CardContent>
-      </Card>
-    )
+    return <Skeleton className="h-full w-64" />
   }
 
-  const selectedStrategiesCount = riskStrategies.filter(strategy => strategy.selected).length
-
   return (
-    <Card className={className}>
-      <CardContent className="p-2">
-        <div className="text-muted-foreground pl-4">
-          Risk Strategies
-        </div>
-        <div className="text-3xl font-semibold text-left pl-4 pt-1 pr-4">
-          {selectedStrategiesCount > 0 ? `${selectedStrategiesCount} Selected` : "Not Set"}
-        </div>
-        {selectedStrategy && (
-          <div className="text-sm text-muted-foreground pl-4">
-            Active: {selectedStrategy.name}
-          </div>
-        )}
+    <div className={`w-64 border-l ${className}`}>
+      <div className="p-4 border-b">
+        <h2 className="text-lg font-semibold mb-4">Risk Strategies</h2>
         <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
           <DrawerTrigger asChild>
-            <Button
-              variant="ghost"
-              className="text-muted-foreground text-left pl-4"
-            >
-              {riskStrategies.length > 0 ? "Update" : "Set Strategies"}
+            <Button className="w-full">
+              <Plus className="mr-2 h-4 w-4" /> Add Strategy
             </Button>
           </DrawerTrigger>
           <DrawerContent className="h-screen max-h-screen">
@@ -770,8 +754,20 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
             </div>
           </DrawerContent>
         </Drawer>
-      </CardContent>
-    </Card>
+      </div>
+      <ScrollArea className="h-[calc(100vh-10rem)]">
+        <div className="p-4 space-y-4">
+          {selectedStrategies.map((strategy) => (
+            <Card key={strategy.name}>
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold">{strategy.name}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
   )
 }
 

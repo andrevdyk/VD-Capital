@@ -1,6 +1,4 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -24,33 +22,8 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { X, Plus, Trash2 } from 'lucide-react'
-import { submitRiskStrategy, getUserRiskStrategy } from '../actions/risk-management'
-import { useToast } from "@/components/ui/use-toast"
-import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
-
-interface RiskRewardRatio {
-  riskToReward: number;
-  riskPercentage: number;
-}
-
-interface RiskStrategy {
-  name: string;
-  type: string;
-  value: number;
-  description: string;
-  example: string;
-  selected: boolean;
-  additionalParams?: {
-    [key: string]: number | string | boolean | RiskRewardRatio[];
-  };
-}
-
-interface RiskPercentageCardProps {
-  initialStrategies?: RiskStrategy[] | null;
-  onStrategiesChange?: (strategies: RiskStrategy[]) => void;
-  className?: string;
-}
+import { RiskStrategy } from '@/app/types/user'
 
 const predefinedStrategies: RiskStrategy[] = [
   {
@@ -164,80 +137,14 @@ const predefinedStrategies: RiskStrategy[] = [
   },
 ]
 
-export function RiskPercentageCard({ initialStrategies, onStrategiesChange, className }: RiskPercentageCardProps) {
-  const [riskStrategies, setRiskStrategies] = useState<RiskStrategy[]>(initialStrategies || [])
-  const [selectedStrategy, setSelectedStrategy] = useState<RiskStrategy | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+interface AddRiskStrategyProps {
+  onStrategySelect: (strategy: RiskStrategy) => void;
+}
+
+export function AddRiskStrategy({ onStrategySelect }: AddRiskStrategyProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const { toast } = useToast()
-
-  useEffect(() => {
-    const fetchRiskStrategies = async () => {
-      try {
-        const fetchedStrategies = await getUserRiskStrategy()
-        console.log('Fetched strategies:', fetchedStrategies)
-        if (fetchedStrategies && fetchedStrategies.length > 0) {
-          const updatedStrategies = fetchedStrategies.map(strategy => ({
-            ...strategy,
-            selected: Boolean(strategy.selected)
-          })) as RiskStrategy[];
-          setRiskStrategies(updatedStrategies)
-          setSelectedStrategy(updatedStrategies[0])
-          onStrategiesChange && onStrategiesChange(updatedStrategies)
-        } else {
-          console.log('No strategies fetched, using predefined strategies')
-          setRiskStrategies(predefinedStrategies)
-          setSelectedStrategy(predefinedStrategies[0])
-          onStrategiesChange && onStrategiesChange(predefinedStrategies)
-        }
-      } catch (error) {
-        console.error('Error fetching user risk strategies:', error)
-        setRiskStrategies(predefinedStrategies)
-        setSelectedStrategy(predefinedStrategies[0])
-        onStrategiesChange && onStrategiesChange(predefinedStrategies)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (!initialStrategies || initialStrategies.length === 0) {
-      fetchRiskStrategies()
-    } else {
-      const updatedStrategies = initialStrategies.map(strategy => ({
-        ...strategy,
-        selected: Boolean(strategy.selected)
-      })) as RiskStrategy[];
-      setRiskStrategies(updatedStrategies)
-      setSelectedStrategy(updatedStrategies[0] || null)
-      setIsLoading(false)
-    }
-  }, [initialStrategies, onStrategiesChange])
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true)
-    try {
-      const result = await submitRiskStrategy(riskStrategies)
-      setRiskStrategies(result)
-      if (onStrategiesChange) {
-        onStrategiesChange(result)
-      }
-      toast({
-        title: "Risk Strategies updated",
-        description: "Your risk strategies have been successfully updated.",
-      })
-      setIsDrawerOpen(false)
-    } catch (error) {
-      console.error('Error submitting risk strategies:', error)
-      toast({
-        title: "Failed to update Risk Strategies",
-        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  const [riskStrategies, setRiskStrategies] = useState<RiskStrategy[]>(predefinedStrategies)
+  const [selectedStrategy, setSelectedStrategy] = useState<RiskStrategy | null>(null)
 
   const handleStrategyChange = (name: string, field: string, value: string | number | boolean) => {
     setRiskStrategies(prevStrategies =>
@@ -304,7 +211,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
               ...strategy,
               additionalParams: {
                 ...strategy.additionalParams,
-                ratios: (strategy.additionalParams?.ratios as RiskRewardRatio[]).map((item, i) =>
+                ratios: (strategy.additionalParams?.ratios as { riskToReward: number; riskPercentage: number }[]).map((item, i) =>
                   i === index ? { ...item, [field]: parseFloat(value) || 0 } : item
                 )
               }
@@ -319,7 +226,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
               ...prevStrategy,
               additionalParams: {
                 ...prevStrategy.additionalParams,
-                ratios: (prevStrategy.additionalParams?.ratios as RiskRewardRatio[]).map((item, i) =>
+                ratios: (prevStrategy.additionalParams?.ratios as { riskToReward: number; riskPercentage: number }[]).map((item, i) =>
                   i === index ? { ...item, [field]: parseFloat(value) || 0 } : item
                 )
               }
@@ -337,7 +244,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
               ...strategy,
               additionalParams: {
                 ...strategy.additionalParams,
-                ratios: [...(strategy.additionalParams?.ratios as RiskRewardRatio[]), { riskToReward: 2, riskPercentage: 1 }]
+                ratios: [...(strategy.additionalParams?.ratios as { riskToReward: number; riskPercentage: number }[]), { riskToReward: 2, riskPercentage: 1 }]
               }
             }
           : strategy
@@ -350,7 +257,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
               ...prevStrategy,
               additionalParams: {
                 ...prevStrategy.additionalParams,
-                ratios: [...(prevStrategy.additionalParams?.ratios as RiskRewardRatio[]), { riskToReward: 2, riskPercentage: 1 }]
+                ratios: [...(prevStrategy.additionalParams?.ratios as { riskToReward: number; riskPercentage: number }[]), { riskToReward: 2, riskPercentage: 1 }]
               }
             }
           : null
@@ -366,7 +273,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
               ...strategy,
               additionalParams: {
                 ...strategy.additionalParams,
-                ratios: (strategy.additionalParams?.ratios as RiskRewardRatio[]).filter((_, i) => i !== index)
+                ratios: (strategy.additionalParams?.ratios as { riskToReward: number; riskPercentage: number }[]).filter((_, i) => i !== index)
               }
             }
           : strategy
@@ -379,7 +286,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
               ...prevStrategy,
               additionalParams: {
                 ...prevStrategy.additionalParams,
-                ratios: (prevStrategy.additionalParams?.ratios as RiskRewardRatio[]).filter((_, i) => i !== index)
+                ratios: (prevStrategy.additionalParams?.ratios as { riskToReward: number; riskPercentage: number }[]).filter((_, i) => i !== index)
               }
             }
           : null
@@ -515,7 +422,7 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
       case 'riskReward':
         return (
           <>
-            {(strategy.additionalParams?.ratios as RiskRewardRatio[])?.map((ratio, index) => (
+            {(strategy.additionalParams?.ratios as { riskToReward: number; riskPercentage: number }[])?.map((ratio, index) => (
               <div key={index} className="flex items-center space-x-4 mt-2">
                 <Label htmlFor={`${strategy.name}-ratio-${index}`} className="text-lg">Risk to Reward:</Label>
                 <span className="text-lg">1:</span>
@@ -661,117 +568,80 @@ export function RiskPercentageCard({ initialStrategies, onStrategiesChange, clas
     }
   }
 
-  if (isLoading) {
-    return (
-      <Card className="w-full min-w-fit max-w-[300px] overflow-hidden">
-        <CardContent className="p-2">
-          <div className="pl-4">
-            <Skeleton className="h-4 w-24 mb-2" />
-          </div>
-          <div className="pl-4 pt-1 pr-4">
-            <Skeleton className="h-8 w-40 mb-2" />
-          </div>
-          <div className="pl-4">
-            <Skeleton className="h-8 w-28" />
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const selectedStrategiesCount = riskStrategies.filter(strategy => strategy.selected).length
+  const handleSaveChanges = () => {
+    if (selectedStrategy) {
+      onStrategySelect(selectedStrategy);
+      setIsDrawerOpen(false);
+    }
+  };
 
   return (
-    <Card className={className}>
-      <CardContent className="p-2">
-        <div className="text-muted-foreground pl-4">
-          Risk Strategies
-        </div>
-        <div className="text-3xl font-semibold text-left pl-4 pt-1 pr-4">
-          {selectedStrategiesCount > 0 ? `${selectedStrategiesCount} Selected` : "Not Set"}
-        </div>
-        {selectedStrategy && (
-          <div className="text-sm text-muted-foreground pl-4">
-            Active: {selectedStrategy.name}
-          </div>
-        )}
-        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-          <DrawerTrigger asChild>
-            <Button
-              variant="ghost"
-              className="text-muted-foreground text-left pl-4"
-            >
-              {riskStrategies.length > 0 ? "Update" : "Set Strategies"}
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent className="h-screen max-h-screen">
-            <div className="mx-auto w-full h-full flex flex-col">
-              <DrawerHeader className="relative">
-                <DrawerClose asChild>
-                  <X
-                    className="absolute top-2 right-2 cursor-pointer"
-                    size={24}
-                  />
-                </DrawerClose>
-                <DrawerTitle>
-                  Set Risk Strategies
-                </DrawerTitle>
-                <DrawerDescription>
-                  Choose or create your preferred risk strategies for trading
-                </DrawerDescription>
-              </DrawerHeader>
-              <div className="flex-1 overflow-hidden">
-                <div className="flex h-full">
-                  <ScrollArea className="w-2/5 border-r p-4">
-                    {riskStrategies.map((strategy) => (
-                      <Card
-                        key={strategy.name}
-                        className={`mb-4 cursor-pointer ${selectedStrategy?.name === strategy.name ? 'bg-primary text-primary-foreground' : ''}`}
-                        onClick={() => setSelectedStrategy(strategy)}
-                      >
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div>
-                            <h3 className="text-xl font-semibold mb-2">{strategy.name}</h3>
-                            <p className="text-sm">{strategy.description}</p>
-                          </div>
-                          <Checkbox
-                            checked={strategy.selected}
-                            onCheckedChange={(checked) => handleStrategyChange(strategy.name, 'selected', checked)}
-                          />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </ScrollArea>
-                  <div className="flex-1 p-4 overflow-y-auto">
-                    {selectedStrategy && (
-                      <div className="space-y-6">
-                        <h2 className="text-3xl font-bold">{selectedStrategy.name}</h2>
-                        <p className="text-lg">{selectedStrategy.description}</p>
-                        <div>
-                          <h3 className="text-2xl font-semibold mb-2">Example:</h3>
-                          <p className="text-lg">{selectedStrategy.example}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-2xl font-semibold mb-4">Configuration:</h3>
-                          <div className="space-y-4">
-                            {renderStrategyConfig(selectedStrategy)}
-                          </div>
+    <>
+      <Button variant="outline" onClick={() => setIsDrawerOpen(true)}>
+        Add Risk Strategy
+      </Button>
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent className="h-screen max-h-screen">
+          <div className="mx-auto w-full h-full flex flex-col">
+            <DrawerHeader className="relative">
+              <DrawerClose asChild>
+                <X
+                  className="absolute top-2 right-2 cursor-pointer"
+                  size={24}
+                />
+              </DrawerClose>
+              <DrawerTitle>
+                Add Risk Strategy
+              </DrawerTitle>
+              <DrawerDescription>
+                Choose or create your preferred risk strategy for trading
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="flex-1 overflow-hidden">
+              <div className="flex h-full">
+                <ScrollArea className="w-2/5 border-r p-4">
+                  {riskStrategies.map((strategy) => (
+                    <Card
+                      key={strategy.name}
+                      className={`mb-4 cursor-pointer ${selectedStrategy?.name === strategy.name ? 'bg-primary text-primary-foreground' : ''}`}
+                      onClick={() => setSelectedStrategy(strategy)}
+                    >
+                      <CardContent className="p-4">
+                        <h3 className="text-xl font-semibold mb-2">{strategy.name}</h3>
+                        <p className="text-sm">{strategy.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </ScrollArea>
+                <div className="flex-1 p-4 overflow-y-auto">
+                  {selectedStrategy && (
+                    <div className="space-y-6">
+                      <h2 className="text-3xl font-bold">{selectedStrategy.name}</h2>
+                      <p className="text-lg">{selectedStrategy.description}</p>
+                      <div>
+                        <h3 className="text-2xl font-semibold mb-2">Example:</h3>
+                        <p className="text-lg">{selectedStrategy.example}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-semibold mb-4">Configuration:</h3>
+                        <div className="space-y-4">
+                          {renderStrategyConfig(selectedStrategy)}
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
-              <DrawerFooter className="py-6">
-                <Button onClick={handleSubmit} disabled={isSubmitting} className="text-lg">
-                  {isSubmitting ? 'Updating...' : 'Update Risk Strategies'}
-                </Button>
-              </DrawerFooter>
             </div>
-          </DrawerContent>
-        </Drawer>
-      </CardContent>
-    </Card>
+            <DrawerFooter className="py-6">
+              <Button onClick={handleSaveChanges} className="text-lg">
+                Save Changes
+              </Button>
+            </DrawerFooter>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
   )
 }
 

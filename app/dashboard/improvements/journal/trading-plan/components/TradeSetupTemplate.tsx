@@ -38,7 +38,8 @@ import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { saveSetup } from '../actions/save-setup'
 import { useToast } from "@/components/ui/use-toast"
-import { UserSetup } from '@/app/types/user';
+import { UserSetup, RiskStrategy } from '@/app/types/user';
+import { AddRiskStrategy } from './AddRiskStrategy'
 
 interface Strategy {
   id: string
@@ -56,6 +57,7 @@ interface TradeSetupTemplateProps {
   onSetupSaved: () => void;
   setupToEdit: UserSetup | null;
   selectedStrategy: Strategy | null;
+  riskStrategies?: never;
 }
 
 const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px']
@@ -67,6 +69,7 @@ const fontOptions = [
 
 
 export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selectedStrategy }: TradeSetupTemplateProps) {
+  console.log('riskStrategies prop:', undefined);
   const [setupName, setSetupName] = useState('')
   const [setupText, setSetupText] = useState('')
   const [tags, setTags] = useState<string[]>([])
@@ -309,6 +312,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
 
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState<boolean>(false);
   const { toast } = useToast()
+  const [selectedRiskStrategy, setSelectedRiskStrategy] = useState<RiskStrategy | null>(null);
 
   const handleAddTemplate = (traderType: string, templateIndex: number) => {
     const template = tradeSetupTemplates[traderType as keyof typeof tradeSetupTemplates][templateIndex];
@@ -462,7 +466,10 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
 
   const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML;
-    setSetupText(content);
+    const riskStrategyDiv = content.match(/<div class="mb-4 p-2 bg-muted rounded-md" contenteditable="false">[\s\S]*?<\/div>/);
+    const riskStrategyContent = riskStrategyDiv ? riskStrategyDiv[0] : '';
+    const userContent = content.replace(riskStrategyContent, '').trim();
+    setSetupText(userContent);
     e.currentTarget.className = e.currentTarget.className.replace(/font-(sans|serif|mono)/g, fontFamily);
   }, [fontFamily]);
 
@@ -543,6 +550,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
     }
   }, [setupToEdit]);
 
+
   const handleSaveSetup = async () => {
     if (!setupName.trim()) {
       toast({
@@ -577,6 +585,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
       setup_description: setupText,
       tags: allTags,
       strategy_id: selectedStrategy.id,
+      risk_strategy: selectedRiskStrategy ? JSON.stringify(selectedRiskStrategy) : null,
     }
 
     try {
@@ -590,6 +599,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
       setSetupName('')
       setSetupText('')
       setTags([])
+      setSelectedRiskStrategy(null)
     } catch (error) {
       toast({
         title: "Error",
@@ -764,31 +774,93 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
         </Select>
       </div>
       <div className="relative">
+        <div className="absolute top-2 right-2">
+          <AddRiskStrategy
+            onStrategySelect={(strategy) => {
+              setSelectedRiskStrategy(strategy);
+            }}
+          />
+        </div>
         <div
           ref={textareaRef}
           contentEditable
           suppressContentEditableWarning
           onInput={handleInput}
-          className={`cursor-default h-[500px] overflow-y-auto text-sm pt-10 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
+          className={`cursor-default h-[500px] overflow-y-auto text-sm p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
           style={{ 
             fontSize,
             scrollbarWidth: 'thin',
             scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'
           }}
-        />
+        >
+          {selectedRiskStrategy && (
+            <div className="mb-4 p-2 bg-muted rounded-md" contentEditable={false}>
+              <p className="font-semibold">{selectedRiskStrategy.name}</p>
+              {selectedRiskStrategy.type === 'percentage' && selectedRiskStrategy.name === 'Fixed Risk Percentage' && (
+                <p>Risk: {selectedRiskStrategy.value}%</p>
+              )}
+              {selectedRiskStrategy.type === 'dynamic' && (
+                <p>Risk: {selectedRiskStrategy.value}%<br />Increment: {selectedRiskStrategy.additionalParams?.incrementRisk?.toString()}%</p>
+              )}
+              {selectedRiskStrategy.type === 'fixed' && (
+                <p>Risk: {selectedRiskStrategy.value} USD</p>
+              )}
+              {selectedRiskStrategy.type === 'volatility' && (
+                <p>Multiplier: {selectedRiskStrategy.additionalParams?.multiplier?.toString()}x   {selectedRiskStrategy.additionalParams?.indicator?.toString()}   Risk: {selectedRiskStrategy.value}%</p>
+              )}
+              {selectedRiskStrategy.type === 'percentage' && selectedRiskStrategy.name === 'Equity-Based Risk' && (
+                <p>Risk: {selectedRiskStrategy.value}%</p>
+              )}
+              {selectedRiskStrategy.type === 'maxRisk' && selectedRiskStrategy.additionalParams?.period && (
+                <p>Risk: {selectedRiskStrategy.value}%</p>
+              )}
+              {selectedRiskStrategy.type === 'tiered' && (
+                <p>Low Confidence: {selectedRiskStrategy.additionalParams?.lowConfidence?.toString()}%<br />
+                 Medium Confidence: {selectedRiskStrategy.additionalParams?.mediumConfidence?.toString()}%<br />
+                 High Confidence: {selectedRiskStrategy.additionalParams?.highConfidence?.toString()}%</p>
+              )}
+              {selectedRiskStrategy.type === 'timeBased' && (
+                <p>Scalp: {selectedRiskStrategy.additionalParams?.scalpRisk?.toString()}%<br />
+                 Intraday: {selectedRiskStrategy.additionalParams?.intradayRisk?.toString()}%<br />
+                 Swing: {selectedRiskStrategy.additionalParams?.swingRisk?.toString()}%</p>
+              )}
+              {selectedRiskStrategy.type === 'scaling' && (
+                <p>Initial: {selectedRiskStrategy.additionalParams?.initialRisk?.toString()}%<br />
+                 Scale In: {selectedRiskStrategy.additionalParams?.scaleInTime?.toString()}% Completion<br />
+                 Max: {selectedRiskStrategy.additionalParams?.maxTotalRisk?.toString()}%</p>
+              )}
+              {selectedRiskStrategy.type === 'riskReward' && (
+                <div>
+                  <p>Risk Reward-Based Adjustments</p>
+                  {selectedRiskStrategy.additionalParams?.ratios && Array.isArray(selectedRiskStrategy.additionalParams.ratios) && (
+                    <ul>
+                      {selectedRiskStrategy.additionalParams.ratios.map((ratio, index) => (
+                        <li key={index}>
+                          {ratio.riskToReward.toString()}:1 at {ratio.riskPercentage.toString()}%
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {setupText}
+        </div>
       </div>
       <div className="flex justify-end mt-4 space-x-2">
-        <Button variant="outline"
+        <Button
           onClick={() => {
             setSetupText('');
             setTags([]);
+            setSelectedRiskStrategy(null);
           }}
         >
-          Reset
+          Reset Template
         </Button>
         <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline">
+            <Button>
               Add Template
             </Button>
           </DialogTrigger>
@@ -808,7 +880,8 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
                         <p className="text-sm text-muted-foreground mb-4">
                           {template.description}
                         </p>
-                        <Button variant="outline" onClick={() => handleAddTemplate(traderType, index)}>
+                        <Button onClick={() => handleAddTemplate(traderType, index)}
+                        >
                           Use Template
                         </Button>
                       </Card>
@@ -819,7 +892,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
             </ScrollArea>
           </DialogContent>
         </Dialog>
-        <Button variant="outline" onClick={handleSaveSetup}>
+        <Button onClick={handleSaveSetup}>
           <Save className="mr-2 h-4 w-4" />
           Save Setup
         </Button>

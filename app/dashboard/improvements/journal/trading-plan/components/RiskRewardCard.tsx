@@ -16,7 +16,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { X } from 'lucide-react'
-import { submitRiskRewardStrategy, getUserRiskRewardStrategy } from '../actions/risk-management'
+import { submitRiskStrategy, getUserRiskStrategy } from '../actions/risk-management'
 import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 
 interface RiskRewardStrategy {
   name: string;
@@ -36,11 +37,13 @@ interface RiskRewardStrategy {
   example: string;
   ratio?: number;
   additionalParams?: Record<string, number>;
+  selected?: boolean; // Added to handle selected strategy from backend
 }
 
 interface RiskRewardCardProps {
   initialStrategy?: RiskRewardStrategy | null;
   onStrategyChange: (strategy: RiskRewardStrategy | null) => void;
+  className?: string;
 }
 
 const predefinedStrategies: RiskRewardStrategy[] = [
@@ -242,7 +245,7 @@ const calculateScenarioResults = (strategy: RiskRewardStrategy, wins: number) =>
   return results;
 };
 
-export function RiskRewardCard({ initialStrategy, onStrategyChange }: RiskRewardCardProps) {
+export function RiskRewardCard({ initialStrategy, onStrategyChange, className }: RiskRewardCardProps) {
   const [selectedStrategy, setSelectedStrategy] = useState<RiskRewardStrategy | null>(initialStrategy || null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -252,11 +255,19 @@ export function RiskRewardCard({ initialStrategy, onStrategyChange }: RiskReward
   useEffect(() => {
     const fetchRiskRewardStrategy = async () => {
       try {
-        const fetchedStrategy = await getUserRiskRewardStrategy()
-        setSelectedStrategy(fetchedStrategy)
-        onStrategyChange(fetchedStrategy)
+        const fetchedStrategies = await getUserRiskStrategy()
+        if (fetchedStrategies && fetchedStrategies.length > 0) {
+          const selectedStrategy = fetchedStrategies.find(strategy => strategy.selected) || fetchedStrategies[0]
+          setSelectedStrategy(selectedStrategy)
+          onStrategyChange(selectedStrategy)
+        }
       } catch (error) {
         console.error('Error fetching user risk-reward strategy:', error)
+        toast({
+          title: "Failed to fetch Risk-Reward Strategy",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        })
       } finally {
         setIsLoading(false)
       }
@@ -273,14 +284,16 @@ export function RiskRewardCard({ initialStrategy, onStrategyChange }: RiskReward
   const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
-      const result = await submitRiskRewardStrategy(selectedStrategy)
-      setSelectedStrategy(result)
-      onStrategyChange(result)
-      toast({
-        title: "Risk-Reward Strategy updated",
-        description: "Your risk-reward strategy has been successfully updated.",
-      })
-      setIsDrawerOpen(false)
+      if (selectedStrategy) {
+        const result = await submitRiskStrategy([selectedStrategy])
+        setSelectedStrategy(result[0])
+        onStrategyChange(result[0])
+        toast({
+          title: "Risk-Reward Strategy updated",
+          description: "Your risk-reward strategy has been successfully updated.",
+        })
+        setIsDrawerOpen(false)
+      }
     } catch (error) {
       console.error('Error submitting risk-reward strategy:', error)
       toast({
@@ -332,7 +345,7 @@ export function RiskRewardCard({ initialStrategy, onStrategyChange }: RiskReward
   }
 
   return (
-    <Card className="w-full min-w-fit max-w-[300px] overflow-hidden">
+    <Card className={cn("w-full min-w-fit max-w-[300px] overflow-hidden", className)}>
       <CardContent className="p-2">
         <div className="text-muted-foreground pl-4">
           Risk-Reward Strategy
@@ -350,6 +363,7 @@ export function RiskRewardCard({ initialStrategy, onStrategyChange }: RiskReward
             <Button
               variant="ghost"
               className="text-muted-foreground text-left pl-4"
+              aria-label={selectedStrategy ? "Update Risk-Reward Strategy" : "Set Risk-Reward Strategy"}
             >
               {selectedStrategy ? "Update" : "Set Strategy"}
             </Button>
@@ -403,7 +417,7 @@ export function RiskRewardCard({ initialStrategy, onStrategyChange }: RiskReward
                               </TableHeader>
                               <TableBody>
                                 {calculateScenarioResults(selectedStrategy, 10).map((result) => (
-                                  <TableRow key={result.trade}>
+                                  <TableRow key={`win-${result.trade}`}>
                                     <TableCell>{result.trade}</TableCell>
                                     <TableCell>{result.risk.toFixed(2)}</TableCell>
                                     <TableCell>{result.reward.toFixed(2)}</TableCell>
@@ -428,7 +442,7 @@ export function RiskRewardCard({ initialStrategy, onStrategyChange }: RiskReward
                               </TableHeader>
                               <TableBody>
                                 {calculateScenarioResults(selectedStrategy, 10).map((result) => (
-                                  <TableRow key={result.trade}>
+                                  <TableRow key={`loss-${result.trade}`}>
                                     <TableCell>{result.trade}</TableCell>
                                     <TableCell>{result.risk.toFixed(2)}</TableCell>
                                     <TableCell>0.00</TableCell>

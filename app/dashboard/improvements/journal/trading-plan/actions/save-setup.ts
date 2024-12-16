@@ -102,6 +102,7 @@ export async function saveSetup(setupData: {
   setup_description: string;
   tags: string[];
   strategy_id: string;
+  risk_strategy: string | null;
 }) {
   const supabase = createClient()
 
@@ -129,6 +130,7 @@ export async function saveSetup(setupData: {
           setup_description: setupData.setup_description,
           tags: setupData.tags,
           strategy_id: setupData.strategy_id,
+          risk_strategy: setupData.risk_strategy,
           updated_at: new Date().toISOString()
         })
         .eq('id', setupData.id)
@@ -142,7 +144,8 @@ export async function saveSetup(setupData: {
           setup_name: setupData.setup_name,
           setup_description: setupData.setup_description,
           tags: setupData.tags,
-          strategy_id: setupData.strategy_id
+          strategy_id: setupData.strategy_id,
+          risk_strategy: setupData.risk_strategy
         })
     }
 
@@ -282,6 +285,42 @@ export async function getSetupById(setupId: string) {
   } catch (error) {
     console.error('Unexpected error in getSetupById:', error)
     throw new Error(`Failed to fetch setup: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+export async function deleteStrategy(strategyId: string) {
+  const supabase = createClient()
+
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+
+    if (userError) {
+      console.error('Error fetching user:', userError)
+      throw new Error(`User authentication failed: ${userError.message}`)
+    }
+
+    if (!userData?.user) {
+      throw new Error('User data not found')
+    }
+
+    const userId = userData.user.id
+
+    // Start a Supabase transaction
+    const { data, error } = await supabase.rpc('delete_strategy_and_setups', {
+      p_strategy_id: strategyId,
+      p_user_id: userId
+    })
+
+    if (error) {
+      console.error('Error deleting strategy and related setups:', error)
+      throw new Error(`Failed to delete strategy and related setups: ${error.message}`)
+    }
+
+    revalidatePath('/dashboard/improvements/journal/trading-plan')
+    return { success: true, message: 'Strategy and related setups deleted successfully' }
+  } catch (error) {
+    console.error('Unexpected error in deleteStrategy:', error)
+    throw new Error(`Failed to delete strategy and related setups: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
