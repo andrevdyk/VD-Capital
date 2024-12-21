@@ -67,9 +67,7 @@ const fontOptions = [
   { value: 'font-mono', label: 'Monospace' },
 ]
 
-
 export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selectedStrategy }: TradeSetupTemplateProps) {
-  console.log('riskStrategies prop:', undefined);
   const [setupName, setSetupName] = useState('')
   const [setupText, setSetupText] = useState('')
   const [tags, setTags] = useState<string[]>([])
@@ -314,103 +312,34 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
   const { toast } = useToast()
   const [selectedRiskStrategy, setSelectedRiskStrategy] = useState<RiskStrategy | null>(null);
 
-  const handleAddTemplate = (traderType: string, templateIndex: number) => {
-    const template = tradeSetupTemplates[traderType as keyof typeof tradeSetupTemplates][templateIndex];
-    const newTags: string[] = [];
-
-    // Create a map of abbreviations to full names
-    const abbreviationMap = new Map(template.tags.map(tag => {
-      const fullName = Object.values(dropdownItems)
-        .flatMap(item => Object.values(item.items).flat())
-        .find(item => item.includes(tag));
-      return [tag, fullName || tag];
-    }));
-
-    const contentWithTags = template.content.replace(/^- (.+)$/gm, (match, p1) => {
-      return '- ' + p1.split(/\s+/).map((word: string) => {
-        const fullName = abbreviationMap.get(word);
-        if (fullName) {
-          const tagColor = getTagColor(fullName);
-          newTags.push(fullName);
-          return `<span class="${tagColor} text-white px-1 rounded inline-block cursor-pointer" contenteditable="false">${fullName}</span>`;
-        }
-        return word;
-      }).join(' ');
-    });
-
-    setSetupText(contentWithTags);
-    setTags(prevTags => {
-      const allTags = [...prevTags, ...newTags];
-      return Array.from(new Set(allTags));
-    });
-    setIsTemplateDialogOpen(false);
-  };
-
   const getTagColor = useMemo(() => (tag: string): string => {
-  if (dropdownItems[0].items['Trend Indicators'].includes(tag)) return 'bg-blue-500'
-  if (dropdownItems[0].items['Momentum Indicators'].includes(tag)) return 'bg-green-500'
-  if (dropdownItems[0].items['Volatility Indicators'].includes(tag)) return 'bg-red-500'
-  if (dropdownItems[0].items['Volume Indicators'].includes(tag)) return 'bg-purple-500'
-  if (dropdownItems[0].items['Custom and Advanced Indicators'].includes(tag)) return 'bg-pink-800'
-  if (dropdownItems[0].items['Composite Indicators'].includes(tag)) return 'bg-[#611C35]'
-  if (dropdownItems[1].items['Economic Indicators'].includes(tag)) return 'bg-yellow-500'
-  if (dropdownItems[1].items['Company-Specific'].includes(tag)) return 'bg-orange-500'
-  if (dropdownItems[2].items['Market Structure'].includes(tag)) return 'bg-pink-500'
-  if (dropdownItems[3].items['Reversal Patterns'].includes(tag)) return 'bg-teal-500'
-  if (dropdownItems[3].items['Continuation Patterns'].includes(tag)) return 'bg-indigo-500'
-  if (dropdownItems[3].items['Exotic Patterns'].includes(tag)) return 'bg-violet-500'
-  if (dropdownItems[3].items['Candlestick Patterns'].includes(tag)) return 'bg-cyan-500'
-  if (dropdownItems[4].items['Advanced Concepts'].includes(tag)) return 'bg-green-500'
-  if (dropdownItems[5].items['Clear Entry Criteria'].includes(tag) ||
-      dropdownItems[5].items['Timeframe Alignment'].includes(tag) ||
-      dropdownItems[5].items['Risk-to-Reward Ratio'].includes(tag) ||
-      dropdownItems[5].items['Confirmation'].includes(tag) ||
-      dropdownItems[5].items['Breakout Rules'].includes(tag) ||
-      dropdownItems[5].items['Reversal Rules'].includes(tag) ||
-      dropdownItems[5].items['Stop-Loss Placement'].includes(tag) ||
-      dropdownItems[5].items['Profit Targeting'].includes(tag) ||
-      dropdownItems[5].items['Time-Based Exits'].includes(tag) ||
-      dropdownItems[5].items['Partial Profit-Taking'].includes(tag) ||
-      dropdownItems[5].items['Market Conditions'].includes(tag)) return 'bg-amber-500'
-  return 'bg-primary'
-}, [dropdownItems]);
-
-  useEffect(() => {
-    console.log('TradeSetupTemplate rendered');
-    if (textareaRef.current) {
-      const selection = window.getSelection();
-      let range = selection?.rangeCount ? selection.getRangeAt(0) : null;
-
-      if (textareaRef.current.innerHTML !== setupText) {
-        textareaRef.current.innerHTML = setupText;
-        // Add event listeners to the newly created spans
-        textareaRef.current.querySelectorAll('span[contenteditable="false"]').forEach(span => {
-          span.addEventListener('click', () => removeTag(span.textContent || ''));
-        });
-
-        if (selection && range) {
-          try {
-            range = document.createRange();
-            range.selectNodeContents(textareaRef.current);
-            range.collapse(false);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          } catch (error) {
-            console.error('Error setting selection:', error);
-          }
-        }
-      }
-    }
-  }, [setupText]);
-
-  const handleItemClick = useCallback((item: string) => {
-    setTags(prevTags => [...prevTags, item]);
-    setSetupText(prevText => {
-      const tagColor = getTagColor(item);
-      const newSpan = `<span class="${tagColor} text-white px-1 rounded inline-block cursor-pointer" contenteditable="false">${item}</span>`;
-      return prevText + newSpan;
-    });
-  }, [getTagColor]);
+    if (dropdownItems[0].items['Trend Indicators'].includes(tag)) return 'bg-blue-500'
+    if (dropdownItems[0].items['Momentum Indicators'].includes(tag)) return 'bg-green-500'
+    if (dropdownItems[0].items['Volatility Indicators'].includes(tag)) return 'bg-red-500'
+    if (dropdownItems[0].items['Volume Indicators'].includes(tag)) return 'bg-purple-500'
+    if (dropdownItems[0].items['Custom and Advanced Indicators'].includes(tag)) return 'bg-pink-800'
+    if (dropdownItems[0].items['Composite Indicators'].includes(tag)) return 'bg-[#611C35]'
+    if (dropdownItems[1].items['Economic Indicators'].includes(tag)) return 'bg-yellow-500'
+    if (dropdownItems[1].items['Company-Specific'].includes(tag)) return 'bg-orange-500'
+    if (dropdownItems[2].items['Market Structure'].includes(tag)) return 'bg-pink-500'
+    if (dropdownItems[3].items['Reversal Patterns'].includes(tag)) return 'bg-teal-500'
+    if (dropdownItems[3].items['Continuation Patterns'].includes(tag)) return 'bg-indigo-500'
+    if (dropdownItems[3].items['Exotic Patterns'].includes(tag)) return 'bg-violet-500'
+    if (dropdownItems[3].items['Candlestick Patterns'].includes(tag)) return 'bg-cyan-500'
+    if (dropdownItems[4].items['Advanced Concepts'].includes(tag)) return 'bg-green-500'
+    if (dropdownItems[5].items['Clear Entry Criteria'].includes(tag) ||
+        dropdownItems[5].items['Timeframe Alignment'].includes(tag) ||
+        dropdownItems[5].items['Risk-to-Reward Ratio'].includes(tag) ||
+        dropdownItems[5].items['Confirmation'].includes(tag) ||
+        dropdownItems[5].items['Breakout Rules'].includes(tag) ||
+        dropdownItems[5].items['Reversal Rules'].includes(tag) ||
+        dropdownItems[5].items['Stop-Loss Placement'].includes(tag) ||
+        dropdownItems[5].items['Profit Targeting'].includes(tag) ||
+        dropdownItems[5].items['Time-Based Exits'].includes(tag) ||
+        dropdownItems[5].items['Partial Profit-Taking'].includes(tag) ||
+        dropdownItems[5].items['Market Conditions'].includes(tag)) return 'bg-amber-500'
+    return 'bg-primary'
+  }, [dropdownItems]);
 
   const removeTag = useCallback((tagToRemove: string) => {
     setTags(prevTags => prevTags.filter(tag => tag !== tagToRemove));
@@ -426,6 +355,48 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
       return doc.body.innerHTML;
     });
   }, []);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      const selection = window.getSelection();
+      const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+
+      if (textareaRef.current.innerHTML !== setupText) {
+        textareaRef.current.innerHTML = setupText;
+        textareaRef.current.querySelectorAll('span[contenteditable="false"]').forEach(span => {
+          span.addEventListener('click', () => removeTag(span.textContent || ''));
+        });
+
+        if (selection && range) {
+          try {
+            const newRange = document.createRange();
+            newRange.selectNodeContents(textareaRef.current);
+            newRange.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          } catch (error) {
+            console.error('Error setting selection:', error);
+          }
+        }
+      }
+    }
+  }, [setupText]);
+
+  const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
+    const content = e.currentTarget.innerHTML;
+    setSetupText(content);
+    e.currentTarget.className = e.currentTarget.className.replace(/font-(sans|serif|mono)/g, fontFamily);
+  }, [fontFamily]);
+
+  const handleItemClick = useCallback((item: string) => {
+    setTags(prevTags => [...prevTags, item]);
+    setSetupText(prevText => {
+      const tagColor = getTagColor(item);
+      const newSpan = `<span class="${tagColor} text-white px-1 rounded inline-block cursor-pointer" contenteditable="false">${item}</span>`;
+      return prevText + newSpan;
+    });
+  }, [getTagColor]);
+
 
   const applyTextFormatting = useCallback((format: 'bold' | 'italic' | 'underline') => {
     if (textareaRef.current) {
@@ -447,14 +418,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
     }
   }, []);
 
-  const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-    const content = e.currentTarget.innerHTML;
-    setSetupText(content);
-    e.currentTarget.className = e.currentTarget.className.replace(/font-(sans|serif|mono)/g, fontFamily);
-  }, [fontFamily]);
-
   useEffect(() => {
-    console.log('TradeSetupTemplate rendered');
     if (textareaRef.current) {
       const applyActiveFormatting = () => {
         const selection = window.getSelection();
@@ -483,12 +447,10 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
   }, [isBold, isItalic, isUnderline])
 
   useEffect(() => {
-    console.log('TradeSetupTemplate rendered');
     setCategoryOptions(dropdownItems.map(item => item.category));
   }, [dropdownItems]);
 
   useEffect(() => {
-    console.log('TradeSetupTemplate rendered');
     if (newIndicatorCategory) {
       const category = dropdownItems.find(item => item.category === newIndicatorCategory);
       if (category) {
@@ -531,6 +493,37 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
     }
   }, [setupToEdit]);
 
+  const handleAddTemplate = (traderType: string, templateIndex: number) => {
+    const template = tradeSetupTemplates[traderType as keyof typeof tradeSetupTemplates][templateIndex];
+    const newTags: string[] = [];
+
+    // Create a map of abbreviations to full names
+    const abbreviationMap = new Map(template.tags.map(tag => {
+      const fullName = Object.values(dropdownItems)
+        .flatMap(item => Object.values(item.items).flat())
+        .find(item => item.includes(tag));
+      return [tag, fullName || tag];
+    }));
+
+    const contentWithTags = template.content.replace(/^- (.+)$/gm, (match, p1) => {
+      return '- ' + p1.split(/\s+/).map((word: string) => {
+        const fullName = abbreviationMap.get(word);
+        if (fullName) {
+          const tagColor = getTagColor(fullName);
+          newTags.push(fullName);
+          return `<span class="${tagColor} text-white px-1 rounded inline-block cursor-pointer" contenteditable="false">${fullName}</span>`;
+        }
+        return word;
+      }).join(' ');
+    });
+
+    setSetupText(contentWithTags);
+    setTags(prevTags => {
+      const allTags = [...prevTags, ...newTags];
+      return Array.from(new Set(allTags));
+    });
+    setIsTemplateDialogOpen(false);
+  };
 
   const handleSaveSetup = async () => {
     if (!setupName.trim()) {
@@ -658,251 +651,250 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
 
   return (
     <Card className="w-full h-[calc(100vh-5px)] max-h-[768px]">
-    <CardHeader>
-      <Input
-        type="text"
-        placeholder="Setup name..."
-        value={setupName}
-        onChange={(e) => setSetupName(e.target.value)}
-        className="text-2xl font-bold cursor-default"
-      />
-    </CardHeader>
-    <CardContent>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {dropdownItems.map((dropdown) => (
-          <DropdownMenu key={dropdown.category}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                {dropdown.category} <ChevronDown className="ml-2 h-4 w-4" />
+      <CardHeader>
+        <Input
+          type="text"
+          placeholder="Setup name..."
+          value={setupName}
+          onChange={(e) => setSetupName(e.target.value)}
+          className="text-2xl font-bold cursor-default"
+        />
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {dropdownItems.map((dropdown) => (
+            <DropdownMenu key={dropdown.category}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  {dropdown.category} <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 h-[50vh] overflow-y-auto ">
+                {Object.entries(dropdown.items).map(([subCategory, items], index) => (
+                  <React.Fragment key={subCategory}>
+                    {index > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuLabel>{subCategory}</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      {items.map((item) => (
+                        <DropdownMenuItem key={item} onSelect={() => handleItemClick(item)}>
+                          {item}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </React.Fragment>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ))}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" className="ml-2">
+                <Plus className="h-4 w-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 h-[50vh] overflow-y-auto ">
-              {Object.entries(dropdown.items).map(([subCategory, items], index) => (
-                <React.Fragment key={subCategory}>
-                  {index > 0 && <DropdownMenuSeparator />}
-                  <DropdownMenuLabel>{subCategory}</DropdownMenuLabel>
-                  <DropdownMenuGroup>
-                    {items.map((item) => (
-                      <DropdownMenuItem key={item} onSelect={() => handleItemClick(item)}>
-                        {item}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuGroup>
-                </React.Fragment>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ))}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="icon" className="ml-2">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Custom Indicator</DialogTitle>
-              <DialogDescription>Enter the details for your custom indicator.</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="category" className="text-right">
-                  Category
-                </Label>
-                <Select
-                  value={newIndicatorCategory}
-                  onValueChange={setNewIndicatorCategory}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categoryOptions.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="subcategory" className="text-right">
-                  Subcategory
-                </Label>
-                <Select
-                  value={newIndicatorSubCategory}
-                  onValueChange={setNewIndicatorSubCategory}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select subcategory" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subcategoryOptions.map((subcategory) => (
-                      <SelectItem key={subcategory} value={subcategory}>
-                        {subcategory}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Indicator Name
-                </Label>
-                <Input
-                  id="name"
-                  value={newIndicatorName}
-                  onChange={(e) => setNewIndicatorName(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleAddCustomIndicator}>Add Indicator</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-      <div className="flex items-center space-x-2 mb-4">
-        <ToggleGroup type="multiple" variant="outline">
-          <ToggleGroupItem 
-            value="bold" 
-            aria-label="Toggle bold" 
-            onClick={() => applyTextFormatting('bold')}
-            data-state={isBold ? "on" : "off"}
-          >
-            <Bold className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem 
-            value="italic" 
-            aria-label="Toggle italic" 
-            onClick={() => applyTextFormatting('italic')}
-            data-state={isItalic ? "on" : "off"}
-          >
-            <Italic className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem 
-            value="underline" 
-            aria-label="Toggle underline" 
-            onClick={() => applyTextFormatting('underline')}
-            data-state={isUnderline ? "on" : "off"}
-          >
-            <Underline className="h-4 w-4" />
-          </ToggleGroupItem>
-        </ToggleGroup>
-        <Select value={fontFamily} onValueChange={(value) => {
-          setFontFamily(value);
-          if (textareaRef.current) {
-            textareaRef.current.className = textareaRef.current.className.replace(/font-(sans|serif|mono)/g, value);
-          }
-        }}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Font" />
-          </SelectTrigger>
-          <SelectContent>
-            {fontOptions.map((font) => (
-              <SelectItem key={font.value} value={font.value}>
-                {font.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={fontSize} onValueChange={setFontSize}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Font size" />
-          </SelectTrigger>
-          <SelectContent>
-            {fontSizes.map((size) => (
-              <SelectItem key={size} value={size}>
-                {size}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="relative mb-4">
-        <div className="flex justify-between items-center">
-          <div>
-            {selectedRiskStrategy ? (
-              <div className="p-2 bg-muted rounded-md">
-                <p className="font-semibold">{selectedRiskStrategy.name}</p>
-                {renderRiskStrategyDetails(selectedRiskStrategy)}
-              </div>
-            ) : (
-              <p>No risk strategy</p>
-            )}
-          </div>
-          <AddRiskStrategy
-            onStrategySelect={(strategy) => {
-              setSelectedRiskStrategy(strategy);
-            }}
-          />
-        </div>
-      </div>
-      <div
-        ref={textareaRef}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={handleInput}
-        className={`cursor-default h-[350px] overflow-y-auto text-sm p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
-        style={{ 
-          fontSize,
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'
-        }}
-        dangerouslySetInnerHTML={{ __html: setupText }}
-      />
-      <div className="flex justify-end mt-4 space-x-2">
-        <Button
-          onClick={() => {
-            setSetupText('');
-            setTags([]);
-            setSelectedRiskStrategy(null);
-          }}
-        >
-          Reset Template
-        </Button>
-        <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              Add Template
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh]">
-            <DialogHeader>
-              <DialogTitle>Add Template</DialogTitle><DialogTitle>Add Template</DialogTitle>
-              <DialogDescription>Choose a template to add to your trade setup</DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="h-[60vh] pr-4">
-              {Object.entries(tradeSetupTemplates).map(([traderType, templates]) => (
-                <div key={traderType} className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4">{traderType} Templates</h3>
-                  <div className="grid grid-cols-1 md:grid-cols2 lg:grid-cols-3 gap-4">
-                    {templates.map((template, index) => (
-                      <Card key={`${traderType}-${index}`} className="p-4">
-                        <h4 className="font-medium mb-2">{template.name}</h4>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          {template.description}
-                        </p>
-                        <Button onClick={() => handleAddTemplate(traderType, index)}
-                        >
-                          Use Template
-                        </Button>
-                      </Card>
-                    ))}
-                  </div>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Custom Indicator</DialogTitle>
+                <DialogDescription>Enter the details for your custom indicator.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="category" className="text-right">
+                    Category
+                  </Label>
+                  <Select
+                    value={newIndicatorCategory}
+                    onValueChange={setNewIndicatorCategory}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="subcategory" className="text-right">
+                    Subcategory
+                  </Label>
+                  <Select
+                    value={newIndicatorSubCategory}
+                    onValueChange={setNewIndicatorSubCategory}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select subcategory" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subcategoryOptions.map((subcategory) => (
+                        <SelectItem key={subcategory} value={subcategory}>
+                          {subcategory}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Indicator Name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={newIndicatorName}
+                    onChange={(e) => setNewIndicatorName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleAddCustomIndicator}>Add Indicator</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <div className="flex items-center space-x-2 mb-4">
+          <ToggleGroup type="multiple" variant="outline">
+            <ToggleGroupItem 
+              value="bold" 
+              aria-label="Toggle bold" 
+              onClick={() => applyTextFormatting('bold')}
+              data-state={isBold ? "on" : "off"}
+            >
+              <Bold className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem 
+              value="italic" 
+              aria-label="Toggle italic" 
+              onClick={() => applyTextFormatting('italic')}
+              data-state={isItalic ? "on" : "off"}
+            >
+              <Italic className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem 
+              value="underline" 
+              aria-label="Toggle underline" 
+              onClick={() => applyTextFormatting('underline')}
+              data-state={isUnderline ? "on" : "off"}
+            >
+              <Underline className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <Select value={fontFamily} onValueChange={(value) => {
+            setFontFamily(value);
+            if (textareaRef.current) {
+              textareaRef.current.className = textareaRef.current.className.replace(/font-(sans|serif|mono)/g, value);
+            }
+          }}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Font" />
+            </SelectTrigger>
+            <SelectContent>
+              {fontOptions.map((font) => (
+                <SelectItem key={font.value} value={font.value}>
+                  {font.label}
+                </SelectItem>
               ))}
-            </ScrollArea>
-          </DialogContent>
-        </Dialog>
-        <Button onClick={handleSaveSetup}>
-          <Save className="mr-2 h-4 w-4" />
-          Save Setup
-        </Button>
-      </div>
-    </CardContent>
-  </Card>
+            </SelectContent>
+          </Select>
+          <Select value={fontSize} onValueChange={setFontSize}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Font size" />
+            </SelectTrigger>
+            <SelectContent>
+              {fontSizes.map((size) => (
+                <SelectItem key={size} value={size}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="relative mb-4">
+          <div className="flex justify-between items-center">
+            <div>
+              {selectedRiskStrategy ? (
+                <div className="p-2 bg-muted rounded-md">
+                  <p className="font-semibold">{selectedRiskStrategy.name}</p>
+                  {renderRiskStrategyDetails(selectedRiskStrategy)}
+                </div>
+              ) : (
+                <p>No risk strategy</p>
+              )}
+            </div>
+            <AddRiskStrategy
+              onStrategySelect={(strategy) => {
+                setSelectedRiskStrategy(strategy);
+              }}
+            />
+          </div>
+        </div>
+        <div
+          ref={textareaRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={handleInput}
+          className={`cursor-default h-[350px] overflow-y-auto text-sm p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
+          style={{ 
+            fontSize,
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'
+          }}
+        />
+        <div className="flex justify-end mt-4 space-x-2">
+          <Button
+            onClick={() => {
+              setSetupText('');
+              setTags([]);
+              setSelectedRiskStrategy(null);
+            }}
+          >
+            Reset Template
+          </Button>
+          <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                Add Template
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[80vh]">
+              <DialogHeader>
+                <DialogTitle>Add Template</DialogTitle>
+                <DialogDescription>Choose a template to add to your trade setup</DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="h-[60vh] pr-4">
+                {Object.entries(tradeSetupTemplates).map(([traderType, templates]) => (
+                  <div key={traderType} className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4">{traderType} Templates</h3>
+                    <div className="grid grid-cols-1 md:grid-cols2 lg:grid-cols-3 gap-4">
+                      {templates.map((template, index) => (
+                        <Card key={`${traderType}-${index}`} className="p-4">
+                          <h4 className="font-medium mb-2">{template.name}</h4>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            {template.description}
+                          </p>
+                          <Button onClick={() => handleAddTemplate(traderType, index)}
+                          >
+                            Use Template
+                          </Button>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
+          <Button onClick={handleSaveSetup}>
+            <Save className="mr-2 h-4 w-4" />
+            Save Setup
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
