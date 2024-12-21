@@ -18,6 +18,14 @@ import { deleteSetup } from '../actions/save-setup'
 import { useToast } from "@/components/ui/use-toast"
 import { UserSetup } from '@/app/types/user'
 
+interface RiskStrategy {
+  type: string;
+  value: number;
+  additionalParams?: {
+    [key: string]: string | number | boolean | { riskToReward: number; riskPercentage: number; }[];
+  };
+}
+
 interface UserSetupsListProps {
   setups: UserSetup[]
   onUpdate: () => void
@@ -64,6 +72,60 @@ const UserSetupsList: React.FC<UserSetupsListProps> = ({ setups, onUpdate, onEdi
     }
   }
 
+  const parseRiskStrategy = (riskStrategyString: string | null): RiskStrategy | null => {
+    if (!riskStrategyString) return null;
+    try {
+      return JSON.parse(riskStrategyString) as RiskStrategy;
+    } catch (error) {
+      console.error("Error parsing risk strategy:", error);
+      return null;
+    }
+  }
+
+  const renderRiskStrategyDetails = (strategy: RiskStrategy) => {
+  const renderAdditionalParams = (params: RiskStrategy['additionalParams']) => {
+    if (!params) return null;
+    return Object.entries(params).map(([key, value]) => {
+      if (Array.isArray(value) && value.every(item => typeof item === 'object' && 'riskToReward' in item && 'riskPercentage' in item)) {
+        return (
+          <div key={key}>
+            <p>{key}:</p>
+            <ul>
+              {value.map((ratio, index) => (
+                <li key={index}>
+                  {ratio.riskToReward}:1 at {ratio.riskPercentage}%
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+      return <p key={key}>{key}: {JSON.stringify(value)}</p>;
+    });
+  };
+
+  switch (strategy.type) {
+    case 'percentage':
+      return <p>Risk: {strategy.value}%</p>;
+    case 'dynamic':
+    case 'fixed':
+    case 'volatility':
+    case 'maxRisk':
+    case 'tiered':
+    case 'timeBased':
+    case 'scaling':
+    case 'riskReward':
+      return (
+        <div>
+          <p>{strategy.type} Risk: {strategy.value}{strategy.type === 'fixed' ? ' USD' : '%'}</p>
+          {renderAdditionalParams(strategy.additionalParams)}
+        </div>
+      );
+    default:
+      return <p>Unknown risk strategy type</p>;
+  }
+};
+
   const filteredSetups = selectedStrategyId
     ? setups.filter(setup => setup.strategy_id === selectedStrategyId)
     : setups
@@ -81,7 +143,20 @@ const UserSetupsList: React.FC<UserSetupsListProps> = ({ setups, onUpdate, onEdi
             filteredSetups.map((setup) => (
               <div key={setup.id} className="mb-4 p-4 border rounded-lg">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-semibold">{setup.setup_name}</h3>
+                  <div>
+                    <h3 className="text-lg font-semibold">{setup.setup_name}</h3>
+                    {setup.risk_strategy && (
+                      <div className="mt-1 text-sm text-gray-600">
+                        {(() => {
+                          const parsedStrategy = parseRiskStrategy(setup.risk_strategy);
+                          return parsedStrategy ? renderRiskStrategyDetails(parsedStrategy) : 'No risk strategy details available';
+                        })()}
+                      </div>
+                    )}
+                    <p className="text-sm text-gray-500 mt-1">
+                      Created on {new Date(setup.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
                   <div className="flex space-x-2">
                     <Button variant="outline" size="sm" onClick={() => onEdit(setup.id)}>
                       <Edit className="h-4 w-4" />
@@ -112,9 +187,6 @@ const UserSetupsList: React.FC<UserSetupsListProps> = ({ setups, onUpdate, onEdi
                     </AlertDialog>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500">
-                  Created on {new Date(setup.created_at).toLocaleDateString()}
-                </p>
                 <div className="mt-2">
                   {setup.tags.map((tag) => (
                     <Badge key={tag} className={`mr-1 mb-1 ${getTagColor(tag)} text-white`}>

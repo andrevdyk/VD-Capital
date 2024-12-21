@@ -404,44 +404,27 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
   }, [setupText]);
 
   const handleItemClick = useCallback((item: string) => {
-    if (textareaRef.current) {
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-
-        const tagColor = getTagColor(item);
-        const span = document.createElement('span');
-        span.className = `${tagColor} text-white px-1 rounded inline-block cursor-pointer`;
-        span.textContent = item;
-        span.contentEditable = 'false';
-        span.addEventListener('click', () => removeTag(item));
-
-        range.insertNode(span);
-        range.collapse(false);
-
-        selection.removeAllRanges();
-        selection.addRange(range);
-
-        setTags(prevTags => [...prevTags, item]);
-        setSetupText(textareaRef.current.innerHTML);
-
-        // Ensure focus is set back to the textarea
-        textareaRef.current.focus();
-      }
-    }
+    setTags(prevTags => [...prevTags, item]);
+    setSetupText(prevText => {
+      const tagColor = getTagColor(item);
+      const newSpan = `<span class="${tagColor} text-white px-1 rounded inline-block cursor-pointer" contenteditable="false">${item}</span>`;
+      return prevText + newSpan;
+    });
   }, [getTagColor]);
 
   const removeTag = useCallback((tagToRemove: string) => {
-    setTags(prevTags => prevTags.filter(tag => tag !== tagToRemove))
-    if (textareaRef.current) {
-      const spans = textareaRef.current.getElementsByTagName('span')
-      for (let i = spans.length - 1; i >= 0; i--) {
-        if (spans[i].textContent === tagToRemove) {
-          spans[i].remove()
+    setTags(prevTags => prevTags.filter(tag => tag !== tagToRemove));
+    setSetupText(prevText => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(prevText, 'text/html');
+      const spans = doc.querySelectorAll('span');
+      spans.forEach(span => {
+        if (span.textContent === tagToRemove) {
+          span.parentNode?.removeChild(span);
         }
-      }
-      setSetupText(textareaRef.current.innerHTML)
-    }
+      });
+      return doc.body.innerHTML;
+    });
   }, []);
 
   const applyTextFormatting = useCallback((format: 'bold' | 'italic' | 'underline') => {
@@ -466,10 +449,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
 
   const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
     const content = e.currentTarget.innerHTML;
-    const riskStrategyDiv = content.match(/<div class="mb-4 p-2 bg-muted rounded-md" contenteditable="false">[\s\S]*?<\/div>/);
-    const riskStrategyContent = riskStrategyDiv ? riskStrategyDiv[0] : '';
-    const userContent = content.replace(riskStrategyContent, '').trim();
-    setSetupText(userContent);
+    setSetupText(content);
     e.currentTarget.className = e.currentTarget.className.replace(/font-(sans|serif|mono)/g, fontFamily);
   }, [fontFamily]);
 
@@ -547,6 +527,7 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
       setSetupName(setupToEdit.setup_name);
       setSetupText(setupToEdit.setup_description || '');
       setTags(setupToEdit.tags);
+      setSelectedRiskStrategy(setupToEdit.risk_strategy ? JSON.parse(setupToEdit.risk_strategy) : null);
     }
   }, [setupToEdit]);
 
@@ -608,6 +589,72 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
       })
     }
   }
+
+  const renderRiskStrategyDetails = (strategy: RiskStrategy) => {
+    switch (strategy.type) {
+      case 'percentage':
+        return <p>Risk: {strategy.value}%</p>;
+      case 'dynamic':
+        return (
+          <p>
+            Risk: {strategy.value}%<br />
+            Increment: {strategy.additionalParams?.incrementRisk?.toString()}%
+          </p>
+        );
+      case 'fixed':
+        return <p>Risk: {strategy.value} USD</p>;
+      case 'volatility':
+        return (
+          <p>
+            Multiplier: {strategy.additionalParams?.multiplier?.toString()}x{' '}
+            {strategy.additionalParams?.indicator?.toString()} Risk: {strategy.value}%
+          </p>
+        );
+      case 'maxRisk':
+        return <p>Risk: {strategy.value}%</p>;
+      case 'tiered':
+        return (
+          <p>
+            Low Confidence: {strategy.additionalParams?.lowConfidence?.toString()}%<br />
+            Medium Confidence: {strategy.additionalParams?.mediumConfidence?.toString()}%<br />
+            High Confidence: {strategy.additionalParams?.highConfidence?.toString()}%
+          </p>
+        );
+      case 'timeBased':
+        return (
+          <p>
+            Scalp: {strategy.additionalParams?.scalpRisk?.toString()}%<br />
+            Intraday: {strategy.additionalParams?.intradayRisk?.toString()}%<br />
+            Swing: {strategy.additionalParams?.swingRisk?.toString()}%
+          </p>
+        );
+      case 'scaling':
+        return (
+          <p>
+            Initial: {strategy.additionalParams?.initialRisk?.toString()}%<br />
+            Scale In: {strategy.additionalParams?.scaleInTime?.toString()}% Completion<br />
+            Max: {strategy.additionalParams?.maxTotalRisk?.toString()}%
+          </p>
+        );
+      case 'riskReward':
+        return (
+          <div>
+            <p>Risk Reward-Based Adjustments</p>
+            {strategy.additionalParams?.ratios && Array.isArray(strategy.additionalParams.ratios) && (
+              <ul>
+                {strategy.additionalParams.ratios.map((ratio, index) => (
+                  <li key={index}>
+                    {ratio.riskToReward.toString()}:1 at {ratio.riskPercentage.toString()}%
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <Card className="w-full h-[calc(100vh-5px)] max-h-[768px]">
@@ -773,81 +820,38 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
           </SelectContent>
         </Select>
       </div>
-      <div className="relative">
-        <div className="absolute top-2 right-2">
+      <div className="relative mb-4">
+        <div className="flex justify-between items-center">
+          <div>
+            {selectedRiskStrategy ? (
+              <div className="p-2 bg-muted rounded-md">
+                <p className="font-semibold">{selectedRiskStrategy.name}</p>
+                {renderRiskStrategyDetails(selectedRiskStrategy)}
+              </div>
+            ) : (
+              <p>No risk strategy</p>
+            )}
+          </div>
           <AddRiskStrategy
             onStrategySelect={(strategy) => {
               setSelectedRiskStrategy(strategy);
             }}
           />
         </div>
-        <div
-          ref={textareaRef}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={handleInput}
-          className={`cursor-default h-[500px] overflow-y-auto text-sm p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
-          style={{ 
-            fontSize,
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'
-          }}
-        >
-          {selectedRiskStrategy && (
-            <div className="mb-4 p-2 bg-muted rounded-md" contentEditable={false}>
-              <p className="font-semibold">{selectedRiskStrategy.name}</p>
-              {selectedRiskStrategy.type === 'percentage' && selectedRiskStrategy.name === 'Fixed Risk Percentage' && (
-                <p>Risk: {selectedRiskStrategy.value}%</p>
-              )}
-              {selectedRiskStrategy.type === 'dynamic' && (
-                <p>Risk: {selectedRiskStrategy.value}%<br />Increment: {selectedRiskStrategy.additionalParams?.incrementRisk?.toString()}%</p>
-              )}
-              {selectedRiskStrategy.type === 'fixed' && (
-                <p>Risk: {selectedRiskStrategy.value} USD</p>
-              )}
-              {selectedRiskStrategy.type === 'volatility' && (
-                <p>Multiplier: {selectedRiskStrategy.additionalParams?.multiplier?.toString()}x   {selectedRiskStrategy.additionalParams?.indicator?.toString()}   Risk: {selectedRiskStrategy.value}%</p>
-              )}
-              {selectedRiskStrategy.type === 'percentage' && selectedRiskStrategy.name === 'Equity-Based Risk' && (
-                <p>Risk: {selectedRiskStrategy.value}%</p>
-              )}
-              {selectedRiskStrategy.type === 'maxRisk' && selectedRiskStrategy.additionalParams?.period && (
-                <p>Risk: {selectedRiskStrategy.value}%</p>
-              )}
-              {selectedRiskStrategy.type === 'tiered' && (
-                <p>Low Confidence: {selectedRiskStrategy.additionalParams?.lowConfidence?.toString()}%<br />
-                 Medium Confidence: {selectedRiskStrategy.additionalParams?.mediumConfidence?.toString()}%<br />
-                 High Confidence: {selectedRiskStrategy.additionalParams?.highConfidence?.toString()}%</p>
-              )}
-              {selectedRiskStrategy.type === 'timeBased' && (
-                <p>Scalp: {selectedRiskStrategy.additionalParams?.scalpRisk?.toString()}%<br />
-                 Intraday: {selectedRiskStrategy.additionalParams?.intradayRisk?.toString()}%<br />
-                 Swing: {selectedRiskStrategy.additionalParams?.swingRisk?.toString()}%</p>
-              )}
-              {selectedRiskStrategy.type === 'scaling' && (
-                <p>Initial: {selectedRiskStrategy.additionalParams?.initialRisk?.toString()}%<br />
-                 Scale In: {selectedRiskStrategy.additionalParams?.scaleInTime?.toString()}% Completion<br />
-                 Max: {selectedRiskStrategy.additionalParams?.maxTotalRisk?.toString()}%</p>
-              )}
-              {selectedRiskStrategy.type === 'riskReward' && (
-                <div>
-                  <p>Risk Reward-Based Adjustments</p>
-                  {selectedRiskStrategy.additionalParams?.ratios && Array.isArray(selectedRiskStrategy.additionalParams.ratios) && (
-                    <ul>
-                      {selectedRiskStrategy.additionalParams.ratios.map((ratio, index) => (
-                        <li key={index}>
-                          {ratio.riskToReward.toString()}:1 at {ratio.riskPercentage.toString()}%
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-          {setupText}
-        </div>
       </div>
+      <div
+        ref={textareaRef}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={handleInput}
+        className={`cursor-default h-[350px] overflow-y-auto text-sm p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 whitespace-pre-wrap [&>span]:user-select-none ${fontFamily}`}
+        style={{ 
+          fontSize,
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'
+        }}
+        dangerouslySetInnerHTML={{ __html: setupText }}
+      />
       <div className="flex justify-end mt-4 space-x-2">
         <Button
           onClick={() => {
@@ -866,14 +870,14 @@ export default function TradeSetupTemplate({ onSetupSaved, setupToEdit, selected
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[80vh]">
             <DialogHeader>
-              <DialogTitle>Add Template</DialogTitle>
+              <DialogTitle>Add Template</DialogTitle><DialogTitle>Add Template</DialogTitle>
               <DialogDescription>Choose a template to add to your trade setup</DialogDescription>
             </DialogHeader>
             <ScrollArea className="h-[60vh] pr-4">
               {Object.entries(tradeSetupTemplates).map(([traderType, templates]) => (
                 <div key={traderType} className="mb-8">
                   <h3 className="text-lg font-semibold mb-4">{traderType} Templates</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols2 lg:grid-cols-3 gap-4">
                     {templates.map((template, index) => (
                       <Card key={`${traderType}-${index}`} className="p-4">
                         <h4 className="font-medium mb-2">{template.name}</h4>

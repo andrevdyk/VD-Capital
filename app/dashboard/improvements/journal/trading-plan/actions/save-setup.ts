@@ -188,6 +188,7 @@ export async function getUserSetups() {
         tags, 
         created_at,
         strategy_id,
+        risk_strategy,
         user_strategies (
           strategy_id,
           strategy_name,

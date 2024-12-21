@@ -1,4 +1,5 @@
 export interface UserSetup {
+  user_strategies: any;
   strategy_id: string;
   id: string;
   setup_name: string;
