@@ -195,7 +195,7 @@ export function JournalNavigation() {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <Link href="/reflect" legacyBehavior passHref>
+          <Link href="/dashboard/improvements/journal/reflect" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               Reflect
             </NavigationMenuLink>
