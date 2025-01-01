@@ -10,7 +10,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "seo-heist.s3.amazonaws.com",
+        hostname: "nobtgazxiggvkrwxugpq.supabase.co/storage/v1/s3",
         port: "",
         pathname: "/**",
       },
@@ -31,6 +31,12 @@ const nextConfig = {
         hostname: "utfs.io",
         port: "",
         pathname: "/**",
+      },
+      {
+        protocol: 'https',
+        hostname: 'nobtgazxiggvkrwxugpq.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/**',
       },
     ],
   },

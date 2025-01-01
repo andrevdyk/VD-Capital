@@ -8,18 +8,20 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Pencil, Trash, Check, MoreHorizontal } from 'lucide-react'
+import { CalendarIcon, Pencil, Trash, Check, MoreHorizontal, StickyNote } from 'lucide-react'
 import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from "date-fns"
 import { getTradingHistory } from '../actions/getTradingHistory'
 import { deleteTrade } from '../actions/deleteTrade'
 import { addTrade } from '../actions/addTrade'
 import { editTrade } from '../actions/editTrade'
-import { getUserStrategies } from '../actions/getUserStrategies'
 import { getUserSetups } from '../actions/getUserSetups'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { DateRange } from 'react-day-picker'
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
+import { Textarea } from "@/components/ui/textarea"
+import { TradeNotes } from './trade-notes'
 
 interface Trade {
   id: string
@@ -34,6 +36,7 @@ interface Trade {
   mistakes?: string
   strategy_id?: string
   setup_id?: string
+  notes?: string;
 }
 
 interface TradeData {
@@ -43,7 +46,7 @@ interface TradeData {
   placing_time: string;
   closing_time: string;
   entry_price: number;
-  exit_price: number;
+  exit_price: number
   mistakes?: string;
   strategy_id?: string;
   setup_id?: string;
@@ -57,9 +60,15 @@ interface Strategy {
 interface Setup {
   id: string;
   setup_name: string;
+  strategy_id: string;
 }
 
-export function TradesTable() {
+interface TradesTableProps {
+  initialStrategies: Strategy[]
+  initialSetups: Setup[]
+}
+
+export function TradesTable({ initialStrategies, initialSetups }: TradesTableProps) {
   const [trades, setTrades] = useState<Trade[]>([])
   const [filteredTrades, setFilteredTrades] = useState<Trade[]>([])
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -89,8 +98,20 @@ export function TradesTable() {
     setup: true,
   })
   const [selectedTrades, setSelectedTrades] = useState<string[]>([])
-  const [strategies, setStrategies] = useState<Strategy[]>([])
-  const [setups, setSetups] = useState<Record<string, Setup[]>>({})
+  const [strategies, setStrategies] = useState<Strategy[]>(initialStrategies)
+  const [setups, setSetups] = useState<Record<string, Setup[]>>(
+    initialSetups.reduce((acc, setup) => {
+      if (!acc[setup.strategy_id]) {
+        acc[setup.strategy_id] = []
+      }
+      acc[setup.strategy_id].push(setup)
+      return acc
+    }, {} as Record<string, Setup[]>)
+  )
+  const [bulkStrategyId, setBulkStrategyId] = useState<string | null>(null)
+  const [bulkSetupId, setBulkSetupId] = useState<string | null>(null)
+  const [notesTrade, setNotesTrade] = useState<Trade | null>(null) // Update: Initialize notesTrade as null
+  const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false)
 
   useEffect(() => {
     const fetchTrades = async () => {
@@ -101,15 +122,7 @@ export function TradesTable() {
       }
     }
 
-    const fetchStrategies = async () => {
-      const userStrategies = await getUserStrategies()
-      if (userStrategies) {
-        setStrategies(userStrategies)
-      }
-    }
-
     fetchTrades()
-    fetchStrategies()
   }, [])
 
   useEffect(() => {
@@ -277,12 +290,6 @@ export function TradesTable() {
         updatedTrade.setup_id = undefined; // Reset setup when strategy changes
         await editTrade(updatedTrade);
         setTrades(trades.map(t => t.id === tradeId ? updatedTrade : t));
-        
-        // Fetch setups for the new strategy
-        const newSetups = await getUserSetups(strategyId);
-        if (newSetups) {
-          setSetups(prev => ({ ...prev, [strategyId]: newSetups }));
-        }
       }
     } catch (error) {
       console.error('Error updating strategy:', error);
@@ -302,6 +309,24 @@ export function TradesTable() {
     }
   }
 
+  const handleBulkStrategyChange = async (strategyId: string) => {
+    try {
+      await Promise.all(selectedTrades.map(tradeId => handleStrategyChange(tradeId, strategyId)))
+      setBulkStrategyId(null)
+    } catch (error) {
+      console.error('Error updating strategies:', error)
+    }
+  }
+
+  const handleBulkSetupChange = async (setupId: string) => {
+    try {
+      await Promise.all(selectedTrades.map(tradeId => handleSetupChange(tradeId, setupId)))
+      setBulkSetupId(null)
+    } catch (error) {
+      console.error('Error updating setups:', error)
+    }
+  }
+
   const indexOfLastTrade = currentPage * tradesPerPage
   const indexOfFirstTrade = indexOfLastTrade - tradesPerPage
   const currentTrades = filteredTrades.slice(indexOfFirstTrade, indexOfLastTrade)
@@ -317,6 +342,16 @@ export function TradesTable() {
 
   const toggleColumn = (column: string) => {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }))
+  }
+
+  const handleOpenNotesDrawer = (trade: Trade) => { // Update: handleOpenNotesDrawer function
+    setNotesTrade(trade)
+    setIsNotesDrawerOpen(true)
+  }
+
+
+  const handleSaveNotes = async (notes: string) => {
+    //This function is removed as per the update request
   }
 
   return (
@@ -411,9 +446,39 @@ export function TradesTable() {
             </DropdownMenuContent>
           </DropdownMenu>
           {selectedTrades.length > 0 && (
-            <Button variant="outline" onClick={handleDeleteAllSelected} className="h-10 text-sm hover:bg-destructive hover:text-destructive-foreground">
-              Delete All Trades
-            </Button>
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-10 text-sm">
+                    Add Strategy
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {strategies.map(strategy => (
+                    <DropdownMenuItem key={strategy.strategy_id} onSelect={() => handleBulkStrategyChange(strategy.strategy_id)}>
+                      {strategy.strategy_name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-10 text-sm">
+                    Add Setup
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {Object.values(setups).flat().map(setup => (
+                    <DropdownMenuItem key={setup.id} onSelect={() => handleBulkSetupChange(setup.id)}>
+                      {setup.setup_name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button variant="outline" onClick={handleDeleteAllSelected} className="h-10 text-sm hover:bg-destructive hover:text-destructive-foreground">
+                Delete All Trades
+              </Button>
+            </>
           )}
         </div>
         <Button variant="outline" onClick={handleAddTrade} className="h-10 text-sm">Add Trade</Button>
@@ -540,7 +605,7 @@ export function TradesTable() {
               {visibleColumns.exitPrice && <TableCell>{editingId === trade.id ? <Input type="number" value={trade.exit_price} onChange={e => setTrades(trades.map(t => t.id === trade.id ? {...t, exit_price: Number(e.target.value)} : t))} /> : trade.exit_price.toFixed(5)}</TableCell>}
               {visibleColumns.netProfit && (
                 <TableCell className={getNetProfitStyle(trade.net_profit)}>
-                  {trade.net_profit.toFixed(2)}
+                  {trade.net_profit >= 0 ? `$${trade.net_profit.toFixed(2)}` : `-$${Math.abs(trade.net_profit).toFixed(2)}`}
                 </TableCell>
               )}
               {visibleColumns.status && (
@@ -616,6 +681,9 @@ export function TradesTable() {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
+                  <Button variant="outline" size="icon" onClick={() => handleOpenNotesDrawer(trade)}>
+                    <StickyNote className="h-4 w-4" />
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -657,6 +725,14 @@ export function TradesTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <TradeNotes
+        trade={notesTrade} 
+        isOpen={isNotesDrawerOpen}
+        onOpenChange={setIsNotesDrawerOpen}
+        onNotesUpdate={(updatedTrade) => {
+          setTrades(trades.map(t => t.id === updatedTrade.id? updatedTrade : t))
+        }}
+      />
     </div>
   )
 }
