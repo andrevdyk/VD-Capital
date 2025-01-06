@@ -69,7 +69,7 @@ export default function TradingQuizPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="h-14 lg:h-[55px] border-b w-full bg-white dark:bg-black flex items-center gap-4 z-1">
+      <div className="h-14 border-b w-full bg-white dark:bg-black flex items-center gap-4 z-1">
         <div className="px-4 -z-1">
           <JournalNavigation />
         </div>

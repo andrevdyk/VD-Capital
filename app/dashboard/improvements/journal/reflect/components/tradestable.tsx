@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Pencil, Trash, Check, MoreHorizontal, StickyNote } from 'lucide-react'
-import { format, subDays, subMonths, subYears, startOfDay, endOfDay } from "date-fns"
+import { CalendarIcon, Pencil, Trash, Check, MoreHorizontal, StickyNote, ArrowUpDown } from 'lucide-react'
+import { format, subDays, subMonths, subYears, startOfDay, endOfDay, addMinutes } from "date-fns"
 import { getTradingHistory } from '../actions/getTradingHistory'
 import { deleteTrade } from '../actions/deleteTrade'
 import { addTrade } from '../actions/addTrade'
@@ -22,6 +22,7 @@ import { DateRange } from 'react-day-picker'
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
 import { Textarea } from "@/components/ui/textarea"
 import { TradeNotes } from './trade-notes'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface Trade {
   id: string
@@ -110,8 +111,18 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
   )
   const [bulkStrategyId, setBulkStrategyId] = useState<string | null>(null)
   const [bulkSetupId, setBulkSetupId] = useState<string | null>(null)
-  const [notesTrade, setNotesTrade] = useState<Trade | null>(null) // Update: Initialize notesTrade as null
+  const [notesTrade, setNotesTrade] = useState<Trade | null>(null) 
   const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false)
+  const [notesFilter, setNotesFilter] = useState<string>('all')
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [durationFilters, setDurationFilters] = useState({
+    scalpTrades: 15,
+    dayTrades: 24,
+    swingTrades: 7,
+    positionTrades: 4
+  });
+  const [selectedDurationFilter, setSelectedDurationFilter] = useState<string>('all');
 
   useEffect(() => {
     const fetchTrades = async () => {
@@ -133,18 +144,29 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
       const dateMatch = !dateRange || !dateRange.from || !dateRange.to || 
         (new Date(trade.placing_time) >= startOfDay(dateRange.from) && 
          new Date(trade.placing_time) <= endOfDay(dateRange.to))
-      return statusMatch && directionMatch && symbolMatch && dateMatch
+      const notesMatch = notesFilter === 'all' || 
+        (notesFilter === 'completed' && trade.notes && trade.notes !== '') ||
+        (notesFilter === 'incomplete' && (!trade.notes || trade.notes === ''))
+      const durationMatch = selectedDurationFilter === 'all' || (() => {
+        const durationMinutes = getDurationInMinutes(trade.placing_time, trade.closing_time)
+        switch (selectedDurationFilter) {
+          case 'scalpTrades': return durationMinutes >= 0 && durationMinutes <= durationFilters.scalpTrades;
+          case 'dayTrades': return durationMinutes > durationFilters.scalpTrades && durationMinutes <= durationFilters.dayTrades * 60;
+          case 'swingTrades': return durationMinutes > durationFilters.dayTrades * 60 && durationMinutes <= durationFilters.swingTrades * 24 * 60;
+          case 'positionTrades': return durationMinutes > durationFilters.swingTrades * 24 * 60 && durationMinutes <= durationFilters.positionTrades * 7 * 24 * 60;
+          default: return true
+        }
+      })()
+      return statusMatch && directionMatch && symbolMatch && dateMatch && notesMatch && durationMatch
     })
     setFilteredTrades(filtered)
     setCurrentPage(1)
-  }, [trades, statusFilter, directionFilter, symbolFilter, dateRange])
+  }, [trades, statusFilter, directionFilter, symbolFilter, dateRange, notesFilter, selectedDurationFilter, durationFilters])
 
   const calculateDuration = (placingTime: string, closingTime: string) => {
-    const start = new Date(placingTime)
-    const end = new Date(closingTime)
-    const durationMs = end.getTime() - start.getTime()
-    const hours = Math.floor(durationMs / (1000 * 60 * 60))
-    const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60))
+    const durationMinutes = getDurationInMinutes(placingTime, closingTime)
+    const hours = Math.floor(durationMinutes / 60)
+    const minutes = durationMinutes % 60
     return `${hours}h ${minutes}m`
   }
 
@@ -164,6 +186,12 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
     if (netProfit > 0) return 'text-[#03b198]'
     if (netProfit < 0) return 'text-[#ff004d]'
     return 'text-yellow-600'
+  }
+
+  const getDurationInMinutes = (placingTime: string, closingTime: string) => {
+    const start = new Date(placingTime)
+    const end = new Date(closingTime)
+    return Math.round((end.getTime() - start.getTime()) / 60000)
   }
 
   const handleDelete = async (id: string) => {
@@ -287,7 +315,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
       const updatedTrade = trades.find(t => t.id === tradeId);
       if (updatedTrade) {
         updatedTrade.strategy_id = strategyId;
-        updatedTrade.setup_id = undefined; // Reset setup when strategy changes
+        updatedTrade.setup_id = undefined; 
         await editTrade(updatedTrade);
         setTrades(trades.map(t => t.id === tradeId ? updatedTrade : t));
       }
@@ -344,15 +372,91 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }))
   }
 
-  const handleOpenNotesDrawer = (trade: Trade) => { // Update: handleOpenNotesDrawer function
+  const handleOpenNotesDrawer = (trade: Trade) => { 
     setNotesTrade(trade)
     setIsNotesDrawerOpen(true)
   }
 
-
   const handleSaveNotes = async (notes: string) => {
     //This function is removed as per the update request
   }
+
+  const clearAllFilters = () => {
+    setStatusFilter('all')
+    setDirectionFilter('all')
+    setSymbolFilter('')
+    setDateRange(undefined)
+    setNotesFilter('all')
+    setSelectedDurationFilter('all');
+    setFilteredTrades(trades);
+  }
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const handleDurationFilterChange = (value: string) => {
+    setSelectedDurationFilter(value);
+    if (value !== 'all') {
+      const updatedTrades = trades.filter(trade => {
+        const durationMinutes = getDurationInMinutes(trade.placing_time, trade.closing_time);
+        switch (value) {
+          case 'scalpTrades':
+            return durationMinutes >= 0 && durationMinutes <= durationFilters.scalpTrades;
+          case 'dayTrades':
+            return durationMinutes > durationFilters.scalpTrades && durationMinutes <= durationFilters.dayTrades * 60;
+          case 'swingTrades':
+            return durationMinutes > durationFilters.dayTrades * 60 && durationMinutes <= durationFilters.swingTrades * 24 * 60;
+          case 'positionTrades':
+            return durationMinutes > durationFilters.swingTrades * 24 * 60 && durationMinutes <= durationFilters.positionTrades * 7 * 24 * 60;
+          default:
+            return true;
+        }
+      });
+      setFilteredTrades(updatedTrades);
+    } else {
+      setFilteredTrades(trades);
+    }
+  };
+
+  const handleDurationInputChange = (category: keyof typeof durationFilters, value: string) => {
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue > 0) {
+      setDurationFilters(prev => ({ ...prev, [category]: numValue }));
+    }
+  };
+
+  const handleDurationInputBlur = () => {
+    handleDurationFilterChange(selectedDurationFilter);
+  };
+
+  const sortedTrades = [...filteredTrades].sort((a, b) => {
+    if (!sortColumn) return 0
+    
+    const aValue = a[sortColumn as keyof Trade]
+    const bValue = b[sortColumn as keyof Trade]
+
+    if (aValue === undefined || bValue === undefined) return 0
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue)
+    }
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue
+    }
+
+    if (aValue instanceof Date && bValue instanceof Date) {
+      return sortDirection === 'asc' ? aValue.getTime() - bValue.getTime() : bValue.getTime() - aValue.getTime()
+    }
+
+    return 0
+  })
 
   return (
     <div>
@@ -385,6 +489,87 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
               <SelectItem value="Sell">Sell</SelectItem>
             </SelectContent>
           </Select>
+          <Select onValueChange={setNotesFilter}>
+            <SelectTrigger className="w-[180px] h-10 text-sm">
+              <SelectValue placeholder="Filter by Notes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Trades</SelectItem>
+              <SelectItem value="completed">Completed Notes</SelectItem>
+              <SelectItem value="incomplete">Incomplete Notes</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select onValueChange={handleDurationFilterChange} value={selectedDurationFilter}>
+            <SelectTrigger className="w-[200px] h-10 text-sm">
+              <SelectValue placeholder="Filter by Duration">
+                {selectedDurationFilter === 'all' ? 'All Durations' :
+                 selectedDurationFilter === 'scalpTrades' ? 'Scalp Trades' :
+                 selectedDurationFilter === 'dayTrades' ? 'Day Trades' :
+                 selectedDurationFilter === 'swingTrades' ? 'Swing Trades' :
+                 selectedDurationFilter === 'positionTrades' ? 'Position Trades' : 'Filter by Duration'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Durations</SelectItem>
+              <SelectItem value="scalpTrades">
+                Scalp Trades
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className="text-sm">0 mins to</span>
+                  <Input
+                    type="number"
+                    className="w-16 h-8 text-sm"
+                    value={durationFilters.scalpTrades}
+                    onChange={(e) => handleDurationInputChange('scalpTrades', e.target.value)}
+                    onBlur={handleDurationInputBlur}
+                  />
+                  <span className="text-sm">mins</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="dayTrades">
+                Day Trades
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className="text-sm">{durationFilters.scalpTrades} mins to</span>
+                  <Input
+                    type="number"
+                    className="w-16 h-8 text-sm"
+                    value={durationFilters.dayTrades}
+                    onChange={(e) => handleDurationInputChange('dayTrades', e.target.value)}
+                    onBlur={handleDurationInputBlur}
+                  />
+                  <span className="text-sm">hours</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="swingTrades">
+                Swing Trades
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className="text-sm">{durationFilters.dayTrades} hours to</span>
+                  <Input
+                    type="number"
+                    className="w-16 h-8 text-sm"
+                    value={durationFilters.swingTrades}
+                    onChange={(e) => handleDurationInputChange('swingTrades', e.target.value)}
+                    onBlur={handleDurationInputBlur}
+                  />
+                  <span className="text-sm">days</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="positionTrades">
+                Position Trades
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className="text-sm">{durationFilters.swingTrades} days to</span>
+                  <Input
+                    type="number"
+                    className="w-16 h-8 text-sm"
+                    value={durationFilters.positionTrades}
+                    onChange={(e) => handleDurationInputChange('positionTrades', e.target.value)}
+                    onBlur={handleDurationInputBlur}
+                  />
+                  <span className="text-sm">weeks</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[300px] h-10 justify-start text-left text-sm font-normal">
@@ -480,6 +665,9 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
               </Button>
             </>
           )}
+          <Button variant="outline" onClick={clearAllFilters} className="h-10 text-sm">
+            Clear All Filters
+          </Button>
         </div>
         <Button variant="outline" onClick={handleAddTrade} className="h-10 text-sm">Add Trade</Button>
       </div>
@@ -498,17 +686,72 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
                 onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
               />
             </TableHead>
-            {visibleColumns.symbol && <TableHead>Symbol</TableHead>}
-            {visibleColumns.direction && <TableHead>Direction</TableHead>}
-            {visibleColumns.size && <TableHead>Size</TableHead>}
-            {visibleColumns.openingTime && <TableHead>Opening Time</TableHead>}
-            {visibleColumns.closingTime && <TableHead>Closing Time</TableHead>}
+            {visibleColumns.symbol && (
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('symbol')} className="h-8 text-xs font-medium">
+                  Symbol
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+            )}
+            {visibleColumns.direction && (
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('side')} className="h-8 text-xs font-medium">
+                  Direction
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+            )}
+            {visibleColumns.size && (
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('qty')} className="h-8 text-xs font-medium">
+                  Size
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+            )}
+            {visibleColumns.openingTime && (
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('placing_time')} className="h-8 text-xs font-medium">
+                  Opening Time
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+            )}
+            {visibleColumns.closingTime && (
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('closing_time')} className="h-8 text-xs font-medium">
+                  Closing Time
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+            )}
             {visibleColumns.duration && <TableHead>Duration</TableHead>}
-            {visibleColumns.entryPrice && <TableHead>Entry Price</TableHead>}
-            {visibleColumns.exitPrice && <TableHead>Exit Price</TableHead>}
-            {visibleColumns.netProfit && <TableHead>Net Profit</TableHead>}
+            {visibleColumns.entryPrice && (
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('entry_price')} className="h-8 text-xs font-medium">
+                  Entry Price
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+            )}
+            {visibleColumns.exitPrice && (
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('exit_price')} className="h-8 text-xs font-medium">
+                  Exit Price
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+            )}
+            {visibleColumns.netProfit && (
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('net_profit')} className="h-8 text-xs font-medium">
+                  Net Profit
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+            )}
             {visibleColumns.status && <TableHead>Status</TableHead>}
-            {visibleColumns.mistakes && <TableHead>Mistakes</TableHead>}
             {visibleColumns.strategy && <TableHead>Strategy</TableHead>}
             {visibleColumns.setup && <TableHead>Setup</TableHead>}
             <TableHead>Actions</TableHead>
@@ -540,7 +783,6 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
               {visibleColumns.exitPrice && <TableCell><Input type="number" value={newTrade.exit_price || ''} onChange={e => setNewTrade({...newTrade, exit_price: Number(e.target.value)})} required /></TableCell>}
               {visibleColumns.netProfit && <TableCell>-</TableCell>}
               {visibleColumns.status && <TableCell>-</TableCell>}
-              {visibleColumns.mistakes && <TableCell><Input value={newTrade.mistakes || ''} onChange={e => setNewTrade({...newTrade, mistakes: e.target.value})} /></TableCell>}
               {visibleColumns.strategy && (
                 <TableCell>
                   <Select value={newTrade.strategy_id || ''} onValueChange={value => setNewTrade({...newTrade, strategy_id: value, setup_id: undefined})}>
@@ -574,7 +816,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
               </TableCell>
             </TableRow>
           )}
-          {currentTrades.map((trade) => (
+          {sortedTrades.slice(indexOfFirstTrade, indexOfLastTrade).map((trade) => (
             <TableRow key={trade.id} className="h-12">
               <TableCell>
                 <Checkbox
@@ -615,7 +857,6 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
                   </span>
                 </TableCell>
               )}
-              {visibleColumns.mistakes && <TableCell>{editingId === trade.id ? <Input value={trade.mistakes || ''} onChange={e => setTrades(trades.map(t => t.id === trade.id ? {...t, mistakes: e.target.value} : t))} /> : trade.mistakes || '-'}</TableCell>}
               {visibleColumns.strategy && (
                 <TableCell>
                   <Select 
@@ -653,37 +894,71 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
               )}
               <TableCell>
                 <div className="flex space-x-2">
-                  {editingId === trade.id ? (
-                    <Button variant="outline" size="icon" onClick={() => handleSave(trade)}>
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button variant="outline" size="icon" onClick={() => handleEdit(trade.id)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Dialog open={deleteConfirmation === trade.id} onOpenChange={(isOpen) => !isOpen && setDeleteConfirmation(null)}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="hover:bg-destructive hover:text-destructive-foreground" size="icon" onClick={() => handleDelete(trade.id)}>
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Confirm Deletion</DialogTitle>
-                        <DialogDescription>
-                          Are you sure you want to delete this trade? This action cannot be undone.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteConfirmation(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={() => confirmDelete([trade.id])}>Delete</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                  <Button variant="outline" size="icon" onClick={() => handleOpenNotesDrawer(trade)}>
-                    <StickyNote className="h-4 w-4" />
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {editingId === trade.id ? (
+                          <Button variant="outline" size="icon" onClick={() => handleSave(trade)}>
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="icon" onClick={() => handleEdit(trade.id)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Edit Trade</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={() => handleOpenNotesDrawer(trade)} className="relative">
+                          <StickyNote className="h-4 w-4" />
+                          {trade.notes && (
+                            <div className="absolute -top-1 -right-1 bg-[#03b198] rounded-full p-0.5">
+                              <Check className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Add Trade Notes</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Dialog open={deleteConfirmation === trade.id} onOpenChange={(isOpen) => !isOpen && setDeleteConfirmation(null)}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" className="hover:bg-destructive hover:text-destructive-foreground" size="icon" onClick={() => handleDelete(trade.id)}>
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Confirm Deletion</DialogTitle>
+                              <DialogDescription>
+                                Are you sure you want to delete this trade? This action cannot be undone.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setDeleteConfirmation(null)}>Cancel</Button>
+                              <Button variant="destructive" onClick={() => confirmDelete([trade.id])}>Delete</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete Trade</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </TableCell>
             </TableRow>
@@ -692,7 +967,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
       </Table>
       <div className="flex justify-between items-center mt-4">
         <div>
-          Showing {indexOfFirstTrade + 1} to {Math.min(indexOfLastTrade, filteredTrades.length)} of {filteredTrades.length} trades
+          Showing {indexOfFirstTrade + 1} to {Math.min(indexOfLastTrade, sortedTrades.length)} of {sortedTrades.length} trades
         </div>
         <div className="flex space-x-2">
           <Button
@@ -704,8 +979,8 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
           </Button>
           <Button
             variant="outline"
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(sortedTrades.length / tradesPerPage)))}
+            disabled={currentPage === Math.ceil(sortedTrades.length / tradesPerPage)}
           >
             Next
           </Button>
@@ -721,7 +996,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmation(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={() => confirmDelete(selectedTrades)}>Delete All</Button>
+            <Button variant="destructive"onClick={() => confirmDelete(selectedTrades)}>Delete All</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
