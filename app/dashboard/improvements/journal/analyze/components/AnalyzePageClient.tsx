@@ -62,15 +62,12 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
     try {
       const parsedNotes = JSON.parse(trade.notes) as NotesContent;
       const mistakes = Object.values(parsedNotes).flatMap(section => section.mistakes);
-      console.log(`Mistakes for trade ${trade.id}:`, mistakes);
       return mistakes;
     } catch (error) {
       console.error('Error parsing notes for trade:', trade.id, error);
       return [];
     }
   })));
-
-  console.log('All Mistakes:', allMistakes);
 
   useEffect(() => {
     const newFilteredTrades = initialTrades.filter(trade => {
@@ -98,31 +95,30 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
     })
 
     setFilteredTrades(newFilteredTrades)
-    console.log('Filtered Trades:', newFilteredTrades);
   }, [filters, initialTrades])
 
   const chartData = filteredTrades
-  .sort((a, b) => new Date(a.closing_time).getTime() - new Date(b.closing_time).getTime())
-  .reduce((acc, trade) => {
-    const date = new Date(trade.closing_time).toLocaleDateString();
-    const lastTotal = acc.length > 0 ? acc[acc.length - 1].totalProfit : 0;
-    const newTotal = lastTotal + trade.net_profit;
-    
-    if (acc.length > 0 && acc[acc.length - 1].date === date) {
-      // Update the existing entry for this date
-      acc[acc.length - 1].profit += trade.net_profit;
-      acc[acc.length - 1].totalProfit = newTotal;
-    } else {
-      // Add a new entry for this date
-      acc.push({
-        date,
-        profit: trade.net_profit,
-        totalProfit: newTotal
-      });
-    }
-    
-    return acc;
-  }, [] as { date: string; profit: number; totalProfit: number }[]);
+    .sort((a, b) => new Date(a.closing_time).getTime() - new Date(b.closing_time).getTime())
+    .reduce((acc, trade) => {
+      const date = new Date(trade.closing_time).toLocaleDateString();
+      const lastTotal = acc.length > 0 ? acc[acc.length - 1].totalProfit : 0;
+      const newTotal = lastTotal + trade.net_profit;
+      
+      if (acc.length > 0 && acc[acc.length - 1].date === date) {
+        // Update the existing entry for this date
+        acc[acc.length - 1].profit += trade.net_profit;
+        acc[acc.length - 1].totalProfit = newTotal;
+      } else {
+        // Add a new entry for this date
+        acc.push({
+          date,
+          profit: trade.net_profit,
+          totalProfit: newTotal
+        });
+      }
+      
+      return acc;
+    }, [] as { date: string; profit: number; totalProfit: number }[]);
 
   const symbols = Array.from(new Set(initialTrades.map(trade => trade.symbol)))
   const directions = ['Buy', 'Sell']
@@ -146,41 +142,57 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
             title="Mistakes"
             options={allMistakes.map(mistake => ({ id: mistake, label: mistake }))}
             onSelectionChange={handleFilterChange('mistakes')}
+            trades={initialTrades}
+            filterType="mistakes"
           />
           <ScrollableSelection
             title="Strategies"
             options={strategies.map(strategy => ({ id: strategy.strategy_id, label: strategy.strategy_name }))}
             onSelectionChange={handleFilterChange('strategies')}
+            trades={initialTrades}
+            filterType="strategies"
           />
           <ScrollableSelection
             title="Setups"
             options={setups.map(setup => ({ id: setup.id, label: setup.setup_name }))}
             onSelectionChange={handleFilterChange('setups')}
+            trades={initialTrades}
+            filterType="setups"
           />
           <ScrollableSelection
             title="Months"
             options={months.map((month, index) => ({ id: index.toString(), label: month }))}
             onSelectionChange={handleFilterChange('months')}
+            trades={initialTrades}
+            filterType="months"
           />
           <ScrollableSelection
             title="Weekdays"
             options={weekdays.map((day, index) => ({ id: index.toString(), label: day }))}
             onSelectionChange={handleFilterChange('weekdays')}
+            trades={initialTrades}
+            filterType="weekdays"
           />
           <ScrollableSelection
             title="Hours"
             options={hours.map((hour, index) => ({ id: index.toString(), label: hour }))}
             onSelectionChange={handleFilterChange('hours')}
+            trades={initialTrades}
+            filterType="hours"
           />
           <ScrollableSelection
             title="Symbols"
             options={symbols.map(symbol => ({ id: symbol, label: symbol }))}
             onSelectionChange={handleFilterChange('symbols')}
+            trades={initialTrades}
+            filterType="symbols"
           />
           <ScrollableSelection
             title="Direction"
             options={directions.map(direction => ({ id: direction, label: direction }))}
             onSelectionChange={handleFilterChange('directions')}
+            trades={initialTrades}
+            filterType="directions"
           />
         </div>
       </div>

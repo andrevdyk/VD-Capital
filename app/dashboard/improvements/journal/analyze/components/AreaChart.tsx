@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { Button } from "@/components/ui/button"
+import { format, parse } from 'date-fns'
 
 interface DataPoint {
   date: string
@@ -21,6 +22,7 @@ interface AreaChartProps {
 
 const POSITIVE_COLOR = "#03b198";
 const NEGATIVE_COLOR = "#ff004d";
+const TRANSPARENT_COLOR = "rgba(255, 255, 255, 0)";
 
 export function AreaChartComponent({ data }: AreaChartProps) {
   const [chartData, setChartData] = useState<DataPoint[]>([])
@@ -73,6 +75,15 @@ export function AreaChartComponent({ data }: AreaChartProps) {
     return Object.values(groupedData);
   };
 
+  const formatXAxisTick = (dateString: string) => {
+    if (!dateString) return 'Baseline';
+    if (timeGrouping === 'month') {
+      const date = parse(dateString, 'yyyy-MM', new Date());
+      return format(date, 'MMM');
+    }
+    return dateString;
+  };
+
   const renderChart = () => {
     const dataKey = viewType === 'accumulative' ? 'totalProfit' : 'profit'
     const reversedData = reverseChartData(chartData)
@@ -96,15 +107,16 @@ export function AreaChartComponent({ data }: AreaChartProps) {
     const CustomTooltip = ({ active, payload, label }: any) => {
       if (active && payload && payload.length) {
         const value = payload[0].value;
+        const color = value >= 0 ? POSITIVE_COLOR : NEGATIVE_COLOR;
         return (
           <div className="custom-tooltip" style={{ 
             backgroundColor: "hsl(var(--background))", 
-            border: "1px solid hsl(var(--border))", 
+            border: `1px solid ${color}`, 
             borderRadius: "var(--radius)",
             padding: "10px"
           }}>
             <p className="label" style={{ color: "hsl(var(--foreground))" }}>{`Date: ${label || 'Baseline'}`}</p>
-            <p className="value" style={{ color: value >= 0 ? POSITIVE_COLOR : NEGATIVE_COLOR }}>
+            <p className="value" style={{ color: color }}>
               {`${dataKey}: $${value.toFixed(2)}`}
             </p>
           </div>
@@ -139,8 +151,40 @@ export function AreaChartComponent({ data }: AreaChartProps) {
             <AreaChart {...commonProps}>
               <defs>
                 <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset={offset} stopColor={POSITIVE_COLOR} stopOpacity={0.8}/>
-                  <stop offset={offset} stopColor={NEGATIVE_COLOR} stopOpacity={0.8}/>
+                  <stop offset="0%" stopColor={POSITIVE_COLOR} stopOpacity={1} />
+                  <stop offset={`${offset * 100}%`} stopColor={POSITIVE_COLOR} stopOpacity={0} />
+                  <stop offset={`${offset * 100}%`} stopColor={NEGATIVE_COLOR} stopOpacity={0} />
+                  <stop offset="100%" stopColor={NEGATIVE_COLOR} stopOpacity={1} />
+                </linearGradient>
+                <linearGradient id="strokeColor" x1="0" y1="0" x2="0" y2="1">
+                
+                <stop
+                  offset= "0%" // This sets where the gradient changes
+                  stopColor="#03b198"
+                  stopOpacity={1}
+                />
+
+                <stop
+                  offset="0%" // Same base point for the transition
+                  stopColor="#03b198"
+                  stopOpacity={1}
+                />
+                <stop
+                  offset={`${offset * 100}%`} 
+                  stopColor="#03b198"
+                  stopOpacity={1}
+                />
+                <stop
+                  offset={`${offset * 100}%`}
+                  stopColor="#ff2f67"
+                  stopOpacity={1}
+                />
+                <stop
+                  offset="100%"
+                  stopColor="#ff2f67"
+                  stopOpacity={1}
+                />
+                {/* Negative stroke gradient */}
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -148,7 +192,8 @@ export function AreaChartComponent({ data }: AreaChartProps) {
                 dataKey="date" 
                 {...commonAxisProps} 
                 reversed={true}
-                tickFormatter={(value) => value || 'Baseline'}
+                tickFormatter={formatXAxisTick}
+                interval={timeGrouping === 'month' ? 0 : 'preserveStartEnd'}
               />
               <YAxis {...commonAxisProps} tickFormatter={(value) => `$${value}`} domain={[Math.min(minValue, 0), Math.max(maxValue, 0)]} />
               <ChartTooltip content={<CustomTooltip />} />
@@ -156,10 +201,28 @@ export function AreaChartComponent({ data }: AreaChartProps) {
               <Area
                 type="monotone"
                 dataKey={dataKey}
-                stroke="url(#splitColor)"
                 fill="url(#splitColor)"
-                fillOpacity={1}
+                fillOpacity={0.6}
+                stroke="url(#strokeColor)"
+                strokeWidth={2}
               />
+              {reversedData.map((entry, index) => {
+                if (index === 0) return null; // Skip the first point (baseline)
+                const prevEntry = reversedData[index - 1];
+                return (
+                  <Line
+                    key={index}
+                    strokeWidth={2}
+                    stroke={entry[dataKey] >= 0 ? POSITIVE_COLOR : NEGATIVE_COLOR}
+                    type="linear"
+                    dataKey={dataKey}
+                    points={[
+                      { x: index - 1, y: prevEntry[dataKey] },
+                      { x: index, y: entry[dataKey] },
+                    ]}
+                  />
+                );
+              })}
             </AreaChart>
           </ChartContainer>
         )
@@ -172,7 +235,8 @@ export function AreaChartComponent({ data }: AreaChartProps) {
                 dataKey="date" 
                 {...commonAxisProps} 
                 reversed={true}
-                tickFormatter={(value) => value || 'Baseline'}
+                tickFormatter={formatXAxisTick}
+                interval={timeGrouping === 'month' ? 0 : 'preserveStartEnd'}
               />
               <YAxis {...commonAxisProps} tickFormatter={(value) => `$${value}`} domain={[Math.min(minValue, 0), Math.max(maxValue, 0)]} />
               <ChartTooltip content={<CustomTooltip />} />
@@ -194,25 +258,82 @@ export function AreaChartComponent({ data }: AreaChartProps) {
       case 'line':
         return (
           <ChartContainer config={chartConfig}>
-            <LineChart {...commonProps}>
+            <AreaChart {...commonProps}>
+              <defs>
+                <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={POSITIVE_COLOR} stopOpacity={1} />
+                  <stop offset={`${offset * 100}%`} stopColor={POSITIVE_COLOR} stopOpacity={0} />
+                  <stop offset={`${offset * 100}%`} stopColor={NEGATIVE_COLOR} stopOpacity={0} />
+                  <stop offset="100%" stopColor={NEGATIVE_COLOR} stopOpacity={1} />
+                </linearGradient>
+                <linearGradient id="strokeColor" x1="0" y1="0" x2="0" y2="1">
+                
+                <stop
+                  offset= "0%" // This sets where the gradient changes
+                  stopColor="#03b198"
+                  stopOpacity={1}
+                />
+
+                <stop
+                  offset="0%" // Same base point for the transition
+                  stopColor="#03b198"
+                  stopOpacity={1}
+                />
+                <stop
+                  offset={`${offset * 100}%`} 
+                  stopColor="#03b198"
+                  stopOpacity={1}
+                />
+                <stop
+                  offset={`${offset * 100}%`}
+                  stopColor="#ff2f67"
+                  stopOpacity={1}
+                />
+                <stop
+                  offset="100%"
+                  stopColor="#ff2f67"
+                  stopOpacity={1}
+                />
+                {/* Negative stroke gradient */}
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="date" 
                 {...commonAxisProps} 
                 reversed={true}
-                tickFormatter={(value) => value || 'Baseline'}
+                tickFormatter={formatXAxisTick}
+                interval={timeGrouping === 'month' ? 0 : 'preserveStartEnd'}
               />
               <YAxis {...commonAxisProps} tickFormatter={(value) => `$${value}`} domain={[Math.min(minValue, 0), Math.max(maxValue, 0)]} />
               <ChartTooltip content={<CustomTooltip />} />
               <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
-              <Line 
-                type="monotone" 
-                dataKey={dataKey} 
-                stroke={POSITIVE_COLOR}
+              <Area
+                type="monotone"
+                dataKey={dataKey}
+                fill="url(#splitColor)"
+                fillOpacity={0}
+                stroke="url(#strokeColor)"
                 strokeWidth={2}
-                dot={false}
               />
-            </LineChart>
+              {reversedData.map((entry, index) => {
+                if (index === 0) return null; // Skip the first point (baseline)
+                const prevEntry = reversedData[index - 1];
+                return (
+                  <Line
+                    key={index}
+                    strokeWidth={2}
+                    stroke={entry[dataKey] >= 0 ? POSITIVE_COLOR : NEGATIVE_COLOR}
+                    type="linear"
+                    dataKey={dataKey}
+                    points={[
+                      { x: index - 1, y: prevEntry[dataKey] },
+                      { x: index, y: entry[dataKey] },
+                    ]}
+                  />
+                );
+              })}
+            </AreaChart>
           </ChartContainer>
         )
       default:
