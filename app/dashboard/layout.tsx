@@ -13,7 +13,7 @@ export default function DashboardLayout({
         <DashboardSideBar />
       </div>
       <DashboardTopNav>
-        <main className="flex flex-col gap-4 px-4 lg:gap-6">
+        <main className="flex flex-col gap-4 pl-4 pr-2 h-full lg:gap-6">
           {children}
         </main>
       </DashboardTopNav>

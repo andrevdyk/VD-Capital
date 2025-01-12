@@ -16,7 +16,7 @@ import Image from 'next/image'
 export default function DashboardTopNav({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col ">
-      <header className="flex h-14 lg:h-[55px] gap-4 border-b w-full bg-white dark:bg-black">
+      <header className="flex h-14 lg:h-[58px] gap-4 border-b w-full bg-white dark:bg-black">
         <Dialog>
           <SheetTrigger className="min-[1024px]:hidden p-2 transition">
             <HamburgerMenuIcon />
@@ -41,7 +41,7 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
               alt="VD Capital Dark Mode"
               width={30}
               height={30}
-              className="hidden dark:block ml-3 flex flex-col" // Show in dark mode, hide in light mode
+              className="hidden dark:block ml-3 flex-col" // Show in dark mode, hide in light mode
             />
           </Link>
             </SheetHeader>

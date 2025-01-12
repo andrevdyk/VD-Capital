@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { AreaChartComponent } from "./AreaChart"
 import { ScrollableSelection } from "./ScrollableSelection"
+import { Button } from "@/components/ui/button"
 
 interface Trade {
   id: string
@@ -43,6 +44,8 @@ interface NotesContent {
   improvement: { text: string; mistakes: string[] };
 }
 
+type Mode = 'evaluation' | 'simulation';
+
 export function AnalyzePageClient({ initialTrades, strategies, setups }: AnalyzePageClientProps) {
   const [filteredTrades, setFilteredTrades] = useState(initialTrades)
   const [filters, setFilters] = useState({
@@ -55,6 +58,7 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
     symbols: [] as string[],
     directions: [] as string[],
   })
+  const [mode, setMode] = useState<Mode>('evaluation')
 
   // Extract unique mistakes from all trades
   const allMistakes = Array.from(new Set(initialTrades.flatMap(trade => {
@@ -97,28 +101,47 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
     setFilteredTrades(newFilteredTrades)
   }, [filters, initialTrades])
 
-  const chartData = filteredTrades
-    .sort((a, b) => new Date(a.closing_time).getTime() - new Date(b.closing_time).getTime())
-    .reduce((acc, trade) => {
-      const date = new Date(trade.closing_time).toLocaleDateString();
-      const lastTotal = acc.length > 0 ? acc[acc.length - 1].totalProfit : 0;
-      const newTotal = lastTotal + trade.net_profit;
-      
-      if (acc.length > 0 && acc[acc.length - 1].date === date) {
-        // Update the existing entry for this date
-        acc[acc.length - 1].profit += trade.net_profit;
-        acc[acc.length - 1].totalProfit = newTotal;
-      } else {
-        // Add a new entry for this date
-        acc.push({
-          date,
-          profit: trade.net_profit,
-          totalProfit: newTotal
-        });
-      }
-      
-      return acc;
-    }, [] as { date: string; profit: number; totalProfit: number }[]);
+  const generateChartData = (trades: Trade[]) => {
+    return trades
+      .sort((a, b) => new Date(a.closing_time).getTime() - new Date(b.closing_time).getTime())
+      .reduce((acc, trade) => {
+        const date = new Date(trade.closing_time).toLocaleDateString();
+        const lastTotal = acc.length > 0 ? acc[acc.length - 1].totalProfit : 0;
+        const newTotal = lastTotal + trade.net_profit;
+        
+        if (acc.length > 0 && acc[acc.length - 1].date === date) {
+          // Update the existing entry for this date
+          acc[acc.length - 1].profit += trade.net_profit;
+          acc[acc.length - 1].totalProfit = newTotal;
+        } else {
+          // Add a new entry for this date
+          acc.push({
+            date,
+            profit: trade.net_profit,
+            totalProfit: newTotal
+          });
+        }
+        
+        return acc;
+      }, [] as { date: string; profit: number; totalProfit: number }[]);
+  }
+
+  const chartData = (() => {
+    const allTradesData = generateChartData(initialTrades);
+    const filteredTradesData = generateChartData(filteredTrades);
+
+    switch (mode) {
+      case 'simulation':
+        return [
+          { name: 'All Trades', data: allTradesData },
+          { name: 'Filtered Trades', data: filteredTradesData }
+        ];
+      case 'evaluation':
+        return filteredTradesData;
+      default:
+        return allTradesData;
+    }
+  })();
 
   const symbols = Array.from(new Set(initialTrades.map(trade => trade.symbol)))
   const directions = ['Buy', 'Sell']
@@ -131,13 +154,29 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Analyze Your Trades</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <AreaChartComponent data={chartData} />
+    <div className="">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold p-4">Analyze Your Trades</h2>
+        <div className="">
+          <Button
+            variant={mode === 'evaluation' ? 'default' : 'outline'}
+            onClick={() => setMode('evaluation')}
+          >
+            Evaluation
+          </Button>
+          <Button
+            variant={mode === 'simulation' ? 'default' : 'outline'}
+            onClick={() => setMode('simulation')}
+          >
+            Simulation
+          </Button>
         </div>
-        <div className="space-y-4 overflow-auto max-h-[calc(100vh-200px)]">
+      </div>
+      <div className="flex gap-6 h-[82vh]">
+        <div className="flex-grow w-[72vw]">
+          <AreaChartComponent data={chartData} mode={mode} trades={filteredTrades} />
+        </div>
+        <div className="w-[410px] space-y-4 overflow-auto h-full" style={{scrollbarWidth: 'thin',scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'}}>
           <ScrollableSelection
             title="Mistakes"
             options={allMistakes.map(mistake => ({ id: mistake, label: mistake }))}

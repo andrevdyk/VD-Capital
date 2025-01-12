@@ -69,14 +69,6 @@ export default function TradingQuizPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="h-14 border-b w-full bg-white dark:bg-black flex items-center gap-4 z-1">
-        <div className="px-4 -z-1">
-          <JournalNavigation />
-        </div>
-        <div className="justify-end px-2 ml-auto">
-          <AddTradesButton />
-        </div>
-      </div>
       <div className="flex flex-1 overflow-hidden">
         <StrategyArea onStrategySelect={handleStrategySelect} />
         <div className="flex-1 overflow-auto p-4">

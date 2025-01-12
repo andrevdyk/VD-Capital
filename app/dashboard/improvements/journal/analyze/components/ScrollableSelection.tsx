@@ -110,13 +110,13 @@ export function ScrollableSelection({ title, options, onSelectionChange, trades,
   }, [options, trades, filterType])
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 flex flex-col">
       <h3 className="text-lg font-semibold">{title}</h3>
-      <ScrollArea className="h-[200px] w-[350px] rounded-md border p-4">
+      <ScrollArea className="h-fit max-h-[200px] w-[390px] overflow-y-scroll rounded-md border p-4 " style={{scrollbarWidth: 'thin',scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'}}>
         {options.map((option) => {
           const stats = memoizedStats[option.id]
           const totalProfit = parseFloat(stats.totalProfit)
-          const textColor = totalProfit > 0 ? 'text-[#03b198]' : 
+          const textColor = totalProfit > 0 ? 'text-[#04D4B5]' : 
                             totalProfit < 0 ? 'text-[#ff004d]' : 
                             'text-muted-foreground'
 

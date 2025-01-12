@@ -123,7 +123,8 @@ const analyze: { title: string; href: string; description: string }[] = [
 
 export function JournalNavigation() {
   return (
-    <NavigationMenu>
+    <NavigationMenu className="h-14 lg:h-[55px] flex items-center z-10">
+      <div className="">
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuTrigger>
@@ -238,6 +239,7 @@ export function JournalNavigation() {
           </NavigationMenuContent>
         </NavigationMenuItem>
       </NavigationMenuList>
+      </div>
     </NavigationMenu>
   )
 }
