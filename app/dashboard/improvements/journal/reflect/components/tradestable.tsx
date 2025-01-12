@@ -86,7 +86,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
     symbol: true,
     direction: true,
-    size: true,
+    size: false,
     openingTime: true,
     closingTime: true,
     duration: true,
@@ -444,6 +444,11 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
     if (aValue === undefined || bValue === undefined) return 0
 
     if (typeof aValue === 'string' && typeof bValue === 'string') {
+      const dateA = new Date(aValue)
+      const dateB = new Date(bValue)
+      if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+        return sortDirection === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime()
+      }
       return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue)
     }
 
@@ -451,11 +456,9 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
       return sortDirection === 'asc' ? aValue - bValue : bValue - aValue
     }
 
-    if (aValue instanceof Date && bValue instanceof Date) {
-      return sortDirection === 'asc' ? aValue.getTime() - bValue.getTime() : bValue.getTime() - aValue.getTime()
-    }
-
-    return 0
+    return sortDirection === 'asc' 
+      ? String(aValue).localeCompare(String(bValue)) 
+      : String(bValue).localeCompare(String(aValue))
   })
 
   return (
