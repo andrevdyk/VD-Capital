@@ -6,18 +6,18 @@ import { ScrollableSelection } from "./ScrollableSelection"
 import { Button } from "@/components/ui/button"
 
 interface Trade {
-  id: string
-  symbol: string
-  side: string
-  qty: number
-  placing_time: string
-  closing_time: string
-  entry_price: number
-  exit_price: number
-  net_profit: number
-  notes?: string
-  strategy_id?: string
-  setup_id?: string
+  id: string;
+  symbol: string;
+  side: 'Buy' | 'Sell';
+  qty: number;
+  placing_time: string;
+  closing_time: string;
+  entry_price: number;
+  exit_price: number;
+  net_profit: number;
+  notes?: string;
+  strategy_id?: string;
+  setup_id?: string;
 }
 
 interface Strategy {
@@ -174,7 +174,7 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
       </div>
       <div className="flex gap-6 h-[82vh]">
         <div className="flex-grow w-[72vw]">
-          <AreaChartComponent data={chartData} mode={mode} trades={filteredTrades} />
+          <AreaChartComponent data={chartData} mode={mode} trades={filteredTrades} allTrades={initialTrades} />
         </div>
         <div className="w-[410px] space-y-4 overflow-auto h-full" style={{scrollbarWidth: 'thin',scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'}}>
           <ScrollableSelection

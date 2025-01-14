@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from 'react'
-import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine, Legend } from 'recharts'
+import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, ReferenceLine, Legend } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
@@ -10,6 +10,8 @@ import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { Button } from "@/components/ui/button"
 import { format } from 'date-fns'
 import React, { Fragment } from 'react'
+import { Info } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface DataPoint {
   date: string
@@ -20,6 +22,7 @@ interface DataPoint {
 
 interface Trade {
   net_profit: number
+  side: 'Buy' | 'Sell'
   // Add other trade properties as needed
 }
 
@@ -27,13 +30,22 @@ interface AreaChartProps {
   data: DataPoint[] | { name: string; data: DataPoint[] }[]
   mode: 'evaluation' | 'simulation'
   trades: Trade[]
+  allTrades: Trade[]
 }
 
 const POSITIVE_COLOR = "#03b198";
 const NEGATIVE_COLOR = "#ff004d";
-const FILTERED_COLOR = "#6200FF";
+const FILTERED_COLOR = "#4338ca";
 
-export function AreaChartComponent({ data, mode, trades }: AreaChartProps) {
+const formatLargeNumber = (num: number | undefined): string => {
+  if (num === undefined || num === null) return "N/A";
+  const roundedNum = Math.abs(num).toFixed(2);
+  const [integerPart, decimalPart] = roundedNum.split('.');
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${num < 0 ? '-' : ''}${formattedInteger}.${decimalPart}`;
+};
+
+export function AreaChartComponent({ data, mode, trades, allTrades }: AreaChartProps) {
   const [chartData, setChartData] = useState<DataPoint[] | { name: string; data: DataPoint[] }[]>([])
   const [viewType, setViewType] = useState<'accumulative' | 'ordinary'>('accumulative')
   const [chartType, setChartType] = useState<'area' | 'bar' | 'line'>('area')
@@ -73,32 +85,46 @@ export function AreaChartComponent({ data, mode, trades }: AreaChartProps) {
   };
 
   const metrics = useMemo(() => {
-    const totalReturn = trades.reduce((sum, trade) => sum + trade.net_profit, 0);
-    const winningTrades = trades.filter(trade => trade.net_profit > 0);
-    const winRate = (winningTrades.length / trades.length) * 100;
-    
-    // Calculate Sharpe Ratio (assuming risk-free rate of 0 for simplicity)
-    const averageReturn = totalReturn / trades.length;
-    const stdDev = Math.sqrt(trades.reduce((sum, trade) => sum + Math.pow(trade.net_profit - averageReturn, 2), 0) / trades.length);
-    const sharpeRatio = averageReturn / stdDev;
-    
-    // Calculate Z-Score (assuming normal distribution)
-    const zScore = averageReturn / (stdDev / Math.sqrt(trades.length));
-    
-    // Calculate Expectancy
-    const averageWin = winningTrades.reduce((sum, trade) => sum + trade.net_profit, 0) / winningTrades.length;
-    const averageLoss = (totalReturn - winningTrades.reduce((sum, trade) => sum + trade.net_profit, 0)) / (trades.length - winningTrades.length);
-    const expectancy = (winRate / 100 * averageWin) - ((1 - winRate / 100) * Math.abs(averageLoss));
+    const calculateMetrics = (trades: Trade[]) => {
+      const totalReturn = trades.reduce((sum, trade) => sum + trade.net_profit, 0);
+      const winningTrades = trades.filter(trade => trade.net_profit > 0);
+      const losingTrades = trades.filter(trade => trade.net_profit < 0);
+      const winRate = (winningTrades.length / trades.length) * 100;
+      const longTrades = trades.filter(trade => trade.side === 'Buy');
+      const shortTrades = trades.filter(trade => trade.side === 'Sell');
+      
+      // Calculate Sharpe Ratio (assuming risk-free rate of 0 for simplicity)
+      const averageReturn = totalReturn / trades.length;
+      const stdDev = Math.sqrt(trades.reduce((sum, trade) => sum + Math.pow(trade.net_profit - averageReturn, 2), 0) / trades.length);
+      const sharpeRatio = averageReturn / stdDev;
+      
+      // Calculate Z-Score (assuming normal distribution)
+      const zScore = averageReturn / (stdDev / Math.sqrt(trades.length));
+      
+      // Calculate Expectancy
+      const averageWin = winningTrades.length > 0 ? winningTrades.reduce((sum, trade) => sum + trade.net_profit, 0) / winningTrades.length : 0;
+      const averageLoss = losingTrades.length > 0 ? Math.abs(losingTrades.reduce((sum, trade) => sum + trade.net_profit, 0) / losingTrades.length) : 0;
+      const expectancy = (winRate / 100 * averageWin) - ((1 - winRate / 100) * averageLoss);
 
-    return {
-      return: totalReturn,
-      winRate,
-      tradeCount: trades.length,
-      sharpeRatio,
-      zScore,
-      expectancy
+      return {
+        return: totalReturn,
+        winRate,
+        tradeCount: trades.length,
+        winningTrades: winningTrades.length,
+        losingTrades: losingTrades.length,
+        longTrades: longTrades.length,
+        shortTrades: shortTrades.length,
+        sharpeRatio,
+        zScore,
+        expectancy
+      };
     };
-  }, [trades]);
+
+    const filteredMetrics = calculateMetrics(trades);
+    const allTradesMetrics = mode === 'simulation' ? calculateMetrics(allTrades) : null;
+
+    return { filtered: filteredMetrics, all: allTradesMetrics };
+  }, [trades, mode, allTrades]);
 
   const renderChart = () => {
     const dataKey = viewType === 'accumulative' ? 'totalProfit' : 'profit'
@@ -423,54 +449,93 @@ export function AreaChartComponent({ data, mode, trades }: AreaChartProps) {
       <CardContent className=" flex-grow overflow-hidden flex flex-col">
         
         <div className="grid grid-cols-6 gap-2 mb-4">
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Return</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold">${metrics.return.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Win Rate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold">{metrics.winRate.toFixed(2)}%</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Trades</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold">{metrics.tradeCount}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Sharpe Ratio</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold">{metrics.sharpeRatio.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Z-Score</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold">{metrics.zScore.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Expectancy</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold">${metrics.expectancy.toFixed(2)}</p>
-            </CardContent>
-          </Card>
+          {[
+            { 
+              label: "Return", 
+              value: metrics.filtered.return, 
+              format: (v: number) => `$${formatLargeNumber(v)}`,
+              info: "The total profit or loss from all trades." 
+            },
+            { 
+              label: "Win Rate", 
+              value: metrics.filtered.winRate, 
+              format: (v: number | undefined) => v !== undefined ? `${Math.round(v)}%` : 'N/A', 
+              subValue: `Wins: ${metrics.filtered.winningTrades} Losses: ${metrics.filtered.losingTrades}`,
+              info: "The percentage of trades that resulted in a profit." 
+            },
+            { 
+              label: "Trades", 
+              value: metrics.filtered.tradeCount, 
+              format: (v: number) => Math.round(v).toString(),
+              subValue: `Longs: ${metrics.filtered.longTrades} Shorts: ${metrics.filtered.shortTrades}`,
+              info: "The total number of trades executed." 
+            },
+            { 
+              label: "Sharpe Ratio", 
+              value: metrics.filtered.sharpeRatio, 
+              format: (v: number | undefined) => v !== undefined ? v.toFixed(2) : 'N/A', 
+              color: (v: number | undefined) => v !== undefined ? (v > 1 ? 'text-[#03b198]' : v > 0.85 ? 'text-yellow-500' : 'text-[#ff004d]') : '',
+              info: "A measure of risk-adjusted return. A higher Sharpe ratio indicates better risk-adjusted performance. Generally, a Sharpe ratio above 1 is considered good, above 2 is very good, and above 3 is excellent.",
+              allTradesValue: metrics.all?.sharpeRatio
+            },
+            { 
+              label: "Z-Score", 
+              value: metrics.filtered.zScore, 
+              format: (v: number | undefined) => v !== undefined ? v.toFixed(2) : 'N/A', 
+              color: (v: number | undefined) => v !== undefined ? (Math.abs(v) > 2 ? 'text-[#03b198]' : Math.abs(v) > 1 ? 'text-yellow-500' : 'text-[#ff004d]') : '',
+              info: "A measure of how many standard deviations the returns are from the mean. A Z-score above 2 or below -2 is generally considered significant.",
+              allTradesValue: metrics.all?.zScore
+            },
+            {
+              label: "Expectancy",
+              value: metrics.filtered.expectancy,
+              format: (v: number) => {
+                const formatted = formatLargeNumber(v);
+                return `$${formatted}`;
+              },
+              color: (v: number) => v > 0 ? 'text-[#03b198]' : v < 0 ? 'text-[#ff004d]' : 'text-white',
+              info: "The average amount you can expect to win (or lose) per trade. A positive expectancy indicates a profitable system."
+            },
+          ].map(({ label, value, format, color, subValue, info, allTradesValue }) => (
+            <Card key={label}>
+              <CardHeader className="p-4">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+                  {label}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{info}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className={`text-xl font-bold ${color ? color(value) : ''}`}>
+                  {typeof value === 'number' && !isNaN(value) ? format(value) : 'N/A'}
+                </p>
+                {subValue && <p className="text-sm text-muted-foreground">{subValue}</p>}
+                {mode === 'simulation' && metrics.all && (
+                  <p className="text-sm text-muted-foreground">
+                    Actual: {
+                      label === 'Sharpe Ratio' || label === 'Z-Score'
+                        ? allTradesValue !== undefined ? format(allTradesValue) : 'N/A'
+                        : label === 'Win Rate'
+                          ? `${Math.round(metrics.all.winRate)}%`
+                          : label === 'Trades'
+                            ? `${metrics.all.tradeCount}`
+                            : typeof metrics.all[label.toLowerCase() as keyof typeof metrics.all] === 'number'
+                              ? format(metrics.all[label.toLowerCase() as keyof typeof metrics.all] as number)
+                              : 'N/A'
+                    }
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
         <div className="flex-grow h-[57vh]">
           {renderChart()}
