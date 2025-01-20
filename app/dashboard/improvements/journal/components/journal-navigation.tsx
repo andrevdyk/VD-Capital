@@ -92,12 +92,6 @@ const testing: { title: string; href: string; description: string }[] = [
     description:
       "Simulate trades in live market conditions without real money.",
   },
-  {
-    title: "Live Testing",
-    href: "/docs/primitives/progress",
-    description:
-      "Start small to evaluate performance under real-time market pressures.",
-  },
 ]
 
 const analyze: { title: string; href: string; description: string }[] = [
@@ -179,7 +173,7 @@ export function JournalNavigation() {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuTrigger>
-            <Link href="/testing">Testing</Link>
+            <Link href="/dashboard/improvements/journal/backtest">Testing</Link>
           </NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
