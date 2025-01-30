@@ -11,7 +11,8 @@ import {
   ChartCandlestick,
   Newspaper,
   University,
-  AreaChart
+  AreaChart,
+  Tent
 } from "lucide-react"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -74,10 +75,10 @@ export default function DashboardSideBar() {
               <span className="hidden lg:block">Finance</span>
             </Link>
 
-            <Separator className="my-3" />
+            <Separator className="my-1" />
 
             <Link
-              className={clsx("flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
+              className={clsx("flex items-center gap-2 rounded-lg px-2 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
                 "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white": pathname === "/dashboard/university"
               })}
               href="/dashboard/university"
@@ -88,15 +89,29 @@ export default function DashboardSideBar() {
               <span className="hidden lg:block">University</span>
             </Link>
             
-            <Separator className="my-3" />
+            <Separator className="my-1" />
+
+            <Link
+              className={clsx("flex items-center gap-2 rounded-lg px-2 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
+                "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white": pathname === "/dashboard/v"
+              })}
+              href="/dashboard/v"
+            >
+              <div className="p-1 bg-transparent">
+              <Tent className="h-5 w-5 rotate-180" />
+              </div>
+              <span className="hidden lg:block">V Social</span>
+            </Link>
+
+            <Separator className="my-1" />
           </nav>
         </div>
 
         {/* Settings Button */}
         <div className="mt-auto px-4 pb-4"> {/* Move this outside flex-1 */}
           <Link
-            className={clsx("flex items-center gap-2 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
-              "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white": pathname === "/dashboard/settings"
+            className={clsx("flex items-center gap-2 rounded-lg px-2 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50", {
+                "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white": pathname === "/dashboard/settings"
             })}
             href="/dashboard/settings"
           >

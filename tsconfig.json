@@ -29,6 +29,6 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "next.config.js"
-  ],
+, "utils/supabase/buckets.ts"  ],
   "exclude": ["node_modules"]
 }
