@@ -23,7 +23,7 @@ export default function Search() {
     if (!searchTerm) return
 
     const { data, error } = await supabase
-      .from("users")
+      .from("profiles")
       .select("id, name, avatar_url")
       .ilike("name", `%${searchTerm}%`)
       .limit(10)
@@ -31,7 +31,7 @@ export default function Search() {
     if (error) {
       console.error("Error searching users:", error)
     } else {
-      setSearchResults(data)
+      //setSearchResults(data)
     }
   }
 

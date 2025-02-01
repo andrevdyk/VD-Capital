@@ -1,5 +1,5 @@
 "use client"
-
+/*
 import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchGroups } from "../actions/groups"
@@ -44,4 +44,4 @@ export default function GroupList({ userId }: { userId: string }) {
     </div>
   )
 }
-
+*/

@@ -11,7 +11,7 @@ type Post = {
   likes: number
   comments: number
 }
-
+/*
 export default function ExploreGrid() {
   const [posts, setPosts] = useState<Post[]>([])
   const supabase = createClient()
@@ -61,3 +61,4 @@ export default function ExploreGrid() {
   )
 }
 
+*/

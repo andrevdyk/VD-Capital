@@ -42,7 +42,7 @@ export default function GroupForm({ userId }: { userId: string }) {
         />
       </div>
       <div className="flex items-center space-x-2">
-        <input
+        <Input
           id="isPrivate"
           type="checkbox"
           checked={isPrivate}

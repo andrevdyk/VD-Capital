@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server"
-import ExploreGrid from "../components/ExploreGrid"
+/*import ExploreGrid from "../components/ExploreGrid"
 
 export default async function Explore() {
   const supabase = createClient()
@@ -18,4 +18,4 @@ export default async function Explore() {
     </div>
   )
 }
-
+*/

@@ -9,6 +9,7 @@ export type Profile = {
   display_name: string
   avatar_url: string | null
   updated_at: string | null
+  cover_image_url: string | null // Add this line
 }
 
 export async function searchUsers(searchTerm: string) {
@@ -82,7 +83,7 @@ export async function createProfile({
     return { success: false, error: "Failed to create profile" }
   }
 
-  revalidatePath("/dashboard/v")
+  revalidatePath("/")
   return { success: true, data: data[0] }
 }
 

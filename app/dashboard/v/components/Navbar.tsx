@@ -26,11 +26,11 @@ export function Navbar() {
     { href: "/dashboard/v/chats", icon: MessageSquare, label: "Chats" },
     { href: "/dashboard/v/search", icon: Search, label: "Search" },
     { href: "/dashboard/v/explore", icon: Compass, label: "Explore" },
-    { href: "/dashboard/v/profile", icon: User, label: "Profile" },
+    { href: `/dashboard/v/profile/${user?.id || ""}`, icon: User, label: "Profile" },
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border md:top-0 md:bottom-auto md:border-b md:border-t-0">
+    <nav className="bg-background border-t border-border md:top-0 md:bottom-auto md:border-b md:border-t-0">
       <div className="container mx-auto px-4">
         <ul className="flex justify-between items-center h-16">
           {navItems.map((item) => (
