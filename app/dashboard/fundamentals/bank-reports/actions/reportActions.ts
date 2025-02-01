@@ -66,4 +66,3 @@ export async function getReportById(id: string): Promise<Report | null> {
     return null
   }
 }
-

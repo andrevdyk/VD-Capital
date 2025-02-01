@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Report } from '../types/report'
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -21,20 +21,7 @@ export default function ReportList() {
   const [assetClass, setAssetClass] = useState('All')
   const { ref, inView } = useInView()
 
-  useEffect(() => {
-    setReports([])
-    setPage(1)
-    setHasMore(true)
-    loadMoreReports(true)
-  }, [search, assetClass])
-
-  useEffect(() => {
-    if (inView && hasMore && !loading) {
-      loadMoreReports()
-    }
-  }, [inView, hasMore, loading])
-
-  const loadMoreReports = async (reset = false) => {
+  const loadMoreReports = useCallback(async (reset = false) => {
     if (loading) return
     setLoading(true)
     const currentPage = reset ? 1 : page
@@ -46,7 +33,20 @@ export default function ReportList() {
       setHasMore(result.hasMore)
       setPage(prevPage => reset ? 2 : prevPage + 1)
     }
-  }
+  }, [loading, page, search, assetClass])
+
+  useEffect(() => {
+    setReports([])
+    setPage(1)
+    setHasMore(true)
+    loadMoreReports(true)
+  }, [loadMoreReports, search, assetClass]) //Fixed unnecessary dependencies
+
+  useEffect(() => {
+    if (inView && hasMore && !loading) {
+      loadMoreReports()
+    }
+  }, [inView, hasMore, loading, loadMoreReports])
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
@@ -98,4 +98,3 @@ export default function ReportList() {
     </Card>
   )
 }
-

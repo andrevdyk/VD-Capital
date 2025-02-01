@@ -13,7 +13,17 @@ export default function ReportDetail() {
 
   useEffect(() => {
     if (reportId) {
-      getReportById(reportId).then(setSelectedReport)
+      getReportById(reportId).then(report => {
+        if (report) {
+          setSelectedReport(report)
+        } else {
+          console.error('Report not found')
+          // Handle the case when the report is not found
+        }
+      }).catch(error => {
+        console.error('Error fetching report:', error)
+        // Handle the error case
+      })
     } else {
       setSelectedReport(null)
     }
@@ -44,4 +54,3 @@ export default function ReportDetail() {
     </Card>
   )
 }
-
