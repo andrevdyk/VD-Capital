@@ -16,6 +16,7 @@ type Profile = {
   username: string
   display_name: string
   avatar_url: string | null
+  cover_image_url: string | null
 }
 
 export function EditProfileForm({ profile }: { profile: Profile }) {

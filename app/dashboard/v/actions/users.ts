@@ -91,18 +91,22 @@ export async function createProfile({
   return { success: true, data: data[0] }
 }
 
-export async function getProfile(userId: string) {
+export async function getProfile(userId: string): Promise<{ success: boolean; data: Profile | null; error?: string }> {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("username, display_name, avatar_url")
+    .select("id, username, display_name, avatar_url, updated_at, cover_image_url")
     .eq("id", userId)
     .single()
 
   if (error) {
+    if (error.code === "PGRST116") {
+      // Profile not found
+      return { success: false, data: null, error: "Profile not found" }
+    }
     console.error("Error fetching profile:", error)
-    return { success: false, error: "Failed to fetch profile" }
+    return { success: false, data: null, error: "Failed to fetch profile" }
   }
 
   return { success: true, data }
