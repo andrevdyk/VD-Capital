@@ -1,47 +1,131 @@
 "use client"
-/*
-import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
-import { fetchGroups } from "../actions/groups"
+import type { Group } from "../actions/groups"
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Users, Crown } from "lucide-react"
 
-type Group = {
-  id: string
-  name: string
-  is_private: boolean
+type GroupWithCreator = Group & {
+  creatorInfo?: {
+    displayName: string
+    username: string
+    avatarUrl: string | null
+  }
 }
 
-export default function GroupList({ userId }: { userId: string }) {
-  const [groups, setGroups] = useState<Group[]>([])
+type GroupListProps = {
+  userId: string
+  isPrivate: boolean
+  activeGroupId: string | null
+  onGroupSelect: (groupId: string) => void
+  groups: GroupWithCreator[]
+}
 
-  useEffect(() => {
-    const loadGroups = async () => {
-      const result = await fetchGroups(userId)
-      if (result.success) {
-        setGroups(result.data)
-      } else {
-        console.error("Error fetching groups:", result.error)
-      }
-    }
-    loadGroups()
-  }, [userId])
+export function GroupList({ userId, isPrivate, activeGroupId, onGroupSelect, groups }: GroupListProps) {
+  // const [groups, setGroups] = useState<GroupWithCreator[]>([])
+  // const [error, setError] = useState<string | null>(null)
+  // const [isLoading, setIsLoading] = useState(true)
+
+  // const loadGroups = useCallback(async () => {
+  //   setIsLoading(true)
+  //   const result = await fetchGroups(userId)
+  //   if (result.success && result.data) {
+  //     const filteredGroups = result.data.filter((group) => group.is_private === isPrivate)
+  //     const groupsWithCreatorInfo = await Promise.all(
+  //       filteredGroups.map(async (group) => {
+  //         const creatorResult = await getProfile(group.created_by)
+  //         if (creatorResult.success && creatorResult.data) {
+  //           return {
+  //             ...group,
+  //             creatorInfo: {
+  //               displayName: creatorResult.data.display_name,
+  //               username: creatorResult.data.username,
+  //               avatarUrl: creatorResult.data.avatar_url,
+  //             },
+  //           }
+  //         }
+  //         return group
+  //       }),
+  //     )
+  //     setGroups(groupsWithCreatorInfo)
+  //     setError(null)
+  //   } else {
+  //     console.error("Error fetching groups:", result.error)
+  //     setError(result.error || "Failed to fetch groups")
+  //   }
+  //   setIsLoading(false)
+  // }, [userId, isPrivate])
+
+  // useEffect(() => {
+  //   loadGroups()
+  // }, [loadGroups])
+
+  // if (isLoading) {
+  //   return <div className="text-center">Loading groups...</div>
+  // }
+
+  // if (error) {
+  //   return <div className="text-red-500 px-4">Error: {error}</div>
+  // }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 px-4">
       {groups.map((group) => (
-        <Card key={group.id}>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              {group.name}
-              {group.is_private && (
-                <span className="ml-2 text-xs bg-secondary text-secondary-foreground rounded-full px-2 py-1">
-                  Private
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+        <TooltipProvider key={group.id}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card
+                className={cn(
+                  "cursor-pointer hover:bg-accent transition-colors",
+                  activeGroupId === group.id && "bg-accent",
+                )}
+                onClick={() => onGroupSelect(group.id)}
+              >
+                <CardHeader className="p-3">
+                  <CardTitle className="flex items-center space-x-2 text-sm font-medium">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{group.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate">{group.name}</span>
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent className="p-0 w-64">
+              <div className="p-4 bg-popover rounded-md shadow-md">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Users className="h-4 w-4 flex-shrink-0" />
+                  <span className="font-semibold">Members:</span>
+                  <span>{group.member_ids.length}</span>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <Crown className="h-4 w-4 mt-1 flex-shrink-0" />
+                  <div className="flex-grow">
+                    <span className="font-semibold">Creator:</span>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <Avatar className="h-6 w-6 flex-shrink-0">
+                        <AvatarImage src={group.creatorInfo?.avatarUrl || undefined} />
+                        <AvatarFallback>{group.creatorInfo?.displayName?.[0] || "U"}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-grow">
+                        <div className="text-sm font-medium truncate">
+                          {group.creatorInfo?.displayName || "Unknown"}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          @{group.creatorInfo?.username || "unknown"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ))}
+      {groups.length === 0 && <p className="text-sm text-muted-foreground px-2">No groups found</p>}
     </div>
   )
 }
-*/
+

@@ -10,6 +10,10 @@ export type Chat = {
   last_message: string | null
   created_at: string
   updated_at: string
+  user: {
+    username: string
+    avatar_url: string | null
+  }
 }
 
 export type Message = {
@@ -18,6 +22,10 @@ export type Message = {
   user_id: string
   content: string
   created_at: string
+  user: {
+    username: string
+    avatar_url: string | null
+  }
 }
 
 export async function fetchChats(userId: string): Promise<{ success: boolean; data: Chat[] | null; error?: string }> {
@@ -25,7 +33,12 @@ export async function fetchChats(userId: string): Promise<{ success: boolean; da
 
   const { data, error } = await supabase
     .from("chats")
-    .select("*")
+    .select(
+      `
+      *,
+      user:profiles!other_user_id(username, avatar_url)
+    `,
+    )
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
 
@@ -44,7 +57,12 @@ export async function fetchMessages(
 
   const { data, error } = await supabase
     .from("messages")
-    .select("*")
+    .select(
+      `
+      *,
+      user:profiles(username, avatar_url)
+    `,
+    )
     .eq("chat_id", chatId)
     .order("created_at", { ascending: true })
 
@@ -62,11 +80,7 @@ interface SendMessageData {
   content: string
 }
 
-export async function sendMessage({
-  chatId,
-  userId,
-  content,
-}: SendMessageData): Promise<{ success: boolean; data?: Message; error?: string }> {
+export async function sendMessage({ chatId, userId, content }: SendMessageData) {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -86,7 +100,7 @@ export async function sendMessage({
   // Update the chat's last message and timestamp
   await supabase.from("chats").update({ last_message: content, updated_at: new Date().toISOString() }).eq("id", chatId)
 
-  revalidatePath("/chats")
+  revalidatePath("/dashboard/v/chats")
   return { success: true, data: data[0] }
 }
 

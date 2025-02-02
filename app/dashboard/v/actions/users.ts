@@ -9,16 +9,19 @@ export type Profile = {
   display_name: string
   avatar_url: string | null
   updated_at: string | null
-  cover_image_url: string | null // Add this line
+  cover_image_url: string | null
 }
 
-export async function searchUsers(searchTerm: string) {
+export async function searchUsers(searchTerm: string, currentUserId: string) {
   const supabase = createClient()
+
+  console.log(`Searching for users with term: ${searchTerm}, currentUserId: ${currentUserId}`)
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, username, avatar_url")
-    .ilike("username", `%${searchTerm}%`)
+    .select("id, username, display_name, avatar_url")
+    .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
+    .neq("id", currentUserId)
     .limit(10)
 
   if (error) {
@@ -26,6 +29,7 @@ export async function searchUsers(searchTerm: string) {
     return { success: false, error: "Failed to search users" }
   }
 
+  console.log("Search results:", data)
   return { success: true, data }
 }
 
@@ -87,18 +91,18 @@ export async function createProfile({
   return { success: true, data: data[0] }
 }
 
-export async function getProfile(userId: string): Promise<{ success: boolean; data: Profile | null; error?: string }> {
+export async function getProfile(userId: string) {
   const supabase = createClient()
 
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("username, display_name, avatar_url")
+    .eq("id", userId)
+    .single()
 
   if (error) {
-    if (error.code === "PGRST116") {
-      // Profile not found
-      return { success: false, data: null, error: "Profile not found" }
-    }
     console.error("Error fetching profile:", error)
-    return { success: false, data: null, error: "Failed to fetch profile" }
+    return { success: false, error: "Failed to fetch profile" }
   }
 
   return { success: true, data }
