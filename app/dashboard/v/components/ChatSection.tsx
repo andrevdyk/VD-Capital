@@ -1,22 +1,41 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { fetchMessages, sendMessage, type Message } from "../actions/chats"
+import { fetchMessages, sendMessage, type Message as MessageType } from "../actions/chats"
+import { Message } from "./Message"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { fetchGroup, type Channel } from "../actions/channels"
+import { toast } from "@/components/ui/use-toast"
+import { createClient } from "@/utils/supabase/client"
 
-export function ChatSection({ userId }: { userId: string }) {
-  const [selectedChat, setSelectedChat] = useState<string | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
+export function ChatSection({ userId, groupId }: { userId: string; groupId: string }) {
+  const [selectedChannel, setSelectedChannel] = useState<string | null>(null)
+  const [channels, setChannels] = useState<Channel[]>([])
+  const [messages, setMessages] = useState<MessageType[]>([])
   const [newMessage, setNewMessage] = useState("")
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
 
   useEffect(() => {
-    if (selectedChat) {
+    const loadChannels = async () => {
+      if (groupId) {
+        const group = await fetchGroup(groupId)
+        if (group) {
+          setChannels([...(group.text_channels || []), ...(group.voice_channels || [])])
+        }
+      }
+    }
+    loadChannels()
+  }, [groupId])
+
+  useEffect(() => {
+    if (selectedChannel) {
       const loadMessages = async () => {
-        const result = await fetchMessages(selectedChat)
+        const result = await fetchMessages(selectedChannel)
         if (result.success && result.data) {
           setMessages(result.data)
         } else {
@@ -24,24 +43,59 @@ export function ChatSection({ userId }: { userId: string }) {
         }
       }
       loadMessages()
+
+      // Subscribe to new messages
+      const subscription = supabase
+        .channel(`public:messages:channel_id=eq.${selectedChannel}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `channel_id=eq.${selectedChannel}`,
+          },
+          (payload) => {
+            const newMessage = payload.new as MessageType
+            setMessages((prevMessages) => [...prevMessages, newMessage])
+          },
+        )
+        .subscribe()
+
+      return () => {
+        subscription.unsubscribe()
+      }
+    } else {
+      setMessages([])
     }
-  }, [selectedChat])
+  }, [selectedChannel, supabase])
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
+    }
+  }, [scrollAreaRef]) //Corrected dependency
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedChat || !newMessage.trim()) return
+    if (!selectedChannel || !newMessage.trim()) return
 
     const result = await sendMessage({
-      chatId: selectedChat,
+      groupId,
+      channelId: selectedChannel,
       userId,
       content: newMessage.trim(),
     })
 
     if (result.success && result.data) {
-      setMessages((prevMessages) => [...prevMessages, result.data as Message])
       setNewMessage("")
     } else {
-      console.error("Error sending message:", result.error)
+      console.error("Error sending message:", result.error, result.details)
+      toast({
+        title: "Error",
+        description: result.error || "Failed to send message. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -49,33 +103,41 @@ export function ChatSection({ userId }: { userId: string }) {
     <Card className="h-[calc(100vh-12rem)]">
       <CardHeader>
         <CardTitle>Chat</CardTitle>
+        <Select onValueChange={(value) => setSelectedChannel(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select a channel" />
+          </SelectTrigger>
+          <SelectContent>
+            {channels.map((channel) => (
+              <SelectItem key={channel.id} value={channel.id}>
+                {channel.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent className="flex flex-col h-full">
-        <ScrollArea className="flex-grow mb-4">
+        <ScrollArea className="flex-grow mb-4" ref={scrollAreaRef}>
           {messages.map((message) => (
-            <div key={message.id} className={`mb-4 ${message.user_id === userId ? "text-right" : "text-left"}`}>
-              <div className="flex items-start space-x-2">
-                <Avatar>
-                  <AvatarImage src={message.user.avatar_url || undefined} />
-                  <AvatarFallback>{message.user.username[0]}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold">{message.user.username}</p>
-                  <p>{message.content}</p>
-                  <p className="text-sm text-muted-foreground">{new Date(message.created_at).toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
+            <Message
+              key={message.id}
+              content={message.content}
+              isCurrentUser={message.user_id === userId}
+              user={message.user}
+            />
           ))}
         </ScrollArea>
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={selectedChannel ? "Type a message..." : "Select a channel to send a message"}
             className="flex-grow"
+            disabled={!selectedChannel}
           />
-          <Button type="submit">Send</Button>
+          <Button type="submit" disabled={!selectedChannel}>
+            Send
+          </Button>
         </form>
       </CardContent>
     </Card>

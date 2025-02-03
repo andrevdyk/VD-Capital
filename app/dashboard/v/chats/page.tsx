@@ -3,6 +3,7 @@ import { getProfile } from "../actions/users"
 import ProfileCreationForm from "../components/ProfileCreationForm"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { ChatPageClient } from "../components/ChatPageClient"
+import { Navbar } from "../components/Navbar"
 
 export default async function ChatsPage() {
   const supabase = createClient()
@@ -30,6 +31,8 @@ export default async function ChatsPage() {
   }
 
   return (
+    <div>
+    <Navbar/>
     <SidebarProvider>
       <ChatPageClient
         userId={user.id}
@@ -37,6 +40,7 @@ export default async function ChatsPage() {
         userDisplayName={profile.display_name || user.email || ""}
       />
     </SidebarProvider>
+    </div>
   )
 }
 

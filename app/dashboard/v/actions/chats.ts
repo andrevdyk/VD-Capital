@@ -3,29 +3,29 @@
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
 
-export type Chat = {
+export type Message = {
   id: string
+  group_id: string
+  channel_id: string
   user_id: string
-  other_user_id: string
-  last_message: string | null
+  content: string
   created_at: string
-  updated_at: string
   user: {
+    id: string
     username: string
     avatar_url: string | null
   }
 }
 
-export type Message = {
+export type Chat = {
   id: string
-  chat_id: string
-  user_id: string
-  content: string
-  created_at: string
   user: {
+    id: string
     username: string
     avatar_url: string | null
   }
+  last_message: string | null
+  updated_at: string
 }
 
 export async function fetchChats(userId: string): Promise<{ success: boolean; data: Chat[] | null; error?: string }> {
@@ -33,12 +33,12 @@ export async function fetchChats(userId: string): Promise<{ success: boolean; da
 
   const { data, error } = await supabase
     .from("chats")
-    .select(
-      `
-      *,
-      user:profiles!other_user_id(username, avatar_url)
-    `,
-    )
+    .select(`
+      id,
+      last_message,
+      updated_at,
+      user:profiles!chats_other_user_id_fkey(id, username, avatar_url)
+    `)
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
 
@@ -47,23 +47,32 @@ export async function fetchChats(userId: string): Promise<{ success: boolean; da
     return { success: false, data: null, error: "Failed to fetch chats" }
   }
 
-  return { success: true, data }
+  const chats: Chat[] = data.map((item: any) => ({
+    id: item.id,
+    user: {
+      id: item.user[0].id,
+      username: item.user[0].username,
+      avatar_url: item.user[0].avatar_url,
+    },
+    last_message: item.last_message,
+    updated_at: item.updated_at,
+  }))
+
+  return { success: true, data: chats }
 }
 
 export async function fetchMessages(
-  chatId: string,
+  channelId: string,
 ): Promise<{ success: boolean; data: Message[] | null; error?: string }> {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from("messages")
-    .select(
-      `
+    .select(`
       *,
-      user:profiles(username, avatar_url)
-    `,
-    )
-    .eq("chat_id", chatId)
+      user:profiles(id, username, avatar_url)
+    `)
+    .eq("channel_id", channelId)
     .order("created_at", { ascending: true })
 
   if (error) {
@@ -75,32 +84,39 @@ export async function fetchMessages(
 }
 
 interface SendMessageData {
-  chatId: string
+  groupId: string
+  channelId: string
   userId: string
   content: string
 }
 
-export async function sendMessage({ chatId, userId, content }: SendMessageData) {
+export async function sendMessage({ groupId, channelId, userId, content }: SendMessageData) {
   const supabase = createClient()
 
   const { data, error } = await supabase
     .from("messages")
-    .insert({
-      chat_id: chatId,
+    .upsert({
+      group_id: groupId,
+      channel_id: channelId,
       user_id: userId,
       content,
     })
-    .select()
+    .select(`
+      *,
+      user:profiles(id, username, avatar_url)
+    `)
+    .single()
 
   if (error) {
     console.error("Error sending message:", error)
-    return { success: false, error: "Failed to send message" }
+    return {
+      success: false,
+      error: `Failed to send message: ${error.message}`,
+      details: error,
+    }
   }
 
-  // Update the chat's last message and timestamp
-  await supabase.from("chats").update({ last_message: content, updated_at: new Date().toISOString() }).eq("id", chatId)
-
   revalidatePath("/dashboard/v/chats")
-  return { success: true, data: data[0] }
+  return { success: true, data }
 }
 

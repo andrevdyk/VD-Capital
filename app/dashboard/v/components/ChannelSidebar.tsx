@@ -151,7 +151,7 @@ export function ChannelSidebar({ groupId, userId, userAvatar, userDisplayName }:
   }
 
   return (
-    <Sidebar className="ml-80 mt-[55px] w-64 border-r">
+    <Sidebar className="ml-[310px] mt-[120px] w-64 border-r">
       <SidebarHeader className="p-4">
         <h2 className="text-xl font-semibold">{group.name}</h2>
       </SidebarHeader>

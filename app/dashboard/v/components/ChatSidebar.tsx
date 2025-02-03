@@ -52,7 +52,7 @@ export function ChatSidebar({
   }
 
   return (
-    <Sidebar className="ml-[50px] mt-[60px] w-64">
+    <Sidebar className="ml-[50px] mt-[120px] w-64">
       <SidebarHeader>
         <h2 className="text-xl font-semibold px-4 py-2">Chat</h2>
         <div className="px-4 py-2">

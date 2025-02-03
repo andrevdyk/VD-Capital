@@ -50,7 +50,7 @@ export function ChatPageClient({ userId, userAvatar, userDisplayName }: ChatPage
         />
       )}
       <div className="flex-1 p-4">
-        <ChatSection userId={userId} />
+        <ChatSection userId={userId} groupId={selectedGroupId || ""} />
       </div>
     </div>
   )
