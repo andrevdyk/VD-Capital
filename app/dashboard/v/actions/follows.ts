@@ -3,69 +3,69 @@
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
 
-export async function followUser(followerId: string, followingId: string) {
+export async function toggleFollow(followerId: string, followingId: string) {
   const supabase = createClient()
 
-  const { error } = await supabase.from("follows").insert({
-    follower_id: followerId,
-    following_id: followingId,
-  })
+  // Check if the follow relationship already exists
+  const { data: existingFollow, error: checkError } = await supabase
+    .from("follows")
+    .select()
+    .eq("follower_id", followerId)
+    .eq("following_id", followingId)
+    .maybeSingle()
 
-  if (error) {
-    console.error("Error following user:", error)
-    return { success: false, error: "Failed to follow user" }
+  if (checkError) {
+    console.error("Error checking follow status:", checkError)
+    return { success: false, error: "Failed to check follow status" }
   }
 
-  revalidatePath("/dashboard/v")
-  return { success: true }
+  let isFollowing: boolean
+
+  if (existingFollow) {
+    // Unfollow
+    const { error: unfollowError } = await supabase
+      .from("follows")
+      .delete()
+      .eq("follower_id", followerId)
+      .eq("following_id", followingId)
+
+    if (unfollowError) {
+      console.error("Error unfollowing:", unfollowError)
+      return { success: false, error: "Failed to unfollow" }
+    }
+    isFollowing = false
+  } else {
+    // Follow
+    const { error: followError } = await supabase
+      .from("follows")
+      .insert({ follower_id: followerId, following_id: followingId })
+
+    if (followError) {
+      console.error("Error following:", followError)
+      return { success: false, error: "Failed to follow" }
+    }
+    isFollowing = true
+  }
+
+  revalidatePath("/dashboard/v/profile/[id]")
+  return { success: true, isFollowing }
 }
 
-export async function unfollowUser(followerId: string, followingId: string) {
+export async function getFollowStatus(followerId: string, followingId: string) {
   const supabase = createClient()
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("follows")
-    .delete()
-    .match({ follower_id: followerId, following_id: followingId })
+    .select()
+    .eq("follower_id", followerId)
+    .eq("following_id", followingId)
+    .maybeSingle()
 
   if (error) {
-    console.error("Error unfollowing user:", error)
-    return { success: false, error: "Failed to unfollow user" }
+    console.error("Error getting follow status:", error)
+    return { success: false, error: "Failed to get follow status" }
   }
 
-  revalidatePath("/dashboard/v")
-  return { success: true }
-}
-
-export async function getFollowingCount(userId: string) {
-  const supabase = createClient()
-
-  const { count, error } = await supabase
-    .from("follows")
-    .select("*", { count: "exact", head: true })
-    .eq("follower_id", userId)
-
-  if (error) {
-    console.error("Error getting following count:", error)
-    return { success: false, error: "Failed to get following count" }
-  }
-
-  return { success: true, count }
-}
-
-export async function getFollowersCount(userId: string) {
-  const supabase = createClient()
-
-  const { count, error } = await supabase
-    .from("follows")
-    .select("*", { count: "exact", head: true })
-    .eq("following_id", userId)
-
-  if (error) {
-    console.error("Error getting followers count:", error)
-    return { success: false, error: "Failed to get followers count" }
-  }
-
-  return { success: true, count }
+  return { success: true, isFollowing: !!data }
 }
 

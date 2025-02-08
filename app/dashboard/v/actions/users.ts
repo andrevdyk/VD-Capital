@@ -10,6 +10,7 @@ export type Profile = {
   avatar_url: string | null
   updated_at: string | null
   cover_image_url: string | null
+  description: string | null
 }
 
 export async function searchUsers(searchTerm: string, currentUserId: string) {
@@ -96,7 +97,7 @@ export async function getProfile(userId: string): Promise<{ success: boolean; da
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, updated_at, cover_image_url")
+    .select("id, username, display_name, avatar_url, updated_at, cover_image_url, description")
     .eq("id", userId)
     .single()
 
@@ -110,5 +111,51 @@ export async function getProfile(userId: string): Promise<{ success: boolean; da
   }
 
   return { success: true, data }
+}
+
+export async function getProfileStats(userId: string): Promise<{
+  success: boolean
+  data: { followers: number; following: number; posts: number } | null
+  error?: string
+}> {
+  const supabase = createClient()
+
+  try {
+    // Fetch follower count
+    const { count: followers, error: followersError } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", userId)
+
+    if (followersError) throw followersError
+
+    // Fetch following count
+    const { count: following, error: followingError } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", userId)
+
+    if (followingError) throw followingError
+
+    // Fetch post count
+    const { count: posts, error: postsError } = await supabase
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+
+    if (postsError) throw postsError
+
+    return {
+      success: true,
+      data: {
+        followers: followers || 0,
+        following: following || 0,
+        posts: posts || 0,
+      },
+    }
+  } catch (error) {
+    console.error("Error fetching profile stats:", error)
+    return { success: false, data: null, error: "Failed to fetch profile stats" }
+  }
 }
 
