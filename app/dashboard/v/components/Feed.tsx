@@ -10,7 +10,7 @@ import { AlertCircle } from "lucide-react"
 type Post = {
   id: string
   content: string
-  media_urls: string | null
+  media_urls: string[] | null
   created_at: string
   user_id: string
   likes: number
