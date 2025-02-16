@@ -102,3 +102,18 @@ export default function PostList({ userId }: { userId: string }) {
   )
 }
 
+/*We need to add functionality for all the other shapes,
+
+Lets start with a rectangle
+
+Needs 8 points
+Middle points on each line adjust the height
+After click on rectangle icon, user should be able to click once and move the mouse which is locked to the other corner
+Needs a point in the centre of rectangle to move it freely
+Needs a dialog to change the fill color and line color
+Dialog needs 3 tabs, Style, Text, and Coordinates
+I think it will be a good idea to separate each group of technical analysis items.
+
+So have Lines as its own component, and have shapes as its own component,
+
+Can we do that?*/
