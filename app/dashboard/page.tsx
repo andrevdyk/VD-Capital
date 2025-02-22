@@ -1,6 +1,7 @@
 import MarketTrendsAllTable from "./components/Table"
 import dynamic from "next/dynamic"
 import { getPolygonData } from "./hooks/usePolygonData"
+import { Seasonality } from "./components/SeasonalityChart"
 
 const Chart = dynamic(() => import("./components/Chart"), { ssr: false })
 
@@ -22,6 +23,9 @@ export default async function Dashboard() {
         </div>
         <div className="w-2/3">
           {data ? <Chart data={data} /> : <div className="flex items-center justify-center h-full">Loading...</div>}
+        </div>
+        <div>
+          <Seasonality />
         </div>
       </div>
     </div>

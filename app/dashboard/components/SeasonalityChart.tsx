@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, LabelList } from "recharts";
 import {
   Card,
@@ -65,7 +65,9 @@ type ChartData = {
 };
 
 // Supabase setup
-const supabase = createClient();
+const supabaseUrl = "https://nobtgazxiggvkrwxugpq.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vYnRnYXp4aWdndmtyd3h1Z3BxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2Nzk5OTIsImV4cCI6MjA0MjI1NTk5Mn0.SWmzkATJ5uUNhCrFdXB-FeCEL3wcVk6p_eDqXpOD-qg"; // Replace this with your key
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export function Seasonality() {
   const [chartData, setChartData] = useState<ChartData[]>([]);
