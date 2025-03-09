@@ -132,13 +132,13 @@ const Chart: React.FC<ChartProps> = ({ data }) => {
         <CardHeader className="flex items-center space-y-0 border-b py-0 sm:flex-row">
           <div className="flex items-center justify-between w-full">
             <span className="text-sm font-medium">Technical Analysis</span>
-            <div className="flex space-x-1">
+            <div className="flex space-x-0">
               {buttons.map((button) => (
                 <Button
                   key={button.value}
                   variant="ghost"
                   size="sm"
-                  className={`text-xs px-2 ${
+                  className={`text-xs px-1 ${
                     activeButton === button.value ? "border-b-2 border-primary" : "border-b-2 border-transparent"
                   }`}
                   onClick={() => setActiveButton(button.value)}

@@ -130,8 +130,8 @@ export function Seasonality() {
 
 
   return (
-    <Card>
-      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-2 sm:flex-row">
+    <Card className="h-[200px]">
+      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-1 sm:flex-row">
         <div className="grid flex-1 gap-1 text-left text-sm">
           <span>Seasonality</span>
         </div>
@@ -155,7 +155,7 @@ export function Seasonality() {
       <CardContent>
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-[550px]"
+          className="aspect-auto h-[160px] w-[550px]"
         >
           <AreaChart data={filteredData}>
             <defs>
