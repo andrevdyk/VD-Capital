@@ -12,6 +12,7 @@ import { Banknote, Folder, HomeIcon, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { ReactNode } from 'react'
 import Image from 'next/image'
+import { AssetFilter } from './asset-filter'
 
 export default function DashboardTopNav({ children }: { children: ReactNode }) {
   return (
@@ -82,6 +83,9 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
             </div>
           </SheetContent>
         </Dialog>
+        <div className="flex-1 flex justify-center">
+          <AssetFilter />
+        </div>
         <div className="flex justify-center items-center gap-2 ml-auto">
           {config?.auth?.enabled && <UserProfile />}
           <ModeToggle />

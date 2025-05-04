@@ -16,14 +16,45 @@ interface ChartProps {
   }[]
 }
 
+interface SupplyDemandZone {
+  id: string
+  startTime: string
+  endTime: string
+  top: number
+  bottom: number
+  type: "supply" | "demand"
+}
+
 const Chart: React.FC<ChartProps> = ({ data }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null)
   const [activeButton, setActiveButton] = useState("sd")
+  const [formattedData, setFormattedData] = useState<CandlestickData[]>([])
+  const [supplyDemandZones, setSupplyDemandZones] = useState<SupplyDemandZone[]>([])
+  const zoneRectanglesRef = useRef<any[]>([])
 
+  // Format the data for the chart
   useEffect(() => {
-    if (chartContainerRef.current && data.length > 0) {
+    if (data.length > 0) {
+      const formatted = data.map((item) => ({
+        time: new Date(item.t).toISOString().split("T")[0] as any,
+        open: item.o,
+        high: item.h,
+        low: item.l,
+        close: item.c,
+      }))
+      setFormattedData(formatted)
+
+      // Calculate supply and demand zones when data changes
+      const zones = identifySupplyDemandZones(formatted)
+      setSupplyDemandZones(zones)
+    }
+  }, [data])
+
+  // Initialize the chart
+  useEffect(() => {
+    if (chartContainerRef.current && formattedData.length > 0) {
       const isDarkMode = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
       const mutedForegroundColor = isDarkMode ? "rgb(115, 115, 128)" : "rgb(161, 161, 170)"
 
@@ -60,17 +91,13 @@ const Chart: React.FC<ChartProps> = ({ data }) => {
         wickDownColor: "#ff2f67",
       })
 
-      const formattedData: CandlestickData[] = data.map((item) => ({
-        time: new Date(item.t).toISOString().split("T")[0] as any,
-        open: item.o,
-        high: item.h,
-        low: item.l,
-        close: item.c,
-      }))
-
       seriesRef.current.setData(formattedData)
-
       chartRef.current.timeScale().fitContent()
+
+      // Draw supply and demand zones if S/D tab is active
+      if (activeButton === "sd") {
+        drawSupplyDemandZones()
+      }
 
       const handleResize = () => {
         if (chartRef.current && chartContainerRef.current) {
@@ -114,7 +141,170 @@ const Chart: React.FC<ChartProps> = ({ data }) => {
         }
       }
     }
-  }, [data])
+  }, [formattedData])
+
+  // Handle tab changes
+  useEffect(() => {
+    if (chartRef.current && seriesRef.current) {
+      // Clear existing zones
+      clearSupplyDemandZones()
+
+      // Draw zones if S/D tab is active
+      if (activeButton === "sd") {
+        drawSupplyDemandZones()
+      }
+    }
+  }, [activeButton, supplyDemandZones])
+
+  // Identify supply and demand zones from price data
+  const identifySupplyDemandZones = (data: CandlestickData[]): SupplyDemandZone[] => {
+    const zones: SupplyDemandZone[] = []
+
+    // Need at least 10 candles to identify zones
+    if (data.length < 10) return zones
+
+    // Parameters for zone identification
+    const lookbackPeriod = 5 // How many candles to look back
+    const strengthThreshold = 0.02 // 2% price movement to consider a strong move
+    const consolidationThreshold = 0.005 // 0.5% range for consolidation
+
+    for (let i = lookbackPeriod; i < data.length - 1; i++) {
+      const currentCandle = data[i]
+      const nextCandle = data[i + 1]
+
+      // Calculate price movement percentage
+      const priceMovement = Math.abs(nextCandle.close - currentCandle.close) / currentCandle.close
+
+      // Check if we have a strong bullish move (potential demand zone before it)
+      if (nextCandle.close > currentCandle.close && priceMovement > strengthThreshold) {
+        // Look for consolidation before the move (potential demand zone)
+        const consolidationStart = i - lookbackPeriod
+        const consolidationEnd = i
+        const bottom = Math.min(...data.slice(consolidationStart, consolidationEnd + 1).map((d) => d.low))
+        const top = Math.max(...data.slice(consolidationStart, consolidationEnd + 1).map((d) => d.high))
+
+        // Check if this is a tight consolidation
+        if ((top - bottom) / bottom < consolidationThreshold) {
+          zones.push({
+            id: `demand-${i}`,
+            startTime: data[consolidationStart].time as string,
+            endTime: data[consolidationEnd].time as string,
+            bottom: bottom * 0.998, // Extend slightly below for visibility
+            top: top * 1.002, // Extend slightly above for visibility
+            type: "demand",
+          })
+        }
+      }
+
+      // Check if we have a strong bearish move (potential supply zone before it)
+      if (nextCandle.close < currentCandle.close && priceMovement > strengthThreshold) {
+        // Look for consolidation before the move (potential supply zone)
+        const consolidationStart = i - lookbackPeriod
+        const consolidationEnd = i
+        const bottom = Math.min(...data.slice(consolidationStart, consolidationEnd + 1).map((d) => d.low))
+        const top = Math.max(...data.slice(consolidationStart, consolidationEnd + 1).map((d) => d.high))
+
+        // Check if this is a tight consolidation
+        if ((top - bottom) / bottom < consolidationThreshold) {
+          zones.push({
+            id: `supply-${i}`,
+            startTime: data[consolidationStart].time as string,
+            endTime: data[consolidationEnd].time as string,
+            bottom: bottom * 0.998, // Extend slightly below for visibility
+            top: top * 1.002, // Extend slightly above for visibility
+            type: "supply",
+          })
+        }
+      }
+    }
+
+    return zones
+  }
+
+  // Draw supply and demand zones on the chart
+  const drawSupplyDemandZones = () => {
+    if (!chartRef.current || !seriesRef.current) return
+
+    // Clear any existing zones
+    clearSupplyDemandZones()
+
+    // Define blue colors for both supply and demand zones
+    const supplyColor = "rgba(25, 118, 210, 0.2)" // Light blue with transparency
+    const demandColor = "rgba(25, 118, 210, 0.2)" // Same blue for both
+    const supplyBorderColor = "rgba(25, 118, 210, 0.5)" // Slightly darker blue for border
+    const demandBorderColor = "rgba(25, 118, 210, 0.5)" // Same border color for both
+
+    // Draw each zone using horizontal lines
+    supplyDemandZones.forEach((zone) => {
+      try {
+        // Add a line at the top of the zone
+        const topLine = seriesRef.current!.createPriceLine({
+          price: zone.top,
+          color: zone.type === "supply" ? supplyBorderColor : demandBorderColor,
+          lineWidth: 1,
+          lineStyle: 2, // Dashed line
+          axisLabelVisible: false,
+          title: zone.type === "supply" ? "Supply" : "Demand",
+        })
+
+        // Add a line at the bottom of the zone
+        const bottomLine = seriesRef.current!.createPriceLine({
+          price: zone.bottom,
+          color: zone.type === "supply" ? supplyBorderColor : demandBorderColor,
+          lineWidth: 1,
+          lineStyle: 2, // Dashed line
+          axisLabelVisible: false,
+          title: "",
+        })
+
+        // Store the lines for later removal
+        zoneRectanglesRef.current.push(topLine, bottomLine)
+
+        // Add a filled area between the lines using a separate series
+        const areaSeries = chartRef.current!.addAreaSeries({
+          topColor: zone.type === "supply" ? supplyColor : demandColor,
+          bottomColor: zone.type === "supply" ? supplyColor : demandColor,
+          lineColor: "transparent",
+          priceLineVisible: false,
+          crosshairMarkerVisible: false,
+          lastValueVisible: false,
+        })
+
+        // Create data points for the area
+        const startDate = new Date(zone.startTime)
+        const endDate = new Date(zone.endTime)
+
+        // Extend the zone to the right edge of the chart for better visibility
+        const lastDataPoint = formattedData[formattedData.length - 1]
+        const endTimeToUse = lastDataPoint ? lastDataPoint.time : zone.endTime
+
+        // Create area data
+        const areaData = [
+          { time: zone.startTime, value: zone.top },
+          { time: endTimeToUse, value: zone.top },
+        ]
+
+        areaSeries.setData(areaData)
+
+        // Store the area series for later removal
+        zoneRectanglesRef.current.push(areaSeries)
+      } catch (error) {
+        console.error("Error drawing zone:", error)
+      }
+    })
+  }
+
+  // Clear all supply and demand zones
+  const clearSupplyDemandZones = () => {
+    // Remove price lines and area series
+    zoneRectanglesRef.current.forEach((item) => {
+      if (item && typeof item.remove === "function") {
+        item.remove()
+      }
+    })
+
+    zoneRectanglesRef.current = []
+  }
 
   const buttons = [
     { value: "sd", label: "S/D" },

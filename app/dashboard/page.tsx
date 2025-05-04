@@ -9,6 +9,7 @@ import { AssetStrength } from "./components/asset-strength"
 
 const Chart = dynamic(() => import("./components/Chart"), { ssr: false })
 
+// Remove the AssetFilter from the page since it's now in the top nav
 export default async function Dashboard() {
   let data, error
 

@@ -9,11 +9,10 @@ export default async function ReflectPage() {
   return (
     <div className="flex flex-col">
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto p-2">
           <main className="">
             <div className="grid grid-cols-1 lg:grid-cols-2">
               <div className="col-span-1 lg:col-span-2">
-                <h2 className="text-2xl font-bold mb-4">Trading History</h2>
                 <TradesTable initialStrategies={strategies} initialSetups={setups} />
               </div>
             </div>

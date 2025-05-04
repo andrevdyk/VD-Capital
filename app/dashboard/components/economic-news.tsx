@@ -285,13 +285,13 @@ export function EconomicNews() {
   const getImpactColor = (impact: string) => {
     switch (impact) {
       case "high":
-        return "bg-[#ff2f67] bg-opacity-20 text-[#ff2f67] border-[#ff2f67]"
+        return "bg-red-100 text-red-800 border-red-200"
       case "medium":
-        return "bg-[#ff932f] bg-opacity-20 text-[#ff932f] border-[#ff932f]"
+        return "bg-orange-100 text-orange-800 border-orange-200"
       case "low":
-        return "bg-blue-100 bg-opacity-20 text-blue-800 border-blue-200"
+        return "bg-blue-100 text-blue-800 border-blue-200"
       default:
-        return "bg-gray-100 bg-opacity-20 text-gray-800 border-gray-200"
+        return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
 
@@ -310,15 +310,15 @@ export function EconomicNews() {
   }
 
   return (
-    <Card className="w-full border lg:max-h-[650px]">
-      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-1 sm:flex-row ">
+    <Card className="w-full">
+      <CardHeader className="flex items-center gap-2 space-y-0 border-b py-2 sm:flex-row">
         <div className="grid flex-1 gap-1 text-left text-sm">
           <span className="font-medium">Economic Calendar</span>
-          
+          <span className="text-xs text-muted-foreground">Market-moving events and analysis</span>
         </div>
         <div className="flex space-x-1">
           <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="text-xs h-7 w-[140px] rounded-lg">
+            <SelectTrigger className="text-xs h-8 w-[140px] rounded-lg">
               <SelectValue placeholder="All Currencies" />
             </SelectTrigger>
             <SelectContent>
@@ -351,7 +351,7 @@ export function EconomicNews() {
             </TabsList>
           </div>
 
-          <TabsContent value="upcoming" className="m-0 max-h-[590px] overflow-y-auto">
+          <TabsContent value="upcoming" className="m-0 max-h-[550px] overflow-y-auto">
             <div className="divide-y">
               {filteredUpcomingEvents.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">No upcoming events for selected currency</div>
@@ -408,7 +408,7 @@ export function EconomicNews() {
             </div>
           </TabsContent>
 
-          <TabsContent value="history" className="m-0 max-h-[590px] overflow-y-auto">
+          <TabsContent value="history" className="m-0 max-h-[550px] overflow-y-auto">
             <div className="divide-y">
               {filteredHistoricalEvents.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">No historical events for selected currency</div>

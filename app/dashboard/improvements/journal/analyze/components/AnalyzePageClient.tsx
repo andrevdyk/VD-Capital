@@ -156,8 +156,7 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
   return (
     <div className="">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold p-4">Analyze Your Trades</h2>
-        <div className="">
+        <div className="mx-auto mb-2">
           <Button
             variant={mode === 'evaluation' ? 'default' : 'outline'}
             onClick={() => setMode('evaluation')}
@@ -172,8 +171,8 @@ export function AnalyzePageClient({ initialTrades, strategies, setups }: Analyze
           </Button>
         </div>
       </div>
-      <div className="flex gap-6 h-[82vh]">
-        <div className="flex-grow w-[72vw]">
+      <div className="flex gap-2 h-[82vh]">
+        <div className="flex-grow w-[72vw] h-[80vh]">
           <AreaChartComponent data={chartData} mode={mode} trades={filteredTrades} allTrades={initialTrades} />
         </div>
         <div className="w-[410px] space-y-4 overflow-auto h-full" style={{scrollbarWidth: 'thin',scrollbarColor: 'rgba(155, 155, 155, 0.5) transparent'}}>

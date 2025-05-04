@@ -330,7 +330,7 @@ export function AreaChartComponent({ data, mode, trades, allTrades }: AreaChartP
         )
       case 'bar':
         return (
-          <ChartContainer config={chartConfig} className="border rounded-lg p-2 w-full h-full">
+          <ChartContainer config={chartConfig} className="border rounded-lg p-2 w-full h-[50%]">
             <ResponsiveContainer width="99%" height="99%">
               <BarChart {...commonProps}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -396,9 +396,8 @@ export function AreaChartComponent({ data, mode, trades, allTrades }: AreaChartP
   }
 
   return (
-    <Card className="w-full h-fit flex flex-col overflow-hidden">
+    <Card className="w-full h-fit flex flex-col">
       <CardHeader>
-        <CardTitle>Profit Over Time</CardTitle>
         <div className="flex justify-between items-center space-x-4">
           <RadioGroup
             defaultValue="accumulative"
