@@ -34,6 +34,7 @@ import {
 import type { DateRange } from "react-day-picker"
 import { TradeNotes } from "./trade-notes"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { CurrencyFlag } from "@/app/dashboard/components/currency-flag"
 
 interface Trade {
   id: string
@@ -137,6 +138,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
     positionTrades: 4,
   })
   const [selectedDurationFilter, setSelectedDurationFilter] = useState<string>("all")
+  const [currentTime, setCurrentTime] = useState<Date>(new Date())
 
   // Function to calculate net profit based on trade details
   const calculateNetProfit = (side: string, entryPrice: number, exitPrice: number | null, qty: number): number => {
@@ -158,6 +160,15 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
     }
 
     fetchTrades()
+  }, [])
+
+  useEffect(() => {
+    // Update current time every minute for open trade durations
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 60000) // 60000 ms = 1 minute
+
+    return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
@@ -211,10 +222,20 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
     notesFilter,
     selectedDurationFilter,
     durationFilters,
+    currentTime,
   ])
 
   const calculateDuration = (placingTime: string, closingTime: string | null) => {
-    if (!closingTime) return "Open"
+    if (!closingTime) {
+      // For open trades, calculate duration from placing time to current time
+      const start = new Date(placingTime)
+      const end = currentTime
+      const durationMinutes = Math.round((end.getTime() - start.getTime()) / 60000)
+      const hours = Math.floor(durationMinutes / 60)
+      const minutes = durationMinutes % 60
+      return `${hours}h ${minutes}m`
+    }
+
     const durationMinutes = getDurationInMinutes(placingTime, closingTime)
     const hours = Math.floor(durationMinutes / 60)
     const minutes = durationMinutes % 60
@@ -436,10 +457,6 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
   const handleOpenNotesDrawer = (trade: Trade) => {
     setNotesTrade(trade)
     setIsNotesDrawerOpen(true)
-  }
-
-  const handleSaveNotes = async (notes: string) => {
-    //This function is removed as per the update request
   }
 
   const clearAllFilters = () => {
@@ -998,7 +1015,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
                       }
                     />
                   ) : (
-                    trade.symbol
+                    <CurrencyFlag symbol={trade.symbol} />
                   )}
                 </TableCell>
               )}
@@ -1076,14 +1093,12 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
                   ) : trade.closing_time ? (
                     new Date(trade.closing_time).toLocaleString()
                   ) : (
-                    "Open"
+                    ""
                   )}
                 </TableCell>
               )}
               {visibleColumns.duration && (
-                <TableCell>
-                  {trade.closing_time ? calculateDuration(trade.placing_time, trade.closing_time) : "Open"}
-                </TableCell>
+                <TableCell>{calculateDuration(trade.placing_time, trade.closing_time)}</TableCell>
               )}
               {visibleColumns.entryPrice && (
                 <TableCell>
@@ -1133,7 +1148,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
                   ) : trade.exit_price !== null ? (
                     trade.exit_price.toFixed(5)
                   ) : (
-                    "Open"
+                    ""
                   )}
                 </TableCell>
               )}
@@ -1142,7 +1157,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
                   className={trade.exit_price === null ? "text-blue-600" : getNetProfitStyle(trade.net_profit)}
                 >
                   {trade.exit_price === null
-                    ? "Open"
+                    ? ""
                     : trade.net_profit >= 0
                       ? `$${trade.net_profit.toFixed(2)}`
                       : `-$${Math.abs(trade.net_profit).toFixed(2)}`}
@@ -1151,7 +1166,7 @@ export function TradesTable({ initialStrategies, initialSetups }: TradesTablePro
               {visibleColumns.status && (
                 <TableCell>
                   {trade.exit_price === null ? (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Open</span>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-600 text-white">Open</span>
                   ) : (
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(trade.net_profit)}`}>
                       {getStatusText(trade.net_profit)}
