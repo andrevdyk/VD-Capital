@@ -22,9 +22,9 @@ interface TradeNotesProps {
     side: string
     qty: number
     entry_price: number
-    exit_price: number
+    exit_price: number | null
     placing_time: string
-    closing_time: string
+    closing_time: string | null
     mistakes?: string
     strategy_id?: string
     setup_id?: string
@@ -234,7 +234,7 @@ export function TradeNotes({ trade, isOpen, onOpenChange, onNotesUpdate }: Trade
     if (!trade) return ''
 
     const isWinningTrade = trade.net_profit > 0
-    const tradeDate = format(new Date(trade.closing_time), "dd MMM yyyy")
+    const tradeDate = format(new Date(trade.closing_time ?? ''), "dd MMM yyyy")
     const result = isWinningTrade ? `+${trade.net_profit.toFixed(2)}` : `-${Math.abs(trade.net_profit).toFixed(2)}`
 
     const winningPlaceholders = {
@@ -272,7 +272,7 @@ export function TradeNotes({ trade, isOpen, onOpenChange, onNotesUpdate }: Trade
         <DrawerHeader className="p-4 border-b">
           <DrawerTitle className="text-xl">Trade Notes</DrawerTitle>
           <DrawerDescription className="">
-            {format(new Date(trade.closing_time), "dd/MM/yyyy HH:mm")} | {trade.symbol} | 
+            {format(new Date(trade.closing_time ?? ''), "dd/MM/yyyy HH:mm")} | {trade.symbol} | 
             <span className={trade.net_profit >= 0 ? 'text-[#03b198]' : 'text-[#ff004d]'}>
               {trade.net_profit >= 0 ? `Profit: $${trade.net_profit.toFixed(2)}` : `Loss: $${Math.abs(trade.net_profit).toFixed(2)}`}
             </span>
