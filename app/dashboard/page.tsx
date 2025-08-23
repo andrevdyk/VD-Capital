@@ -7,7 +7,7 @@ import { EconomicIndicators } from "./components/economic-indicators"
 import { EconomicNews } from "./components/economic-news"
 import { AssetStrength } from "./components/asset-strength"
 
-const Chart = dynamic(() => import("./components/Chart"), { ssr: false })
+const Chart = dynamic(() => import("./components/Chart"), { ssr: true })
 
 // Remove the AssetFilter from the page since it's now in the top nav
 export default async function Dashboard() {

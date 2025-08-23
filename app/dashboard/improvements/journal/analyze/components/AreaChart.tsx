@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { Button } from "@/components/ui/button"
-import { format } from 'date-fns'
+import { format, isValid, parseISO } from 'date-fns'
 import React, { Fragment } from 'react'
 import { Info } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -73,19 +73,55 @@ export function AreaChartComponent({ data, mode, trades, allTrades }: AreaChartP
 
   const formatXAxisTick = (dateString: string) => {
     if (!dateString) return 'Baseline';
-    const date = new Date(dateString);
-    switch (timeGrouping) {
-      case 'month':
-        return format(date, 'MMM yyyy');
-      case 'year':
-        return format(date, 'yyyy');
-      default: // day
-        return format(date, 'dd MMM');
+    
+    // Try to parse the date - handle both ISO strings and regular date strings
+    let date: Date;
+    
+    // First try to parse as ISO string
+    try {
+      date = parseISO(dateString);
+      if (!isValid(date)) {
+        // If ISO parsing fails, try regular Date constructor
+        date = new Date(dateString);
+        if (!isValid(date)) {
+          return 'Invalid Date';
+        }
+      }
+    } catch (error) {
+      return 'Invalid Date';
+    }
+    
+    try {
+      switch (timeGrouping) {
+        case 'month':
+          return format(date, 'MMM yyyy');
+        case 'year':
+          return format(date, 'yyyy');
+        default: // day
+          return format(date, 'dd MMM');
+      }
+    } catch (error) {
+      return 'Invalid Date';
     }
   };
 
   const metrics = useMemo(() => {
     const calculateMetrics = (trades: Trade[]) => {
+      if (trades.length === 0) {
+        return {
+          return: 0,
+          winRate: 0,
+          tradeCount: 0,
+          winningTrades: 0,
+          losingTrades: 0,
+          longTrades: 0,
+          shortTrades: 0,
+          sharpeRatio: 0,
+          zScore: 0,
+          expectancy: 0
+        };
+      }
+
       const totalReturn = trades.reduce((sum, trade) => sum + trade.net_profit, 0);
       const winningTrades = trades.filter(trade => trade.net_profit > 0);
       const losingTrades = trades.filter(trade => trade.net_profit < 0);
@@ -95,11 +131,12 @@ export function AreaChartComponent({ data, mode, trades, allTrades }: AreaChartP
       
       // Calculate Sharpe Ratio (assuming risk-free rate of 0 for simplicity)
       const averageReturn = totalReturn / trades.length;
-      const stdDev = Math.sqrt(trades.reduce((sum, trade) => sum + Math.pow(trade.net_profit - averageReturn, 2), 0) / trades.length);
-      const sharpeRatio = averageReturn / stdDev;
+      const variance = trades.reduce((sum, trade) => sum + Math.pow(trade.net_profit - averageReturn, 2), 0) / trades.length;
+      const stdDev = Math.sqrt(variance);
+      const sharpeRatio = stdDev !== 0 ? averageReturn / stdDev : 0;
       
       // Calculate Z-Score (assuming normal distribution)
-      const zScore = averageReturn / (stdDev / Math.sqrt(trades.length));
+      const zScore = stdDev !== 0 ? averageReturn / (stdDev / Math.sqrt(trades.length)) : 0;
       
       // Calculate Expectancy
       const averageWin = winningTrades.length > 0 ? winningTrades.reduce((sum, trade) => sum + trade.net_profit, 0) / winningTrades.length : 0;
@@ -159,7 +196,24 @@ export function AreaChartComponent({ data, mode, trades, allTrades }: AreaChartP
 
     const CustomTooltip = ({ active, payload, label }: any) => {
       if (active && payload && payload.length) {
-        const formattedDate = label ? format(new Date(label), 'dd MMM yyyy') : 'Baseline';
+        let formattedDate = 'Baseline';
+        
+        if (label) {
+          try {
+            let date = parseISO(label);
+            if (!isValid(date)) {
+              date = new Date(label);
+            }
+            if (isValid(date)) {
+              formattedDate = format(date, 'dd MMM yyyy');
+            } else {
+              formattedDate = label;
+            }
+          } catch (error) {
+            formattedDate = label;
+          }
+        }
+        
         return (
           <div className="custom-tooltip" style={{ 
             backgroundColor: "hsl(var(--background))", 
@@ -543,4 +597,3 @@ export function AreaChartComponent({ data, mode, trades, allTrades }: AreaChartP
     </Card>
   )
 }
-
