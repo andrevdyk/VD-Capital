@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, Medal, Award, Star, TrendingUp } from "lucide-react"
 import { leaderboardData } from "../data/leaderboard-data"
 
+type Timeframe = "weekly" | "monthly" | "alltime"
+
 export function LeaderboardSection() {
-  const [timeframe, setTimeframe] = useState("weekly")
+  const [timeframe, setTimeframe] = useState<Timeframe>("weekly")
 
   return (
     <div className="space-y-6">
@@ -19,7 +21,7 @@ export function LeaderboardSection() {
           <h2 className="text-2xl font-bold">Community Leaderboard</h2>
           <p className="text-muted-foreground">See who's leading the way in learning and trading challenges</p>
         </div>
-        <Select value={timeframe} onValueChange={setTimeframe}>
+        <Select value={timeframe} onValueChange={(value) => setTimeframe(value as Timeframe)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select timeframe" />
           </SelectTrigger>

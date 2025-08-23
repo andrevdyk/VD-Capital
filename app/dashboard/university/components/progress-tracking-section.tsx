@@ -41,7 +41,7 @@ export function ProgressTrackingSection() {
                   {stat.type === "notStarted" && <AlertCircle className="h-5 w-5 text-blue-600" />}
                 </div>
               </div>
-              <Progress value={stat.percentage} className="h-2 mt-2" indicatorClassName={getProgressColor(stat.type)} />
+              <Progress value={stat.percentage} className={`h-2 mt-2 ${getProgressColor(stat.type)}`} />
               <p className="text-sm text-muted-foreground mt-2">{stat.description}</p>
             </CardContent>
           </Card>
