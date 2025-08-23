@@ -53,10 +53,10 @@ export default function StockTable({ stocks }: StockTableProps) {
   const [openCountry, setOpenCountry] = useState(false)
 
   // Get unique values for dropdowns
-  const sectors = [...new Set(stocks.map((stock) => stock.sector).filter(Boolean))]
-  const industries = [...new Set(stocks.map((stock) => stock.industry).filter(Boolean))]
-  const exchanges = [...new Set(stocks.map((stock) => stock.exchange).filter(Boolean))]
-  const countries = [...new Set(stocks.map((stock) => stock.country).filter(Boolean))]
+  const sectors = Array.from(new Set(stocks.map((stock) => stock.sector).filter(Boolean)))
+  const industries = Array.from(new Set(stocks.map((stock) => stock.industry).filter(Boolean)))
+  const exchanges = Array.from(new Set(stocks.map((stock) => stock.exchange).filter(Boolean)))
+  const countries = Array.from(new Set(stocks.map((stock) => stock.country).filter(Boolean)))
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
