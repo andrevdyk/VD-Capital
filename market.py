@@ -29,9 +29,9 @@ PAIRS = {
 # Ranges
 NOW = datetime.utcnow()
 RANGES = {
-    "60m": NOW - timedelta(days=183),     # 6 months
+    "60m": NOW - timedelta(days=1),     # 6 months
     #"4h": NOW - timedelta(days=730),     # 2 years
-    "1d": NOW - timedelta(days=1825)     # 5 years
+    "1d": NOW - timedelta(days=2)     # 5 years
 }
 
 # ========================
