@@ -78,7 +78,12 @@ def main():
             # Upload in chunks of 500 (Supabase API limit)
             for i in range(0, len(records), 500):
                 chunk = records[i:i+500]
-                supabase.table(TABLE_NAME).upsert(chunk).execute()
+                supabase.table(TABLE_NAME).upsert(
+                    chunk,
+                    on_conflict=["pair", "timestamp", "resolution"],
+                    ignore_duplicates=True
+                ).execute()
+
 
     print(f"Inserted total {len(all_records)} rows.")
 
