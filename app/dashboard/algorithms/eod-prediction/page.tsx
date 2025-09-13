@@ -14,7 +14,7 @@ import { ForexPairsTable } from "./components/forex-pairs-table"
 
 // Mock data for forex pairs
 const forexPairs = [
-  { pair: "EUR/USD", current: 1.17347, prediction: 1.8, change: 0.75 },
+  { pair: "EUR/USD", current: 1.7647, prediction: 1.79, change: 0.75 },
   { pair: "GBP/USD", current: 1.2634, prediction: 1.258, change: -0.43 },
   { pair: "USD/JPY", current: 149.82, prediction: 151.2, change: 0.92 },
   { pair: "USD/CHF", current: 0.8756, prediction: 0.869, change: -0.75 },
@@ -51,7 +51,7 @@ export default function EODPredictionDashboard() {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className=" w-[93vw] space-y-6">
+      <div className="w-[94vw] space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-foreground">EoD Prediction Dashboard</h1>
@@ -150,27 +150,23 @@ export default function EODPredictionDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* TradingView Chart */}
           <div className="lg:col-span-3">
-            <Card className="h-[600px]">
+            <Card className="h-[70vh]">
               <CardHeader>
-                <CardTitle>{selectedPair} Chart with Support/Resistance Lines</CardTitle>
+                <CardTitle>{selectedPair} Chart with Prediction Line</CardTitle>
               </CardHeader>
-              <CardContent className="h-full">
-                <TradingViewChart
-                  symbol={selectedPair.replace("/", "")}
-                  supportLevel={currentData.current - 0.005}
-                  resistanceLevel={currentData.prediction}
-                />
+              <CardContent className="h-[60vh]">
+                <TradingViewChart symbol={selectedPair.replace("/", "")} />
               </CardContent>
             </Card>
           </div>
 
           {/* Forex Pairs Table */}
           <div className="lg:col-span-1">
-            <Card className="h-[600px]">
+            <Card className="h-[70vh]">
               <CardHeader>
                 <CardTitle>Major Pairs</CardTitle>
               </CardHeader>
-              <CardContent className="overflow-y-auto">
+              <CardContent className="h-[60vh] overflow-y-auto">
                 <ForexPairsTable pairs={forexPairs} onPairSelect={setSelectedPair} />
               </CardContent>
             </Card>
