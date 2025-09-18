@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { supabase } from "@/lib/supabase"
+import { format } from "date-fns"
 
 interface TradingViewChartProps {
   symbol: string
+  selectedDate?: Date
 }
 
 interface ForexData {
@@ -30,39 +32,128 @@ interface ChartData {
 }
 
 const forexPairs = [
-  { pair: "EUR/USD", current: 1.17647, prediction: 1.1765, change: 0.75 },
-  { pair: "GBP/USD", current: 1.2634, prediction: 1.258, change: -0.43 },
-  { pair: "USD/JPY", current: 149.82, prediction: 151.2, change: 0.92 },
-  { pair: "USD/CHF", current: 0.8756, prediction: 0.869, change: -0.75 },
-  { pair: "AUD/USD", current: 0.6523, prediction: 0.658, change: 0.87 },
-  { pair: "USD/CAD", current: 1.3642, prediction: 1.359, change: -0.38 },
-  { pair: "NZD/USD", current: 0.5987, prediction: 0.602, change: 0.55 },
+  {
+    pair: "EUR/USD",
+    current: 1.17647,
+    predictions: {
+      "2025-09-12": 1.173544,
+      "2025-09-11": 1.173091,
+      "2025-09-10": 1.172152,
+      "2025-09-09": 1.170292,
+      "2025-09-08": 1.169640,
+      "2025-09-07": 1.1771,
+      "2025-09-06": 1.1766,
+    },
+    change: 0.75,
+  },
+  {
+    pair: "GBP/USD",
+    current: 1.2634,
+    predictions: {
+      "2025-09-12": 1.258,
+      "2025-09-11": 1.261,
+      "2025-09-10": 1.265,
+      "2025-09-09": 1.259,
+      "2025-09-08": 1.256,
+      "2025-09-07": 1.263,
+      "2025-09-06": 1.26,
+    },
+    change: -0.43,
+  },
+  {
+    pair: "USD/JPY",
+    current: 149.82,
+    predictions: {
+      "2025-09-12": 151.2,
+      "2025-09-11": 150.8,
+      "2025-09-10": 149.5,
+      "2025-09-09": 151.0,
+      "2025-09-08": 150.3,
+      "2025-09-07": 149.9,
+      "2025-09-06": 151.5,
+    },
+    change: 0.92,
+  },
+  {
+    pair: "USD/CHF",
+    current: 0.8756,
+    predictions: {
+      "2025-09-12": 0.869,
+      "2025-09-11": 0.872,
+      "2025-09-10": 0.875,
+      "2025-09-09": 0.871,
+      "2025-09-08": 0.868,
+      "2025-09-07": 0.873,
+      "2025-09-06": 0.87,
+    },
+    change: -0.75,
+  },
+  {
+    pair: "AUD/USD",
+    current: 0.6523,
+    predictions: {
+      "2025-09-12": 0.658,
+      "2025-09-11": 0.655,
+      "2025-09-10": 0.651,
+      "2025-09-09": 0.657,
+      "2025-09-08": 0.659,
+      "2025-09-07": 0.654,
+      "2025-09-06": 0.656,
+    },
+    change: 0.87,
+  },
+  {
+    pair: "USD/CAD",
+    current: 1.3642,
+    predictions: {
+      "2025-09-12": 1.359,
+      "2025-09-11": 1.362,
+      "2025-09-10": 1.365,
+      "2025-09-09": 1.361,
+      "2025-09-08": 1.358,
+      "2025-09-07": 1.363,
+      "2025-09-06": 1.36,
+    },
+    change: -0.38,
+  },
+  {
+    pair: "NZD/USD",
+    current: 0.5987,
+    predictions: {
+      "2025-09-12": 0.602,
+      "2025-09-11": 0.599,
+      "2025-09-10": 0.596,
+      "2025-09-09": 0.601,
+      "2025-09-08": 0.603,
+      "2025-09-07": 0.598,
+      "2025-09-06": 0.6,
+    },
+    change: 0.55,
+  },
 ]
 
-export function TradingViewChart({ symbol }: TradingViewChartProps) {
+export function TradingViewChart({ symbol, selectedDate }: TradingViewChartProps) {
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(true)
 
-  const getPredictionPrice = (symbol: string) => {
+  const getPredictionPrice = (symbol: string, date?: Date) => {
     const formattedSymbol = symbol.includes("/") ? symbol : symbol.slice(0, 3) + "/" + symbol.slice(3)
     const pair = forexPairs.find((p) => p.pair === formattedSymbol)
-    console.log("[v0] Looking for prediction for:", formattedSymbol, "Found:", pair?.prediction)
-    return pair?.prediction
+
+    if (!pair) return undefined
+
+    const targetDate = date ? format(date, "yyyy-MM-dd") : "2025-09-12"
+    return pair.predictions[targetDate as keyof typeof pair.predictions] || pair.predictions["2025-09-12"]
   }
 
-  const predictionPrice = getPredictionPrice(symbol)
+  const predictionPrice = getPredictionPrice(symbol, selectedDate)
 
   const processSupabaseData = (supabaseData: ForexData[]) => {
     if (!supabaseData || supabaseData.length === 0) return []
 
-    // Get the latest date from the data
-    const latestDate = supabaseData.length > 0 ? new Date(supabaseData[0].timestamp) : new Date()
-    const targetDate = new Date(latestDate.getFullYear(), latestDate.getMonth(), latestDate.getDate())
+    const targetDate = selectedDate || (supabaseData.length > 0 ? new Date(supabaseData[0].timestamp) : new Date())
+    const targetDateOnly = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
 
-    console.log("[v0] Latest date from data:", latestDate.toISOString())
-    console.log("[v0] Target date for prediction:", targetDate.toISOString())
-
-    // Process forex data
     const forexData = supabaseData.map((item) => {
       const timestamp = new Date(item.timestamp)
       return {
@@ -85,11 +176,10 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
       }
     })
 
-    // Create prediction data for every hour from 08:00 to 22:00 on the target date
     const predictionData: ChartData[] = []
     if (predictionPrice) {
       for (let hour = 8; hour <= 22; hour++) {
-        const predictionTimestamp = new Date(targetDate)
+        const predictionTimestamp = new Date(targetDateOnly)
         predictionTimestamp.setHours(hour, 0, 0, 0)
 
         predictionData.push({
@@ -113,19 +203,14 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
       }
     }
 
-    // Combine and sort all data by timestamp
     const combinedData = [...forexData, ...predictionData].sort((a, b) => a.timestamp - b.timestamp)
-
-    console.log("[v0] Combined data points:", combinedData.length)
-    console.log("[v0] Prediction data points:", predictionData.length)
 
     return combinedData
   }
 
   const fetchOHLCData = async (pair: string) => {
     try {
-      console.log("[v0] Fetching OHLC data for", pair)
-      const { data, error } = await supabase
+      let query = supabase
         .from("forex_data")
         .select("*")
         .eq("pair", pair)
@@ -133,12 +218,22 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
         .order("timestamp", { ascending: false })
         .limit(100)
 
+      if (selectedDate) {
+        const startOfDay = new Date(selectedDate)
+        startOfDay.setHours(0, 0, 0, 0)
+        const endOfDay = new Date(selectedDate)
+        endOfDay.setHours(23, 59, 59, 999)
+
+        query = query.lte("timestamp", endOfDay.toISOString())
+      }
+
+      const { data, error } = await query
+
       if (error) {
         console.error("[v0] Supabase error:", error)
         return []
       }
 
-      console.log("[v0] Fetched data:", data?.length, "records")
       return processSupabaseData(data || [])
     } catch (error) {
       console.error("[v0] Error fetching data:", error)
@@ -154,7 +249,7 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
       setLoading(false)
     }
     loadData()
-  }, [symbol])
+  }, [symbol, selectedDate])
 
   if (loading) {
     return (
@@ -172,21 +267,11 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
     )
   }
 
-  // Calculate Y-axis domain based on forex data only with 1% padding
   const forexPrices = chartData.filter((d) => d.forexPrice !== null).map((d) => d.forexPrice!)
-
-  console.log("[v0] Chart data length:", chartData.length)
-  console.log("[v0] Sample chart data:", chartData.slice(0, 3))
-  console.log("[v0] Forex prices extracted:", forexPrices.slice(0, 5))
-  console.log("[v0] Forex prices length:", forexPrices.length)
 
   let yAxisMin: number, yAxisMax: number
 
-  const minPrice = Math.min(...forexPrices)
-  const maxPrice = Math.max(...forexPrices)
-
   if (forexPrices.length === 0) {
-    // Fallback if no forex data - use prediction price range
     const predictionPrices = chartData.filter((d) => d.predictionPrice !== null).map((d) => d.predictionPrice!)
 
     if (predictionPrices.length > 0) {
@@ -198,19 +283,12 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
       yAxisMin = 0
       yAxisMax = 1
     }
-    console.log("[v0] No forex data, using prediction/fallback Y-axis domain:", { yAxisMin, yAxisMax })
   } else {
     const minPrice = Math.min(...forexPrices)
     const maxPrice = Math.max(...forexPrices)
-    yAxisMin = minPrice * 0.999 // 5% below min
-    yAxisMax = maxPrice * 1.0 // 5% above max
-    console.log("[v0] Using forex data Y-axis domain:", {
-      minPrice,
-      maxPrice,
-      yAxisMin,
-      yAxisMax,
-      forexDataCount: forexPrices.length,
-    })
+    const padding = 0.001 // 5% padding
+    yAxisMin = minPrice * (1 - padding) // 5% below min
+    yAxisMax = maxPrice * (1 + padding) // 5% above max
   }
 
   return (
@@ -232,10 +310,10 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
           <defs>
             <linearGradient id="fillForex" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
+              <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="fillPrediction" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#22c55e" stopOpacity={0} />
+              <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
               <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
             </linearGradient>
           </defs>
@@ -254,7 +332,7 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
             tickMargin={8}
             tick={{ fontSize: 12 }}
             tickFormatter={(value) => value.toFixed(5)}
-            domain={[minPrice, maxPrice]}
+            domain={[yAxisMin, yAxisMax]}
             type="number"
           />
           <ChartTooltip
@@ -273,7 +351,6 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
               />
             }
           />
-          {/* Forex Price Area Chart */}
           <Area
             dataKey="forexPrice"
             type="monotone"
@@ -283,7 +360,6 @@ export function TradingViewChart({ symbol }: TradingViewChartProps) {
             connectNulls={true}
             dot={false}
           />
-          {/* Prediction Price Area Chart */}
           <Area
             dataKey="predictionPrice"
             type="monotone"

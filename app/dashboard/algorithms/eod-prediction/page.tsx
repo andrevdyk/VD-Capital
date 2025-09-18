@@ -14,18 +14,109 @@ import { ForexPairsTable } from "./components/forex-pairs-table"
 
 // Mock data for forex pairs
 const forexPairs = [
-  { pair: "EUR/USD", current: 1.7647, prediction: 1.79, change: 0.75 },
-  { pair: "GBP/USD", current: 1.2634, prediction: 1.258, change: -0.43 },
-  { pair: "USD/JPY", current: 149.82, prediction: 151.2, change: 0.92 },
-  { pair: "USD/CHF", current: 0.8756, prediction: 0.869, change: -0.75 },
-  { pair: "AUD/USD", current: 0.6523, prediction: 0.658, change: 0.87 },
-  { pair: "USD/CAD", current: 1.3642, prediction: 1.359, change: -0.38 },
-  { pair: "NZD/USD", current: 0.5987, prediction: 0.602, change: 0.55 },
+  {
+    pair: "EUR/USD",
+    current: 1.7647,
+    predictions: {
+      "2025-09-12": 1.765,
+      "2025-09-11": 1.769,
+      "2025-09-10": 1.772,
+      "2025-09-09": 1.768,
+      "2025-09-08": 1.764,
+      "2025-09-07": 1.771,
+      "2025-09-06": 1.766,
+    },
+    change: 0.75,
+  },
+  {
+    pair: "GBP/USD",
+    current: 1.2634,
+    predictions: {
+      "2025-09-12": 1.258,
+      "2025-09-11": 1.261,
+      "2025-09-10": 1.265,
+      "2025-09-09": 1.259,
+      "2025-09-08": 1.256,
+      "2025-09-07": 1.263,
+      "2025-09-06": 1.26,
+    },
+    change: -0.43,
+  },
+  {
+    pair: "USD/JPY",
+    current: 149.82,
+    predictions: {
+      "2025-09-12": 151.2,
+      "2025-09-11": 150.8,
+      "2025-09-10": 149.5,
+      "2025-09-09": 151.0,
+      "2025-09-08": 150.3,
+      "2025-09-07": 149.9,
+      "2025-09-06": 151.5,
+    },
+    change: 0.92,
+  },
+  {
+    pair: "USD/CHF",
+    current: 0.8756,
+    predictions: {
+      "2025-09-12": 0.869,
+      "2025-09-11": 0.872,
+      "2025-09-10": 0.875,
+      "2025-09-09": 0.871,
+      "2025-09-08": 0.868,
+      "2025-09-07": 0.873,
+      "2025-09-06": 0.87,
+    },
+    change: -0.75,
+  },
+  {
+    pair: "AUD/USD",
+    current: 0.6523,
+    predictions: {
+      "2025-09-12": 0.658,
+      "2025-09-11": 0.655,
+      "2025-09-10": 0.651,
+      "2025-09-09": 0.657,
+      "2025-09-08": 0.659,
+      "2025-09-07": 0.654,
+      "2025-09-06": 0.656,
+    },
+    change: 0.87,
+  },
+  {
+    pair: "USD/CAD",
+    current: 1.3642,
+    predictions: {
+      "2025-09-12": 1.359,
+      "2025-09-11": 1.362,
+      "2025-09-10": 1.365,
+      "2025-09-09": 1.361,
+      "2025-09-08": 1.358,
+      "2025-09-07": 1.363,
+      "2025-09-06": 1.36,
+    },
+    change: -0.38,
+  },
+  {
+    pair: "NZD/USD",
+    current: 0.5987,
+    predictions: {
+      "2025-09-12": 0.602,
+      "2025-09-11": 0.599,
+      "2025-09-10": 0.596,
+      "2025-09-09": 0.601,
+      "2025-09-08": 0.603,
+      "2025-09-07": 0.598,
+      "2025-09-06": 0.6,
+    },
+    change: 0.55,
+  },
 ]
 
 export default function EODPredictionDashboard() {
   const [selectedPair, setSelectedPair] = useState("EUR/USD")
-  const [date, setDate] = useState<Date>()
+  const [date, setDate] = useState<Date>(new Date("2025-09-12"))
   const [currentData, setCurrentData] = useState(forexPairs[0])
 
   useEffect(() => {
@@ -34,6 +125,15 @@ export default function EODPredictionDashboard() {
       setCurrentData(selected)
     }
   }, [selectedPair])
+
+  const getCurrentPrediction = () => {
+    if (!date) return currentData.predictions["2025-09-12"] // Default to most recent
+    const dateString = format(date, "yyyy-MM-dd")
+    return (
+      currentData.predictions[dateString as keyof typeof currentData.predictions] ||
+      currentData.predictions["2025-09-12"]
+    )
+  }
 
   const calculatePips = (current: number, prediction: number) => {
     const pips = Math.abs((prediction - current) * 10000)
@@ -48,6 +148,8 @@ export default function EODPredictionDashboard() {
     // Mock function - would fetch from Supabase in real implementation
     console.log("Fetching predictions for last 7 days...")
   }
+
+  const currentPrediction = getCurrentPrediction()
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -106,7 +208,7 @@ export default function EODPredictionDashboard() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Prediction Price</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{currentData.prediction.toFixed(4)}</div>
+              <div className="text-2xl font-bold">{currentPrediction.toFixed(4)}</div>
             </CardContent>
           </Card>
 
@@ -115,7 +217,7 @@ export default function EODPredictionDashboard() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Pips Away</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{calculatePips(currentData.current, currentData.prediction)}</div>
+              <div className="text-2xl font-bold">{calculatePips(currentData.current, currentPrediction)}</div>
             </CardContent>
           </Card>
 
@@ -131,7 +233,7 @@ export default function EODPredictionDashboard() {
                 )}
               >
                 {currentData.change > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                {Math.abs(Number.parseFloat(calculatePercentage(currentData.current, currentData.prediction)))}%
+                {Math.abs(Number.parseFloat(calculatePercentage(currentData.current, currentPrediction)))}%
               </div>
             </CardContent>
           </Card>
@@ -155,7 +257,7 @@ export default function EODPredictionDashboard() {
                 <CardTitle>{selectedPair} Chart with Prediction Line</CardTitle>
               </CardHeader>
               <CardContent className="h-[60vh]">
-                <TradingViewChart symbol={selectedPair.replace("/", "")} />
+                <TradingViewChart symbol={selectedPair.replace("/", "")} selectedDate={date} />
               </CardContent>
             </Card>
           </div>

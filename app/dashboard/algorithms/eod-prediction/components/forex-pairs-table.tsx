@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils"
 interface ForexPair {
   pair: string
   current: number
-  prediction: number
+  predictions: {
+    [key: string]: number
+  }
   change: number
 }
 
@@ -16,6 +18,11 @@ interface ForexPairsTableProps {
 }
 
 export function ForexPairsTable({ pairs, onPairSelect }: ForexPairsTableProps) {
+  const getMostRecentPrediction = (predictions: { [key: string]: number }) => {
+    const dates = Object.keys(predictions).sort().reverse()
+    return predictions[dates[0]] || 0
+  }
+
   const calculatePercentage = (current: number, prediction: number) => {
     return (((prediction - current) / current) * 100).toFixed(2)
   }
@@ -23,7 +30,8 @@ export function ForexPairsTable({ pairs, onPairSelect }: ForexPairsTableProps) {
   return (
     <div className="space-y-2">
       {pairs.map((pair) => {
-        const percentageAway = Number.parseFloat(calculatePercentage(pair.current, pair.prediction))
+        const currentPrediction = getMostRecentPrediction(pair.predictions)
+        const percentageAway = Number.parseFloat(calculatePercentage(pair.current, currentPrediction))
         const isPositive = percentageAway > 0
 
         return (
@@ -47,7 +55,7 @@ export function ForexPairsTable({ pairs, onPairSelect }: ForexPairsTableProps) {
               </div>
               <div className="flex justify-between">
                 <span>Prediction:</span>
-                <span className="font-mono">{pair.prediction.toFixed(4)}</span>
+                <span className="font-mono">{currentPrediction.toFixed(4)}</span>
               </div>
             </div>
           </div>
