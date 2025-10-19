@@ -22,6 +22,7 @@ import {
 import { TrendingUp, TrendingDown, Scale, AlertCircle } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
 import { OverviewTab } from "./components/overview-tab"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 const SUPABASE_URL = "https://nobtgazxiggvkrwxugpq.supabase.co"
 const SUPABASE_KEY =
@@ -369,40 +370,173 @@ export default function COTDashboard() {
   }
 
   const getNetPositions = (assetData: any) => {
-    if (!assetData) return []
+    if (!assetData || !assetData.history || assetData.history.length < 2) {
+      // Return basic data without changes if history is not available
+      const latest = assetData?.latest
+      if (!latest) return []
+
+      return [
+        {
+          category: "Dealer",
+          net: latest.dealer_long - latest.dealer_short,
+          long: latest.dealer_long,
+          short: latest.dealer_short,
+          longChange: 0,
+          longChangePct: 0,
+          shortChange: 0,
+          shortChangePct: 0,
+        },
+        {
+          category: "Asset Manager",
+          net: latest.asset_mgr_long - latest.asset_mgr_short,
+          long: latest.asset_mgr_long,
+          short: latest.asset_mgr_short,
+          longChange: 0,
+          longChangePct: 0,
+          shortChange: 0,
+          shortChangePct: 0,
+        },
+        {
+          category: "Leveraged Money",
+          net: latest.lev_money_long - latest.lev_money_short,
+          long: latest.lev_money_long,
+          short: latest.lev_money_short,
+          longChange: 0,
+          longChangePct: 0,
+          shortChange: 0,
+          shortChangePct: 0,
+        },
+        {
+          category: "Other Reportable",
+          net: latest.other_long - latest.other_short,
+          long: latest.other_long,
+          short: latest.other_short,
+          longChange: 0,
+          longChangePct: 0,
+          shortChange: 0,
+          shortChangePct: 0,
+        },
+        {
+          category: "Non-Reportable",
+          net: latest.nonrept_long - latest.nonrept_short,
+          long: latest.nonrept_long,
+          short: latest.nonrept_short,
+          longChange: 0,
+          longChangePct: 0,
+          shortChange: 0,
+          shortChangePct: 0,
+        },
+      ]
+    }
+
     const latest = assetData.latest
+    const history = assetData.history
+    const previous = history[history.length - 2] // Get second to last for comparison
+
+    // Calculate dealer changes
+    const dealerLongPrev = previous.dealer_long || latest.dealer_long
+    const dealerShortPrev = previous.dealer_short || latest.dealer_short
+    const dealerLongChange = latest.dealer_long - dealerLongPrev
+    const dealerShortChange = latest.dealer_short - dealerShortPrev
+    const dealerLongChangePct = dealerLongPrev !== 0 ? (dealerLongChange / dealerLongPrev) * 100 : 0
+    const dealerShortChangePct = dealerShortPrev !== 0 ? (dealerShortChange / dealerShortPrev) * 100 : 0
+
+    // Calculate asset manager changes
+    const assetMgrLongPrev = previous.asset_mgr_long || latest.asset_mgr_long
+    const assetMgrShortPrev = previous.asset_mgr_short || latest.asset_mgr_short
+    const assetMgrLongChange = latest.asset_mgr_long - assetMgrLongPrev
+    const assetMgrShortChange = latest.asset_mgr_short - assetMgrShortPrev
+    const assetMgrLongChangePct = assetMgrLongPrev !== 0 ? (assetMgrLongChange / assetMgrLongPrev) * 100 : 0
+    const assetMgrShortChangePct = assetMgrShortPrev !== 0 ? (assetMgrShortChange / assetMgrShortPrev) * 100 : 0
+
+    // Calculate leveraged money changes
+    const levMoneyLongPrev = previous.lev_money_long || latest.lev_money_long
+    const levMoneyShortPrev = previous.lev_money_short || latest.lev_money_short
+    const levMoneyLongChange = latest.lev_money_long - levMoneyLongPrev
+    const levMoneyShortChange = latest.lev_money_short - levMoneyShortPrev
+    const levMoneyLongChangePct = levMoneyLongPrev !== 0 ? (levMoneyLongChange / levMoneyLongPrev) * 100 : 0
+    const levMoneyShortChangePct = levMoneyShortPrev !== 0 ? (levMoneyShortChange / levMoneyShortPrev) * 100 : 0
+
+    // Calculate other reportable changes
+    const otherLongPrev = previous.other_long || latest.other_long
+    const otherShortPrev = previous.other_short || latest.other_short
+    const otherLongChange = latest.other_long - otherLongPrev
+    const otherShortChange = latest.other_short - otherShortPrev
+    const otherLongChangePct = otherLongPrev !== 0 ? (otherLongChange / otherLongPrev) * 100 : 0
+    const otherShortChangePct = otherShortPrev !== 0 ? (otherShortChange / otherShortPrev) * 100 : 0
+
+    // Calculate non-reportable changes
+    const nonreptLongPrev = previous.nonrept_long || latest.nonrept_long
+    const nonreptShortPrev = previous.nonrept_short || latest.nonrept_short
+    const nonreptLongChange = latest.nonrept_long - nonreptLongPrev
+    const nonreptShortChange = latest.nonrept_short - nonreptShortPrev
+    const nonreptLongChangePct = nonreptLongPrev !== 0 ? (nonreptLongChange / nonreptLongPrev) * 100 : 0
+    const nonreptShortChangePct = nonreptShortPrev !== 0 ? (nonreptShortChange / nonreptShortPrev) * 100 : 0
+
     return [
       {
         category: "Dealer",
         net: latest.dealer_long - latest.dealer_short,
         long: latest.dealer_long,
         short: latest.dealer_short,
+        longChange: dealerLongChange,
+        longChangePct: dealerLongChangePct,
+        shortChange: dealerShortChange,
+        shortChangePct: dealerShortChangePct,
       },
       {
         category: "Asset Manager",
         net: latest.asset_mgr_long - latest.asset_mgr_short,
         long: latest.asset_mgr_long,
         short: latest.asset_mgr_short,
+        longChange: assetMgrLongChange,
+        longChangePct: assetMgrLongChangePct,
+        shortChange: assetMgrShortChange,
+        shortChangePct: assetMgrShortChangePct,
       },
       {
         category: "Leveraged Money",
         net: latest.lev_money_long - latest.lev_money_short,
         long: latest.lev_money_long,
         short: latest.lev_money_short,
+        longChange: levMoneyLongChange,
+        longChangePct: levMoneyLongChangePct,
+        shortChange: levMoneyShortChange,
+        shortChangePct: levMoneyShortChangePct,
       },
       {
         category: "Other Reportable",
         net: latest.other_long - latest.other_short,
         long: latest.other_long,
         short: latest.other_short,
+        longChange: otherLongChange,
+        longChangePct: otherLongChangePct,
+        shortChange: otherShortChange,
+        shortChangePct: otherShortChangePct,
       },
       {
         category: "Non-Reportable",
         net: latest.nonrept_long - latest.nonrept_short,
         long: latest.nonrept_long,
         short: latest.nonrept_short,
+        longChange: nonreptLongChange,
+        longChangePct: nonreptLongChangePct,
+        shortChange: nonreptShortChange,
+        shortChangePct: nonreptShortChangePct,
       },
     ]
+  }
+
+  const formatChange = (change: number) => {
+    if (change === 0) return "0"
+    const sign = change > 0 ? "+" : ""
+    return `${sign}${change.toLocaleString()}`
+  }
+
+  const formatPercent = (pct: number) => {
+    if (pct === 0) return "(0%)"
+    const sign = pct > 0 ? "+" : ""
+    return `(${sign}${pct.toFixed(1)}%)`
   }
 
   const AssetPanel = ({ asset, side }: { asset: string; side: string }) => {
@@ -601,23 +735,52 @@ export default function COTDashboard() {
             <CardTitle className="text-base">Net Positions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {netPositions.map((pos) => (
-                <div key={pos.category} className="grid grid-cols-4 gap-2 text-sm border-b pb-2">
-                  <div className="font-medium">{pos.category}</div>
-                  <div className="text-right text-green-600">{pos.long.toLocaleString()}</div>
-                  <div className="text-right text-red-600">{pos.short.toLocaleString()}</div>
-                  <div className="text-right">
-                    <span
-                      className={`flex items-center justify-end gap-1 ${pos.net >= 0 ? "text-green-600" : "text-red-600"}`}
-                    >
-                      {pos.net >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                      {Math.abs(pos.net).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Category</TableHead>
+                  <TableHead className="text-xs text-right">Longs</TableHead>
+                  <TableHead className="text-xs text-right">Shorts</TableHead>
+                  <TableHead className="text-xs text-right">Net Position</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {netPositions.map((pos) => (
+                  <TableRow key={pos.category}>
+                    <TableCell className="font-medium text-xs">{pos.category}</TableCell>
+
+                    {/* Longs */}
+                    <TableCell className="text-right text-xs">
+                      <div>{pos.long.toLocaleString()}</div>
+                      <div className="text-muted-foreground text-[10px]">
+                        {formatChange(pos.longChange)} {formatPercent(pos.longChangePct)}
+                      </div>
+                    </TableCell>
+
+                    {/* Shorts */}
+                    <TableCell className="text-right text-xs">
+                      <div>{pos.short.toLocaleString()}</div>
+                      <div className="text-muted-foreground text-[10px]">
+                        {formatChange(pos.shortChange)} {formatPercent(pos.shortChangePct)}
+                      </div>
+                    </TableCell>
+
+                    {/* Net Position */}
+                    <TableCell className="text-right text-xs">
+                      <span
+                        className={`flex items-center justify-end gap-1 ${
+                          pos.net >= 0 ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {pos.net >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        {Math.abs(pos.net).toLocaleString()}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 
