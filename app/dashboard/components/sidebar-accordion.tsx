@@ -284,15 +284,15 @@ export default function DashboardAccordion() {
                   "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
-                      pathname === "/dashboard/fundamentals/page1",
+                      pathname === "/dashboard/fundamentals/cftc",
                   }
                 )}
-                href="/dashboard/fundamentals/page1"
+                href="/dashboard/fundamentals/cftc"
               >
                 <div className="p-1 bg-transparent">
                   <Torus className="h-4 w-4" />
                 </div>
-                COT Data
+                CoT CFTC Data
               </Link>
             </li>
             <li>
