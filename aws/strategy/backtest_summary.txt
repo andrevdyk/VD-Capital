@@ -1,0 +1,17 @@
+FOREX BACKTEST SUMMARY REPORT
+==================================================
+
+Strategy: Range Breakout (11:00-12:15) + MACD Entry
+Stop Loss: 10 pips
+Take Profit: 10 pips
+Data Period: 2025-01-12 to 2025-09-19
+Total Days: 200 trading days
+
+PERFORMANCE METRICS:
+Total Trades: 146
+Win Rate: 54.1%
+Total Pips: +120.0
+Average Win: +10.0 pips
+Average Loss: -10.0 pips
+Profit Factor: 1.18
+Average Range: 20.4 pips

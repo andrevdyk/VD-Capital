@@ -15,7 +15,6 @@ import {
   Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Legend,
   Label,
 } from "recharts"
@@ -323,8 +322,8 @@ export default function COTDashboard() {
     }
 
     return [
-      { name: "Long", value: longVal, fill: "#10b981" },
-      { name: "Short", value: shortVal, fill: "#ef4444" },
+      { name: "Long", value: longVal, fill: "#03b198" },
+      { name: "Short", value: shortVal, fill: "#ff2f67" },
     ]
   }
 
@@ -360,9 +359,9 @@ export default function COTDashboard() {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background border rounded-lg p-2 shadow-lg">
-          <p className="font-semibold">{payload[0].name}</p>
-          <p className="text-sm">{payload[0].value.toLocaleString()}</p>
+        <div className="bg-background border border-border rounded-lg p-2 shadow-lg">
+          <p className="font-semibold text-xs">{payload[0].name}</p>
+          <p className="text-xs">{payload[0].value.toLocaleString()}</p>
         </div>
       )
     }
@@ -732,13 +731,18 @@ export default function COTDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Net Positions</CardTitle>
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>Net Positions</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                Report Date: {assetData.latest.report_date}
+              </span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Category</TableHead>
+                  <TableHead className="text-xs text-left">Category</TableHead>
                   <TableHead className="text-xs text-right">Longs</TableHead>
                   <TableHead className="text-xs text-right">Shorts</TableHead>
                   <TableHead className="text-xs text-right">Net Position</TableHead>
@@ -748,7 +752,7 @@ export default function COTDashboard() {
               <TableBody>
                 {netPositions.map((pos) => (
                   <TableRow key={pos.category}>
-                    <TableCell className="font-medium text-xs">{pos.category}</TableCell>
+                    <TableCell className="font-medium text-xs text-left pl-4">{pos.category}</TableCell>
 
                     {/* Longs */}
                     <TableCell className="text-right text-xs">
@@ -770,7 +774,7 @@ export default function COTDashboard() {
                     <TableCell className="text-right text-xs">
                       <span
                         className={`flex items-center justify-end gap-1 ${
-                          pos.net >= 0 ? "text-green-600" : "text-red-600"
+                          pos.net >= 0 ? "text-[#03b198]" : "text-[#ff2f67]"
                         }`}
                       >
                         {pos.net >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -791,16 +795,31 @@ export default function COTDashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={assetData.history}>
+                <defs>
+                  <linearGradient id="colorDealer" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={COLORS.dealer} stopOpacity={0.8} />
+                    <stop offset="65%" stopColor={COLORS.dealer} stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorAssetMgr" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={COLORS.assetMgr} stopOpacity={0.8} />
+                    <stop offset="65%" stopColor={COLORS.assetMgr} stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorLevMoney" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={COLORS.levMoney} stopOpacity={0.8} />
+                    <stop offset="65%" stopColor={COLORS.levMoney} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Area
                   type="monotone"
                   dataKey="dealer_net"
                   stackId="1"
                   stroke={COLORS.dealer}
-                  fill={COLORS.dealer}
+                  fillOpacity={1}
+                  fill="url(#colorDealer)"
                   name="Dealer"
                 />
                 <Area
@@ -808,7 +827,8 @@ export default function COTDashboard() {
                   dataKey="asset_mgr_net"
                   stackId="2"
                   stroke={COLORS.assetMgr}
-                  fill={COLORS.assetMgr}
+                  fillOpacity={1}
+                  fill="url(#colorAssetMgr)"
                   name="Asset Mgr"
                 />
                 <Area
@@ -816,7 +836,8 @@ export default function COTDashboard() {
                   dataKey="lev_money_net"
                   stackId="3"
                   stroke={COLORS.levMoney}
-                  fill={COLORS.levMoney}
+                  fillOpacity={1}
+                  fill="url(#colorLevMoney)"
                   name="Lev Money"
                 />
               </AreaChart>
@@ -831,10 +852,22 @@ export default function COTDashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={assetData.history}>
+                <defs>
+                  <linearGradient id="colorOpenInterest" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="#8500eb" stopOpacity={0.8} />
+                    <stop offset="65%" stopColor="#8500eb" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="open_interest" stroke="#8500eb" fill="#8500eb" />
+                <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="open_interest"
+                  stroke="#8500eb"
+                  fillOpacity={1}
+                  fill="url(#colorOpenInterest)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
