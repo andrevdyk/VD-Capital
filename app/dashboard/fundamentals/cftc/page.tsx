@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -19,8 +19,9 @@ import {
   Legend,
   Label,
 } from "recharts"
-import { TrendingUp, TrendingDown, Users, Scale, AlertCircle, Award } from "lucide-react"
+import { TrendingUp, TrendingDown, Scale, AlertCircle } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
+import { OverviewTab } from "./components/overview-tab"
 
 const SUPABASE_URL = "https://nobtgazxiggvkrwxugpq.supabase.co"
 const SUPABASE_KEY =
@@ -29,8 +30,8 @@ const SUPABASE_KEY =
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const COLORS = {
-  dealer: "#3b82f6",
-  assetMgr: "#10b981",
+  dealer: "#03b198",
+  assetMgr: "#ff2f67",
   levMoney: "#f59e0b",
   other: "#8b5cf6",
   nonrept: "#ef4444",
@@ -44,6 +45,8 @@ export default function COTDashboard() {
   const [rankingData, setRankingData] = useState<any[]>([])
   const [positionFlips, setPositionFlips] = useState<any[]>([])
   const [openInterestChanges, setOpenInterestChanges] = useState<any>({})
+  const [allAssetsData, setAllAssetsData] = useState<any[]>([])
+  const [historicalVolatilityData, setHistoricalVolatilityData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,6 +55,8 @@ export default function COTDashboard() {
     fetchRankingData()
     fetchPositionFlips()
     fetchOpenInterestChanges()
+    fetchAllAssetsData()
+    fetchHistoricalVolatilityData()
   }, [])
 
   useEffect(() => {
@@ -68,11 +73,7 @@ export default function COTDashboard() {
         .select(
           "contract_market_name, report_date, dealer_positions_long_all, dealer_positions_short_all, asset_mgr_positions_long, asset_mgr_positions_short, lev_money_positions_long, lev_money_positions_short",
         )
-        .in("commodity_subgroup_name", [
-        "CURRENCY",
-        "CURRENCY(NON-MAJOR)",
-        "OTHER FINANCIAL INSTRUMENTS",
-        ])
+        .in("commodity_subgroup_name", ["CURRENCY", "CURRENCY(NON-MAJOR)", "OTHER FINANCIAL INSTRUMENTS"])
         .order("report_date", { ascending: false })
 
       if (error) throw error
@@ -126,11 +127,7 @@ export default function COTDashboard() {
       const { data: allData, error } = await supabase
         .from("cftc_data_combined")
         .select("contract_market_name, report_date, open_interest_all")
-        .in("commodity_subgroup_name", [
-        "CURRENCY",
-        "CURRENCY(NON-MAJOR)",
-        "OTHER FINANCIAL INSTRUMENTS",
-         ])
+        .in("commodity_subgroup_name", ["CURRENCY", "CURRENCY(NON-MAJOR)", "OTHER FINANCIAL INSTRUMENTS"])
         .order("report_date", { ascending: false })
 
       if (error) throw error
@@ -174,11 +171,7 @@ export default function COTDashboard() {
         .select(
           "contract_market_name, report_date, dealer_positions_long_all, dealer_positions_short_all, asset_mgr_positions_long, asset_mgr_positions_short, lev_money_positions_long, lev_money_positions_short, open_interest_all",
         )
-        .in("commodity_subgroup_name", [
-        "CURRENCY",
-        "CURRENCY(NON-MAJOR)",
-        "OTHER FINANCIAL INSTRUMENTS",
-      ])
+        .in("commodity_subgroup_name", ["CURRENCY", "CURRENCY(NON-MAJOR)", "OTHER FINANCIAL INSTRUMENTS"])
         .order("report_date", { ascending: false })
 
       if (error) throw error
@@ -227,11 +220,7 @@ export default function COTDashboard() {
       const { data: assets, error } = await supabase
         .from("unique_contract_markets")
         .select("contract_market_name")
-        .in("commodity_subgroup_name", [
-        "CURRENCY",
-        "CURRENCY(NON-MAJOR)",
-        "OTHER FINANCIAL INSTRUMENTS",
-      ])
+        .in("commodity_subgroup_name", ["CURRENCY", "CURRENCY(NON-MAJOR)", "OTHER FINANCIAL INSTRUMENTS"])
         .order("contract_market_name")
 
       if (error) throw error
@@ -639,7 +628,6 @@ export default function COTDashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={assetData.history}>
-                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
@@ -680,11 +668,10 @@ export default function COTDashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={assetData.history}>
-                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Area type="monotone" dataKey="open_interest" stroke="#8884d8" fill="#8884d8" />
+                <Area type="monotone" dataKey="open_interest" stroke="#8500eb" fill="#8500eb" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -693,9 +680,149 @@ export default function COTDashboard() {
     )
   }
 
+  const fetchAllAssetsData = async () => {
+    try {
+      const { data: allData, error } = await supabase
+        .from("cftc_data_combined")
+        .select(
+          "contract_market_name, report_date, dealer_positions_long_all, dealer_positions_short_all, asset_mgr_positions_long, asset_mgr_positions_short, lev_money_positions_long, lev_money_positions_short",
+        )
+        .in("commodity_subgroup_name", ["CURRENCY", "CURRENCY(NON-MAJOR)", "OTHER FINANCIAL INSTRUMENTS"])
+        .order("report_date", { ascending: false })
+
+      if (error) throw error
+
+      // Group by asset
+      const assetMap: any = {}
+      allData.forEach((row: any) => {
+        if (!assetMap[row.contract_market_name]) {
+          assetMap[row.contract_market_name] = []
+        }
+        assetMap[row.contract_market_name].push(row)
+      })
+
+      // Calculate net positions and changes
+      const assetsWithChanges = Object.entries(assetMap)
+        .map(([asset, records]: [string, any]) => {
+          if (records.length < 2) return null
+
+          const latest = records[0]
+          const previous = records[1]
+
+          const dealerNetLatest = (latest.dealer_positions_long_all || 0) - (latest.dealer_positions_short_all || 0)
+          const dealerNetPrevious =
+            (previous.dealer_positions_long_all || 0) - (previous.dealer_positions_short_all || 0)
+          const dealerChange =
+            dealerNetPrevious !== 0 ? ((dealerNetLatest - dealerNetPrevious) / Math.abs(dealerNetPrevious)) * 100 : 0
+
+          const assetMgrNetLatest = (latest.asset_mgr_positions_long || 0) - (latest.asset_mgr_positions_short || 0)
+          const assetMgrNetPrevious =
+            (previous.asset_mgr_positions_long || 0) - (previous.asset_mgr_positions_short || 0)
+          const assetMgrChange =
+            assetMgrNetPrevious !== 0
+              ? ((assetMgrNetLatest - assetMgrNetPrevious) / Math.abs(assetMgrNetPrevious)) * 100
+              : 0
+
+          const levMoneyNetLatest = (latest.lev_money_positions_long || 0) - (latest.lev_money_positions_short || 0)
+          const levMoneyNetPrevious =
+            (previous.lev_money_positions_long || 0) - (previous.lev_money_positions_short || 0)
+          const levMoneyChange =
+            levMoneyNetPrevious !== 0
+              ? ((levMoneyNetLatest - levMoneyNetPrevious) / Math.abs(levMoneyNetPrevious)) * 100
+              : 0
+
+          const levMoneyTotal = (latest.lev_money_positions_long || 0) + (latest.lev_money_positions_short || 0)
+
+          return {
+            asset,
+            dealerNet: dealerNetLatest,
+            dealerChange,
+            assetMgrNet: assetMgrNetLatest,
+            assetMgrChange,
+            levMoneyNet: levMoneyNetLatest,
+            levMoneyChange,
+            levMoneyTotal,
+          }
+        })
+        .filter(Boolean)
+
+      setAllAssetsData(assetsWithChanges)
+    } catch (err: any) {
+      console.error("Failed to fetch all assets data:", err)
+    }
+  }
+
+  const fetchHistoricalVolatilityData = async () => {
+    try {
+      const { data: allData, error } = await supabase
+        .from("cftc_data_combined")
+        .select(
+          "contract_market_name, report_date, open_interest_all, dealer_positions_long_all, dealer_positions_short_all, asset_mgr_positions_long, asset_mgr_positions_short, lev_money_positions_long, lev_money_positions_short",
+        )
+        .in("commodity_subgroup_name", ["CURRENCY", "CURRENCY(NON-MAJOR)", "OTHER FINANCIAL INSTRUMENTS"])
+        .order("report_date", { ascending: true })
+        .limit(500)
+
+      if (error) throw error
+
+      // Group by asset and calculate changes
+      const assetMap: any = {}
+      allData.forEach((row: any) => {
+        if (!assetMap[row.contract_market_name]) {
+          assetMap[row.contract_market_name] = []
+        }
+        assetMap[row.contract_market_name].push(row)
+      })
+
+      const volatilityData: any[] = []
+      Object.entries(assetMap).forEach(([asset, records]: [string, any]) => {
+        for (let i = 1; i < records.length; i++) {
+          const current = records[i]
+          const previous = records[i - 1]
+
+          const currentOI = current.open_interest_all || 0
+          const previousOI = previous.open_interest_all || 0
+          const oiChangePct = previousOI !== 0 ? ((currentOI - previousOI) / previousOI) * 100 : 0
+
+          const currentNetPos =
+            (current.dealer_positions_long_all || 0) +
+            (current.asset_mgr_positions_long || 0) +
+            (current.lev_money_positions_long || 0) -
+            ((current.dealer_positions_short_all || 0) +
+              (current.asset_mgr_positions_short || 0) +
+              (current.lev_money_positions_short || 0))
+
+          const previousNetPos =
+            (previous.dealer_positions_long_all || 0) +
+            (previous.asset_mgr_positions_long || 0) +
+            (previous.lev_money_positions_long || 0) -
+            ((previous.dealer_positions_short_all || 0) +
+              (previous.asset_mgr_positions_short || 0) +
+              (previous.lev_money_positions_short || 0))
+
+          const positionChangePct =
+            previousNetPos !== 0 ? ((currentNetPos - previousNetPos) / Math.abs(previousNetPos)) * 100 : 0
+
+          volatilityData.push({
+            asset,
+            date: current.report_date,
+            openInterest: currentOI,
+            netPosition: currentNetPos,
+            oiChangePct,
+            positionChangePct,
+          })
+        }
+      })
+
+      setHistoricalVolatilityData(volatilityData)
+    } catch (err: any) {
+      console.error("Failed to fetch historical volatility data:", err)
+    }
+  }
+
   if (error) {
     return (
-      <div className="min-h-screen p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 p-6 flex items-center justify-center">
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
@@ -706,7 +833,7 @@ export default function COTDashboard() {
 
   if (loading || availableAssets.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-slate-50">
         <div className="text-xl">Loading COT Data...</div>
       </div>
     )
@@ -730,140 +857,7 @@ export default function COTDashboard() {
           </TabsList>
 
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {/* Top Trading Opportunities Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="w-5 h-5" />
-                    Top Trading Opportunities
-                  </CardTitle>
-                  <CardDescription>Top 15 assets ranked by net position strength</CardDescription>
-                </CardHeader>
-                <CardContent className="max-h-80 overflow-y-auto">
-                  {rankingData.map((r, idx) => (
-                    <div
-                      key={r.asset}
-                      className="flex justify-between items-center border-b py-2 text-sm hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-muted-foreground w-6">#{idx + 1}</span>
-                        <span className="font-medium">{r.asset}</span>
-                      </div>
-                      <span
-                        className={`font-semibold flex items-center gap-1 ${r.sentiment === "Long" ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {r.sentiment === "Long" ? (
-                          <TrendingUp className="w-3 h-3" />
-                        ) : (
-                          <TrendingDown className="w-3 h-3" />
-                        )}
-                        {r.netPercentage}%
-                      </span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Recent Position Flips Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5" />
-                    Recent Position Flips
-                  </CardTitle>
-                  <CardDescription>Assets that changed sentiment recently</CardDescription>
-                </CardHeader>
-                <CardContent className="max-h-80 overflow-y-auto">
-                  {positionFlips.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">No flips in the last 4 weeks</div>
-                  ) : (
-                    positionFlips.map((flip) => (
-                      <div key={flip.asset} className="border-b py-2 text-sm">
-                        <div className="font-medium">{flip.asset}</div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                          <span className={flip.from === "Long" ? "text-green-600" : "text-red-600"}>{flip.from}</span>
-                          <span>→</span>
-                          <span className={flip.to === "Long" ? "text-green-600" : "text-red-600"}>{flip.to}</span>
-                          <span className="ml-auto">{flip.date}</span>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Enhanced Open Interest Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    Open Interest Changes
-                  </CardTitle>
-                  <CardDescription>Week-over-week changes in open interest</CardDescription>
-                </CardHeader>
-                <CardContent className="max-h-80 overflow-y-auto">
-                  {Object.entries(openInterestChanges)
-                    .slice(0, 15)
-                    .map(([asset, change]: [string, any]) => (
-                      <div key={asset} className="border-b py-2 text-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">{asset}</span>
-                          <span
-                            className={`font-semibold flex items-center gap-1 ${change.change >= 0 ? "text-green-600" : "text-red-600"}`}
-                          >
-                            {change.change >= 0 ? (
-                              <TrendingUp className="w-3 h-3" />
-                            ) : (
-                              <TrendingDown className="w-3 h-3" />
-                            )}
-                            {change.percentChange}%
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {change.current.toLocaleString()} ({change.change >= 0 ? "+" : ""}
-                          {change.change.toLocaleString()})
-                        </div>
-                      </div>
-                    ))}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Market Sentiment Snapshot Card */}
-            <div className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Scale className="w-5 h-5" />
-                    Market Sentiment Snapshot
-                  </CardTitle>
-                  <CardDescription>Aggregated market overview</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-green-600">
-                        {rankingData.filter((r) => r.sentiment === "Long").length}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">Assets Net Long</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-red-600">
-                        {rankingData.filter((r) => r.sentiment === "Short").length}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">Assets Net Short</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-primary">
-                        {rankingData.length > 0 ? rankingData[0].asset : "N/A"}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">Strongest Position</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <OverviewTab allAssetsData={allAssetsData} historicalData={historicalVolatilityData} />
           </TabsContent>
 
           <TabsContent value="comparison">
