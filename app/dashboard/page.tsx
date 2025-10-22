@@ -6,12 +6,31 @@ import { CommitmentOfTraders } from "./components/commitment-of-traders"
 import { EconomicIndicators } from "./components/economic-indicators"
 import { EconomicNews } from "./components/economic-news"
 import { AssetStrength } from "./components/asset-strength"
-
+import { redirect } from 'next/navigation'
+import { createClient } from '@/utils/supabase/server'
 const Chart = dynamic(() => import("./components/Chart"), { ssr: true })
 
 // Remove the AssetFilter from the page since it's now in the top nav
 export default async function Dashboard() {
   let data, error
+  const supabase = createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .single()
+
+  if (!subscription) {
+    redirect('/billing')
+  }
 
   try {
     data = await getPolygonData()
