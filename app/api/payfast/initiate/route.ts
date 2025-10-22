@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 
 export async function POST(req: Request) {
-  const { userId } = await req.json()
+  const { userId, paymentMethod } = await req.json()
 
   const merchant_id = process.env.PAYFAST_MERCHANT_ID!
   const merchant_key = process.env.PAYFAST_MERCHANT_KEY!
@@ -10,30 +10,74 @@ export async function POST(req: Request) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!
   const payfastUrl = process.env.NEXT_PUBLIC_PAYFAST_URL!
 
-  const data = {
+  // Build parameters object - DO NOT include empty values
+  const params: Record<string, string> = {
     merchant_id,
     merchant_key,
     return_url: `${baseUrl}/billing?success=true`,
     cancel_url: `${baseUrl}/billing?cancelled=true`,
     notify_url: `${baseUrl}/api/payfast/notify`,
-    amount: '25.00',
+    amount: '430.00',
     item_name: 'Monthly Subscription',
     custom_str1: userId,
-    subscription_type: '1', // recurring
-    frequency: '3', // 3 = monthly
-    cycles: '0', // infinite
+    subscription_type: '1',
+    frequency: '3',
+    cycles: '0',
   }
 
-  const query = Object.entries(data)
-    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+  // Add payment method if specified (optional - if not set, all methods shown)
+  if (paymentMethod) {
+    params.payment_method = paymentMethod
+  }
+
+  // Generate signature using PayFast's exact method
+  const signature = generatePayFastSignature(params, passphrase)
+
+  // Debug logging
+  console.log('🧾 PayFast signature debug:')
+  console.log('Generated signature:', signature)
+
+  // Build final URL
+  const queryString = Object.keys(params)
+    .map(key => `${key}=${encodeURIComponent(params[key]).replace(/%20/g, '+')}`)
     .join('&')
+  
+  const finalUrl = `${payfastUrl}?${queryString}&signature=${signature}`
 
-  const signature = crypto
-    .createHash('md5')
-    .update(`${query}&passphrase=${encodeURIComponent(passphrase)}`)
-    .digest('hex')
+  console.log('🔗 Final URL:', finalUrl)
 
-  const paymentUrl = `${payfastUrl}?${query}&signature=${signature}`
+  return NextResponse.json({ url: finalUrl })
+}
 
-  return NextResponse.json({ url: paymentUrl })
+/**
+ * Generate PayFast signature using their official method
+ * Based on: https://developers.payfast.co.za/docs#step_2_create_security_signature
+ */
+function generatePayFastSignature(
+  data: Record<string, string>,
+  passphrase: string | null = null
+): string {
+  // Create parameter string
+  let pfOutput = ""
+  for (let key in data) {
+    if (data.hasOwnProperty(key)) {
+      if (data[key] !== "") {
+        // Encode value and replace %20 with +
+        pfOutput += `${key}=${encodeURIComponent(data[key].trim()).replace(/%20/g, "+")}&`
+      }
+    }
+  }
+
+  // Remove last ampersand
+  let getString = pfOutput.slice(0, -1)
+  
+  // Add passphrase if provided
+  if (passphrase !== null && passphrase !== "") {
+    getString += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, "+")}`
+  }
+
+  console.log('🔑 String to sign:', getString)
+
+  // Generate MD5 hash
+  return crypto.createHash("md5").update(getString).digest("hex")
 }
