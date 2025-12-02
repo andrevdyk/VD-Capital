@@ -2,3 +2,6 @@ yfinance
 pandas
 supabase
 sodapy
+requests
+beautifulsoup4
+lxml
