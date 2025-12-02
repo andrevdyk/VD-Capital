@@ -72,17 +72,17 @@ export default function EconomicsMatrix() {
 
   const getTrendIcon = (value: number | null): JSX.Element => {
     if (value === null || value === undefined) return <Minus className="w-4 h-4 text-gray-400" />;
-    if (value > 0) return <TrendingUp className="w-4 h-4 text-green-600" />;
-    if (value < 0) return <TrendingDown className="w-4 h-4 text-red-600" />;
+    if (value > 0) return <TrendingUp className="w-4 h-4 text-[#03b198]" />;
+    if (value < 0) return <TrendingDown className="w-4 h-4 text-[#ff2f67]" />;
     return <Minus className="w-4 h-4 text-gray-400" />;
   };
 
   const getValueColor = (value: number | null, isPositiveGood: boolean = true): string => {
     if (value === null || value === undefined) return 'text-gray-500';
     if (isPositiveGood) {
-      return value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-gray-700';
+      return value > 0 ? 'text-[#03b198]' : value < 0 ? 'text-[#ff2f67]' : 'text-gray-700';
     } else {
-      return value < 0 ? 'text-green-600' : value > 0 ? 'text-red-600' : 'text-gray-700';
+      return value < 0 ? 'text-[#03b198]' : value > 0 ? 'text-[#ff2f67]' : 'text-gray-700';
     }
   };
 
@@ -102,7 +102,7 @@ export default function EconomicsMatrix() {
       <div className="flex items-center justify-center min-h-screen">
         <Card className="w-96">
           <CardHeader>
-            <CardTitle className="text-red-600">Error</CardTitle>
+            <CardTitle className="text-[#ff2f67]">Error</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-700">{error}</p>
@@ -114,7 +114,7 @@ export default function EconomicsMatrix() {
 
   return (
     <div className="min-h-screen  p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="pl-4">
         <Card className="shadow-xl">
           <CardHeader className="">
             <CardTitle className="text-3xl">Global Economics Matrix</CardTitle>
@@ -123,20 +123,20 @@ export default function EconomicsMatrix() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
+            <div className="overflow-x-auto h-[74vh]">
+              <table className="w-full overflow-y-scroll">
+                <thead className='sticky top-0 z-12 bg-background'>
                   <tr className=" border-b">
-                    <th className="px-4 py-3 text-left font-bold text-foreground sticky left-0 z-10">Country</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">GDP ($B)</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">GDP Growth (%)</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">Interest Rate (%)</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">Inflation (%)</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">Unemployment (%)</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">Gov. Budget (%)</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">Debt/GDP (%)</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">Current Acct (%)</th>
-                    <th className="px-4 py-3 text-right font-bold text-foreground">Population (M)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-left font-bold text-foreground">Country</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">GDP ($B)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">GDP Growth (%)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">Interest Rate (%)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">Inflation (%)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">Unemployment (%)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">Gov. Budget (%)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">Debt/GDP (%)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">Current Acct (%)</th>
+                    <th className="text-nowrap text-sm px-4 py-3 text-right font-bold text-foreground">Population (M)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -145,7 +145,7 @@ export default function EconomicsMatrix() {
                       key={row.id} 
                       className="border-b hover:bg-muted transition-colors"
                     >
-                      <td className="px-4 py-3 font-semibold sticky left-0 bg-inherit z-10">
+                      <td className="px-4 py-3 font-semibold bg-background text-nowrap">
                         {row.country}
                       </td>
                       <td className="px-4 py-3 text-right font-mono">
