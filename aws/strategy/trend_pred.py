@@ -4,207 +4,287 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 import ta
 import plotly.graph_objects as go
 
-# ------------------- TOGGLE FEATURES -------------------
-# All feature set to false = 38.22% accuracy
-# Lags only = 40.03%
-# Lags + RSI = 39.11%
-# Lags + MACD = 40.39%
-# Lags + ATR = 
-# Lags + BB Width = 
-# Lags + RSI + MACD = 41.36
-# Lags + RSI + MACD + ATR = 41.60%
-# Lags + RSI + MACD + ATR + BB Width = 41.70%
-# RSI only = 38.74%
-# RSI + MACD = 40.15%
-# RSI + MACD + ATR = 42.32%
-# RSI + MACD + ATR + BB Width = 42.98%
-# MACD only = 40.02%
-# MACD + ATR = 41.69%
-# MACD + ATR + BB Width =41.34%
-# ATR only = 42.06%
-# ATR + BB Width = 42.02%
-# BB Width only = 41.39%
-USE_LAGS = False
-LAG_BARS = 5
+# ------------------------- TOGGLES / HYPERPARAMS -------------------------
+CSV_FILE = "Data1min_1.csv"        # your 1-min CSV (Date,Time,Open,High,Low,Close[,Volume])
+SEQ_LEN = 20                 # how many past bars the LSTM sees
+CONSISTENCY_N = 2            # require N consecutive future closes in same dir to label up/down
+TRAIN_TEST_SPLIT = 0.8       # fraction for training
+BATCH_SIZE = 64
+EPOCHS = 30
+LR = 0.001
+THRESHOLD = 0.0              # optional additional price threshold (leave 0 if using strict consistency)
+START_HOUR, END_HOUR = 8, 17 # prediction window inclusive
+MAX_PLOT_BARS = 500         # how many 1-min bars to show on plot (reduce if laggy)
+
+# Feature toggles (set False to omit)
 USE_RSI = True
 USE_MACD = True
 USE_ATR = True
-USE_BB_WIDTH = True
-USE_MULTI_TIMEFRAME = False
-PLOT_CANDLESTICKS = False
-PLOT_PROB_MARKERS = True
-MAX_PLOT_BARS = 500
+USE_BB = True
+USE_LAG_RETURNS = True
+LAG_RETURNS = [1,2,3]        # lags for return features
 
-# ------------------- PARAMETERS -------------------
-#Thresholds: 0.0002 = 60.74%, 0.0003 = 74.26%, 0.0005 = 89.16%, 0.0008 = 96.63%
+# Device
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", DEVICE)
 
-CSV_FILE = "data15.csv"
-HORIZON = 4      # predict next 5 min
-THRESHOLD = 0   # threshold for flat
-EPOCHS = 50
-BATCH_SIZE = 64
-LR = 0.001
+# ------------------------- LOAD & BASE PREPROCESS -------------------------
+df_1min = pd.read_csv(CSV_FILE)
+# combine Date + Time into datetime
+df_1min["time"] = pd.to_datetime(df_1min["Date"].astype(str) + " " + df_1min["Time"].astype(str),
+                                 errors="coerce")
+df_1min = df_1min.drop(columns=[c for c in ["Date","Time"] if c in df_1min.columns])
+df_1min = df_1min.rename(columns=str.lower).dropna(subset=["time"]).reset_index(drop=True)
 
-# ------------------- DEVICE -------------------
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
+# ensure numeric columns exist
+for col in ["open","high","low","close"]:
+    if col not in df_1min.columns:
+        raise ValueError(f"Missing required column: {col}")
 
-# ------------------- LOAD DATA -------------------
-df = pd.read_csv(CSV_FILE)
-df["time"] = pd.to_datetime(df["Date"].astype(str) + " " + df["Time"].astype(str), errors="coerce")
-df = df.drop(columns=["Date", "Time"]).dropna(subset=["time"]).reset_index(drop=True)
-df = df.rename(columns=str.lower)
+# ------------------------- FEATURE ENGINEERING -------------------------
+df = df_1min.copy()  # work on a copy for features/labels
 
-# ------------------- TECHNICAL INDICATORS -------------------
+# basic features
+df["return"] = df["close"].pct_change()
+df["hl_range"] = df["high"] - df["low"]
+
+# indicators (use ta library)
 if USE_RSI:
     df["rsi"] = ta.momentum.RSIIndicator(df["close"]).rsi()
 if USE_MACD:
     df["macd"] = ta.trend.MACD(df["close"]).macd()
 if USE_ATR:
     df["atr"] = ta.volatility.AverageTrueRange(df["high"], df["low"], df["close"]).average_true_range()
-if USE_BB_WIDTH:
+if USE_BB:
     bb = ta.volatility.BollingerBands(df["close"])
     df["bb_width"] = bb.bollinger_hband() - bb.bollinger_lband()
 
-# ------------------- LAGGED FEATURES -------------------
-if USE_LAGS:
-    lag_cols = ["open", "high", "low", "close", "rsi", "macd", "atr", "bb_width"]
-    for col in lag_cols:
-        if col in df.columns:
-            for lag in range(1, LAG_BARS+1):
-                df[f"{col}_lag{lag}"] = df[col].shift(lag)
+# lagged returns
+if USE_LAG_RETURNS:
+    for lag in LAG_RETURNS:
+        df[f"ret_lag_{lag}"] = df["return"].shift(lag)
 
+# drop initial NA rows from indicators
 df = df.dropna().reset_index(drop=True)
 
-# ------------------- LABELS -------------------
-df["future_close"] = df["close"].shift(-HORIZON)
-df["target"] = np.where(df["future_close"] > df["close"] + THRESHOLD, 1,
-                        np.where(df["future_close"] < df["close"] - THRESHOLD, 0, 2))
-df = df.dropna().reset_index(drop=True)
+# ------------------------- TREND-CONSISTENCY LABELS -------------------------
+# Label as UP if the next CONSISTENCY_N closes are all > current close
+# Label as DOWN if next CONSISTENCY_N closes are all < current close
+# Else label = -1 (uncertain) and will be skipped.
+def make_consistency_labels(df, consistency_n=CONSISTENCY_N, threshold=THRESHOLD):
+    closes = df["close"].values
+    n = len(closes)
+    labels = np.full(n, -1, dtype=int)
+    for i in range(n - consistency_n):
+        future = closes[i+1:i+1+consistency_n]
+        # require all future > current + threshold --> UP
+        if np.all(future > closes[i] + threshold):
+            labels[i] = 1
+        # require all future < current - threshold --> DOWN
+        elif np.all(future < closes[i] - threshold):
+            labels[i] = 0
+        else:
+            labels[i] = -1
+    # last consistency_n positions remain -1 (no label)
+    return labels
 
-# ------------------- FILTER 5-MIN INTERVALS & TRADING HOURS -------------------
-df["minute"] = df["time"].dt.minute
-df = df[df["minute"] % 5 == 0]               # 5-min intervals
-df = df[(df["time"].dt.hour >= 8) & (df["time"].dt.hour <= 17)]
+df["label_consistency"] = make_consistency_labels(df, CONSISTENCY_N, THRESHOLD)
 
-features = [col for col in df.columns if col not in ["time", "future_close", "target", "minute"]]
-X = df[features].values
-y = df["target"].values
-time_vals = df["time"].values
-close_vals = df["close"].values
+# ------------------------- BUILD SEQUENCES (only keep seqs that end on 5-min & trading hours) -------------------------
+# Allowed end times: minute % 5 == 0 AND hour in [START_HOUR..END_HOUR]
+feature_cols = [c for c in df.columns if c not in ("time","label_consistency")]
+# ensure stable ordering
+feature_cols = [c for c in ["open","high","low","close","return","hl_range","rsi","macd","atr","bb_width"] if c in df.columns] \
+               + [c for c in df.columns if c.startswith("ret_lag_")]
+feature_cols = [c for c in feature_cols if c in df.columns]  # final clean
 
-# ------------------- NORMALIZE -------------------
+X_seqs = []
+y_seqs = []
+times_seqs = []
+closes_seqs = []
+
+vals = df[feature_cols].values
+labels = df["label_consistency"].values
+times = df["time"].values
+closes = df["close"].values
+
+for i in range(len(vals) - SEQ_LEN):
+    end_idx = i + SEQ_LEN - 1
+    t = pd.Timestamp(times[end_idx])
+    # only keep sequences whose end is a 5-min interval inside trading window
+    if not (START_HOUR <= t.hour <= END_HOUR and t.minute % 5 == 0):
+        continue
+    label = labels[end_idx]
+    if label == -1:
+        continue
+    seq = vals[i:i+SEQ_LEN]
+    X_seqs.append(seq)
+    y_seqs.append(label)
+    times_seqs.append(times[end_idx])
+    closes_seqs.append(closes[end_idx])
+
+if len(X_seqs) == 0:
+    raise ValueError("No sequences produced — check SEQ_LEN, CONSISTENCY_N, data density, and trading hours.")
+
+X_seqs = np.array(X_seqs)        # shape (N, SEQ_LEN, feats)
+y_seqs = np.array(y_seqs)        # shape (N,)
+times_seqs = np.array(times_seqs)
+closes_seqs = np.array(closes_seqs)
+
+# ------------------------- SCALE FEATURES (fit on full sequences input data) -------------------------
+# We'll scale per-feature across all sequence rows and timesteps
+n_samples, seq_len, n_feats = X_seqs.shape
+X_reshaped = X_seqs.reshape(-1, n_feats)  # (N*SEQ_LEN, feats)
 scaler = StandardScaler()
-X = scaler.fit_transform(X)
+X_scaled = scaler.fit_transform(X_reshaped).reshape(n_samples, seq_len, n_feats)
 
-# ------------------- TRAIN/TEST SPLIT -------------------
-X_train, X_test, y_train, y_test, time_train, time_test, close_train, close_test = train_test_split(
-    X, y, time_vals, close_vals, test_size=0.2, shuffle=False
-)
+# ------------------------- TRAIN/TEST SPLIT (time-ordered) -------------------------
+split_idx = int(len(X_scaled) * TRAIN_TEST_SPLIT)
+X_train = X_scaled[:split_idx]
+y_train = y_seqs[:split_idx]
+X_test = X_scaled[split_idx:]
+y_test = y_seqs[split_idx:]
+times_test = times_seqs[split_idx:]
+closes_test = closes_seqs[split_idx:]
 
-X_train_tensor = torch.tensor(X_train, dtype=torch.float32).to(device)
-y_train_tensor = torch.tensor(y_train, dtype=torch.long).to(device)
-X_test_tensor = torch.tensor(X_test, dtype=torch.float32).to(device)
-y_test_tensor = torch.tensor(y_test, dtype=torch.long).to(device)
+print(f"Sequences total: {len(X_scaled)}, train: {len(X_train)}, test: {len(X_test)}")
 
-train_loader = DataLoader(TensorDataset(X_train_tensor, y_train_tensor), batch_size=BATCH_SIZE, shuffle=True)
+# create torch datasets
+train_ds = TensorDataset(torch.tensor(X_train, dtype=torch.float32),
+                         torch.tensor(y_train, dtype=torch.long))
+test_ds = TensorDataset(torch.tensor(X_test, dtype=torch.float32),
+                        torch.tensor(y_test, dtype=torch.long))
+train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
+test_loader = DataLoader(test_ds, batch_size=BATCH_SIZE, shuffle=False)
 
-# ------------------- MODEL -------------------
+# ------------------------- MODEL (LSTM) -------------------------
 class LSTMClassifier(nn.Module):
-    def __init__(self, input_dim, hidden_dim=512, num_layers=2, num_classes=3):
-        super(LSTMClassifier, self).__init__()
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)
-        self.fc = nn.Linear(hidden_dim, num_classes)
-        self.softmax = nn.Softmax(dim=1)
+    def __init__(self, input_size, hidden_size=128, num_layers=2, num_classes=2, dropout=0.2):
+        super().__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
+                            batch_first=True, dropout=dropout)
+        self.fc = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
-        x = x.unsqueeze(1)  # seq_len=1
-        out, _ = self.lstm(x)
-        out = self.fc(out[:, -1, :])
-        return self.softmax(out)
+        # x: [batch, seq_len, features]
+        out, _ = self.lstm(x)            # out: [batch, seq_len, hidden]
+        last = out[:, -1, :]             # take last timestep
+        logits = self.fc(last)           # [batch, num_classes]
+        return logits
 
-model = LSTMClassifier(X_train.shape[1]).to(device)
+model = LSTMClassifier(input_size=n_feats, hidden_size=128, num_layers=2).to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
-# ------------------- TRAIN -------------------
-for epoch in range(EPOCHS):
+# ------------------------- TRAIN -------------------------
+for epoch in range(1, EPOCHS+1):
     model.train()
-    total_loss = 0
+    total_loss = 0.0
     for xb, yb in train_loader:
+        xb, yb = xb.to(DEVICE), yb.to(DEVICE)
         optimizer.zero_grad()
-        preds = model(xb)
-        loss = criterion(preds, yb)
+        logits = model(xb)
+        loss = criterion(logits, yb)
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
-    if (epoch+1) % 10 == 0:
-        print(f"Epoch {epoch+1}/{EPOCHS}, Loss: {total_loss/len(train_loader):.4f}")
+    avg_loss = total_loss / max(1, len(train_loader))
+    if epoch % 10 == 0 or epoch == 1:
+        print(f"Epoch {epoch}/{EPOCHS}  loss={avg_loss:.4f}")
 
-# ------------------- EVALUATE -------------------
+# ------------------------- EVALUATE -------------------------
 model.eval()
+preds = []
+probs = []
 with torch.no_grad():
-    preds_probs = model(X_test_tensor).cpu().numpy()
-    preds_class = np.argmax(preds_probs, axis=1)
-    prob_up = preds_probs[:,1]
-    prob_down = preds_probs[:,0]
+    for xb, yb in test_loader:
+        xb = xb.to(DEVICE)
+        logits = model(xb)
+        p = torch.softmax(logits, dim=1).cpu().numpy()
+        pred = np.argmax(p, axis=1)
+        preds.extend(pred)
+        probs.extend(p)
 
-accuracy = (preds_class == y_test).mean()
-print(f"Test Accuracy: {accuracy:.2%}")
+preds = np.array(preds)
+probs = np.array(probs)
+y_test_arr = np.array(y_test)   # ground truth for test set
 
-# ------------------- CORRECTNESS MARKERS -------------------
-correct_markers = np.where(preds_class == y_test, "✓", "✗")
+acc = (preds == y_test_arr).mean()
+print(f"Test accuracy: {acc*100:.2f}%    (N_test={len(y_test_arr)})")
 
-# ------------------- PLOTLY VISUALIZATION -------------------
-if PLOT_CANDLESTICKS:
-    # Limit bars for performance
-    df_plot = df[-MAX_PLOT_BARS:]  # full 1-min bars
-    time_plot = df_plot["time"]
-    close_plot = df_plot["close"]
+# ------------------------- PREPARE PLOT DATA -------------------------
+# Use original 1-min df for candlestick plotting; overlay markers at times_test
+# Limit main plot to last MAX_PLOT_BARS 1-min bars
+df_plot = df_1min.copy().reset_index(drop=True)
+if len(df_plot) > MAX_PLOT_BARS:
+    df_plot = df_plot.iloc[-MAX_PLOT_BARS:]
 
-    # Find indices of 5-min interval candles (already filtered)
-    five_min_mask = df_plot["minute"] % 5 == 0
-    five_min_times = df_plot["time"][five_min_mask]
-    five_min_close = df_plot["close"][five_min_mask]
-    
-    # Corresponding predictions & correctness
-    preds_class_5min = preds_class[np.isin(time_test, five_min_times)]
-    correct_5min = correct_markers[np.isin(time_test, five_min_times)]
-    
-    # Arrows for prediction direction
-    arrows = np.where(preds_class_5min == 1, "↑",
-                      np.where(preds_class_5min == 0, "↓", "–"))
-    symbols = np.array([f"{ar}{c}" for ar, c in zip(arrows, correct_5min)])
+# Build overlay markers only where times_test fall within plotted timeframe
+# times_test are numpy datetimes; convert to pandas Timestamp for easy isin
+times_test_ts = pd.to_datetime(times_test)
+mask_in_plot = (times_test_ts >= df_plot["time"].iloc[0]) & (times_test_ts <= df_plot["time"].iloc[-1])
+overlay_times = times_test_ts[mask_in_plot]
+overlay_closes = closes_test[mask_in_plot]
+overlay_preds = preds[mask_in_plot]
+overlay_probs = probs[mask_in_plot]
 
-    fig = go.Figure()
+# assemble symbol strings arrow + check
+arrow = np.where(overlay_preds == 1, "↑", "↓")
+correct = np.where(overlay_preds == y_test_arr[mask_in_plot], "✓", "✗")
+symbols = [f"{a}{c}" for a,c in zip(arrow, correct)]
 
-    # Full 1-min candlestick chart
-    fig.add_trace(go.Candlestick(
-        x=time_plot,
-        open=df_plot["open"],
-        high=df_plot["high"],
-        low=df_plot["low"],
-        close=df_plot["close"],
-        name="Price"
-    ))
+# marker opacity from probability of predicted class
+pred_class_probs = overlay_probs[np.arange(len(overlay_preds)), overlay_preds]
+# scale to [0.25,1] for visibility
+opacities = 0.25 + 0.75 * (pred_class_probs - pred_class_probs.min()) / max(1e-9, pred_class_probs.max()-pred_class_probs.min())
 
-    # Symbols & arrows on 5-min candles only
-    fig.add_trace(go.Scatter(
-        x=five_min_times,
-        y=five_min_close,
-        mode="text",
-        text=symbols,
-        textposition="top center",
-        name="Prediction / Correctness"
-    ))
+# ------------------------- PLOTLY VISUALIZATION -------------------------
+fig = go.Figure()
 
-    fig.update_layout(
-        title=f"EURUSD Predicted Movement (Next {HORIZON} min)",
-        xaxis_title="Time",
-        yaxis_title="Price"
-    )
-    fig.show()
+fig.add_trace(go.Candlestick(
+    x=df_plot["time"],
+    open=df_plot["open"],
+    high=df_plot["high"],
+    low=df_plot["low"],
+    close=df_plot["close"],
+    name="1-min Price"
+))
+
+# overlay text symbols at 5-min prediction bars
+fig.add_trace(go.Scatter(
+    x=overlay_times,
+    y=overlay_closes,
+    mode="text",
+    text=symbols,
+    textfont=dict(size=12),
+    marker=dict(opacity=opacities),
+    name="Pred ↑/↓ + ✓/✗"
+))
+
+# optionally add a separate small colored dot showing confidence (green for up, red for down)
+fig.add_trace(go.Scatter(
+    x=overlay_times,
+    y=overlay_closes,
+    mode="markers",
+    marker=dict(
+        size=8,
+        color=np.where(overlay_preds==1, "green", "red"),
+        opacity=opacities
+    ),
+    name="Confidence dot"
+))
+
+fig.update_layout(
+    title=f"1-min Candles with 5-min Predictions (SEQ_LEN={SEQ_LEN}, CONSIST_N={CONSISTENCY_N})",
+    xaxis_title="Time",
+    yaxis_title="Price",
+    xaxis_rangeslider_visible=False
+)
+
+fig.show()
+
+# ------------------------- NOTES -------------------------
+print("Done. Tweak SEQ_LEN, CONSISTENCY_N, features toggles, EPOCHS, LR and try again.")

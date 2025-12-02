@@ -79,6 +79,8 @@ const BillingPage = () => {
       return;
     }
 
+    setLoading(true);
+
     const paystack = window.PaystackPop.setup({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
       email: userEmail,
@@ -86,13 +88,16 @@ const BillingPage = () => {
       metadata: {
         user_id: userId, 
         plan_name: name,
+        plan_code: planCode,
       },
       callback: function (response: any) {
         console.log('Payment complete:', response);
+        setLoading(false);
         window.location.href = '/dashboard/payment-success';
       },
       onClose: function () {
-        alert('Payment cancelled.');
+        console.log('Payment cancelled by user');
+        setLoading(false);
       },
     });
 

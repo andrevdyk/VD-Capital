@@ -12,7 +12,6 @@ const Chart = dynamic(() => import("./components/Chart"), { ssr: true })
 
 // Remove the AssetFilter from the page since it's now in the top nav
 export default async function Dashboard() {
-  let data, error
   const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -21,17 +20,40 @@ export default async function Dashboard() {
     redirect('/login')
   }
 
-  const { data: subscription } = await supabase
+  // Check for active subscription
+  const { data: subscription, error: subError } = await supabase
     .from('subscriptions')
     .select('*')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .single()
 
+  // Log for debugging
+  console.log('Subscription check:', { subscription, subError, userId: user.id })
+
+  // If no active subscription found, redirect to billing
   if (!subscription) {
+    console.log('No active subscription found, redirecting to billing')
     redirect('/billing')
   }
 
+  // Check if subscription has expired
+  const now = new Date()
+  const periodEnd = new Date(subscription.current_period_end)
+  
+  if (periodEnd < now) {
+    console.log('Subscription expired:', periodEnd, 'vs now:', now)
+    
+    // Update status to expired
+    await supabase
+      .from('subscriptions')
+      .update({ status: 'expired' })
+      .eq('id', subscription.id)
+    
+    redirect('/billing')
+  }
+  
+  let data, error
   try {
     data = await getPolygonData()
   } catch (err) {
@@ -39,6 +61,7 @@ export default async function Dashboard() {
   }
 
   if (error) return <div className="flex items-center justify-center h-screen">Error: {error}</div>
+  
   return (
     <div className="p-2 space-y-4">
       {/* Row 1: First 3 components */}
