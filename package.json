@@ -112,7 +112,7 @@
     "svix": "^1.13.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.180.0",
+    "three": "^0.181.2",
     "uuid": "^11.0.5",
     "vaul": "^1.1.1",
     "ws": "^8.18.0",

@@ -152,7 +152,7 @@ const SpringAnimatedFeatures = () => {
                 bounce: 0.7,
               }}
               key={project.id}
-              className="mt-5 text-left border p-6 rounded-md dark:bg-black"
+              className="mt-5 text-left border p-6 rounded-md dark:bg-[#0a0a0a]"
             >
               <Link
                 href={project?.url}
