@@ -3,7 +3,7 @@ import { getProfile } from "./actions/users"
 import ProfileCreationForm from "./components/ProfileCreationForm"
 import { Feed } from "./components/Feed"
 import PostForm from "./components/PostForm"
-import { Navbar } from "./components/Navbar"
+
 
 export default async function Dashboard() {
   const supabase = createClient()
@@ -32,7 +32,6 @@ export default async function Dashboard() {
 
   return (
     <div className="container mx-auto px-4 py-4">
-      <Navbar />
       <div className="mb-8 border rounded-lg p-5">
         <PostForm userId={user.id} userAvatar={profile.avatar_url || undefined} />
       </div>

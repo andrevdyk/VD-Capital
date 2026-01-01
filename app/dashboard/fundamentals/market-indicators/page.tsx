@@ -114,7 +114,7 @@ export default function EconomicsMatrix() {
 
   return (
     <div className="min-h-screen  p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="">
         <Card className="shadow-xl">
           <CardHeader className="">
             <CardTitle className="text-3xl">Global Economics Matrix</CardTitle>
