@@ -7,11 +7,11 @@ function calculatePeriodEnd(planCode: string): Date {
   const now = new Date()
   
   switch (planCode) {
-    case 'PLN_fjbbz7v33d9wus0': // Monthly
+    case 'PLN_scsa7d7f5uhdayf': // Monthly
       return new Date(now.setMonth(now.getMonth() + 1))
     case 'PLN_0arepng99m7gwm9': // 6 Month
       return new Date(now.setMonth(now.getMonth() + 6))
-    case 'PLN_bwbwt5rtd3o8s7s': // 12 Month
+    case 'PLN_zmi9znj09vv1d25': // 12 Month
       return new Date(now.setFullYear(now.getFullYear() + 1))
     default:
       // Default to 30 days if plan not recognized

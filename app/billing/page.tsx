@@ -15,7 +15,7 @@ const paystackPlans = [
     name: "Monthly VD Capital Subscription",
     amount: 45000,
     interval: "Monthly",
-    planCode: "PLN_fjbbz7v33d9wus0",
+    planCode: "PLN_scsa7d7f5uhdayf",
     currency: "ZAR",
   },
   {
@@ -29,7 +29,7 @@ const paystackPlans = [
     name: "12 Month VD Capital Subscription",
     amount: 450000,
     interval: "Annually",
-    planCode: "PLN_bwbwt5rtd3o8s7s",
+    planCode: "PLN_zmi9znj09vv1d25",
     currency: "ZAR",
   },
 ]
