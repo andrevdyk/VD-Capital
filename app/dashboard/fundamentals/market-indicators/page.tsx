@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, JSX } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Minus, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import * as flags from 'country-flag-icons/react/3x2';
@@ -349,13 +349,8 @@ export default function EconomicsMatrix() {
   }
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen p-6">
       <div className="pl-4">
-=======
-    <div className="min-h-screen  p-6">
-      <div className="">
->>>>>>> 0be25581ce93696aa81e8a2eb595d603cdde4ea7
         <Card className="shadow-xl">
           <CardHeader>
             <CardTitle className="text-3xl">Global Economics Matrix</CardTitle>
