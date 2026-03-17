@@ -182,7 +182,7 @@ export default function EODPredictionDashboard() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                <Calendar mode="single" selected={date} onSelect={(day) => day && setDate(day)} initialFocus />
               </PopoverContent>
             </Popover>
 

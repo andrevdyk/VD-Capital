@@ -426,7 +426,7 @@ export default function ForexChart() {
 
       {/* ── Timeframe + legend row ── */}
       <div className="flex items-center gap-4 mb-4 flex-wrap">
-        <div className="flex gap-1 bg-slate-900 rounded-lg p-1">
+        <div className="flex gap-1 bg-zinc-900 rounded-lg p-1">
           {TIMEFRAMES.map((tf) => (
             <button
               key={tf.label}
@@ -434,8 +434,8 @@ export default function ForexChart() {
               title={tf.description}
               className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                 activeTimeframe.label === tf.label
-                  ? 'bg-slate-700 text-white'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-zinc-700 text-primary'
+                  : 'text-zinc-400 hover:text-primary'
               }`}
             >
               {tf.label}
