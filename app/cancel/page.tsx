@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import NavBar from '@/components/wrapper/navbar'
+import NavBar from '@/components/homepage/navbar'
 import Link from 'next/link'
 
 export default function Cancel() {
