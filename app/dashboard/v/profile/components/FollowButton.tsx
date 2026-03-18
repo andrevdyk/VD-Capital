@@ -3,16 +3,22 @@
 import {
   useState,
   useEffect,
+  forwardRef,
 } from "react";
-import {
-  motion,
-  AnimatePresence,
-} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   toggleFollow,
   getFollowStatus,
 } from "../../actions/follows";
 import confetti from "canvas-confetti";
+
+const ButtonBase = forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>((props, ref) => <button ref={ref} {...props} />);
+ButtonBase.displayName = "ButtonBase";
+
+const MotionButton = motion.create(ButtonBase);
 
 export function FollowButton({
   followerId,
@@ -22,34 +28,26 @@ export function FollowButton({
   followingId: string;
 }) {
   const [isFollowing, setIsFollowing] =
-    useState<boolean | undefined>(
-      undefined
-    );
-  const [isLoading, setIsLoading] =
-    useState(true);
+    useState<boolean | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkFollowStatus =
-      async () => {
-        const result =
-          await getFollowStatus(
-            followerId,
-            followingId
-          );
-        if (result.success) {
-          setIsFollowing(
-            result.isFollowing
-          );
-        }
-        setIsLoading(false);
-      };
+    const checkFollowStatus = async () => {
+      const result = await getFollowStatus(
+        followerId,
+        followingId
+      );
+      if (result.success) {
+        setIsFollowing(result.isFollowing);
+      }
+      setIsLoading(false);
+    };
     checkFollowStatus();
   }, [followerId, followingId]);
 
   const triggerFireworks = () => {
     const duration = 5 * 1000;
-    const animationEnd =
-      Date.now() + duration;
+    const animationEnd = Date.now() + duration;
     const defaults = {
       startVelocity: 30,
       spread: 360,
@@ -57,106 +55,82 @@ export function FollowButton({
       zIndex: 0,
     };
 
-    const randomInRange = (
-      min: number,
-      max: number
-    ) =>
+    const randomInRange = (min: number, max: number) =>
       Math.random() * (max - min) + min;
 
-    const interval = window.setInterval(
-      () => {
-        const timeLeft =
-          animationEnd - Date.now();
+    const interval = window.setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
 
-        if (timeLeft <= 0) {
-          return clearInterval(
-            interval
-          );
-        }
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
 
-        const particleCount =
-          50 * (timeLeft / duration);
-        // First burst
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: {
-            x: randomInRange(0.1, 0.3),
-            y: Math.random() - 0.2,
-          },
-          colors: [
-            "#1d4ed8",
-            "#60a5fa",
-            "#93c5fd",
-            "#f472b6",
-            "#ec4899",
-          ],
-        });
-        // Second burst
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: {
-            x: randomInRange(0.7, 0.9),
-            y: Math.random() - 0.2,
-          },
-          colors: [
-            "#1d4ed8",
-            "#60a5fa",
-            "#93c5fd",
-            "#f472b6",
-            "#ec4899",
-          ],
-        });
-      },
-      250
-    );
+      const particleCount = 50 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: {
+          x: randomInRange(0.1, 0.3),
+          y: Math.random() - 0.2,
+        },
+        colors: [
+          "#1d4ed8",
+          "#60a5fa",
+          "#93c5fd",
+          "#f472b6",
+          "#ec4899",
+        ],
+      });
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: {
+          x: randomInRange(0.7, 0.9),
+          y: Math.random() - 0.2,
+        },
+        colors: [
+          "#1d4ed8",
+          "#60a5fa",
+          "#93c5fd",
+          "#f472b6",
+          "#ec4899",
+        ],
+      });
+    }, 250);
   };
 
-  const handleToggleFollow =
-    async () => {
-      setIsLoading(true);
-      const result = await toggleFollow(
-        followerId,
-        followingId
-      );
-      if (
-        result.success &&
-        typeof result.isFollowing ===
-          "boolean"
-      ) {
-        setIsFollowing(
-          result.isFollowing
-        );
-        if (result.isFollowing) {
-          triggerFireworks();
-        }
+  const handleToggleFollow = async () => {
+    setIsLoading(true);
+    const result = await toggleFollow(followerId, followingId);
+    if (
+      result.success &&
+      typeof result.isFollowing === "boolean"
+    ) {
+      setIsFollowing(result.isFollowing);
+      if (result.isFollowing) {
+        triggerFireworks();
       }
-      setIsLoading(false);
-    };
+    }
+    setIsLoading(false);
+  };
 
-  if (
-    isLoading ||
-    isFollowing === undefined
-  ) {
+  if (isLoading || isFollowing === undefined) {
     return (
-      <motion.button
+      <MotionButton
         className="relative flex h-10 w-28 items-center justify-center rounded-lg bg-muted text-muted-foreground"
         disabled
       >
         Loading...
-      </motion.button>
+      </MotionButton>
     );
   }
 
   return (
     <AnimatePresence mode="wait">
-      <motion.button
-        key={
-          isFollowing
-            ? "following"
-            : "follow"
-        }
+      <MotionButton
+        key={isFollowing ? "following" : "follow"}
         onClick={handleToggleFollow}
         className={`relative flex h-10 w-28 items-center justify-center rounded-lg ${
           isFollowing
@@ -168,26 +142,18 @@ export function FollowButton({
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
       >
-        <motion.span
-          key={
-            isFollowing
-              ? "unfollow-text"
-              : "follow-text"
-          }
-          initial={{
-            y: 20,
-            opacity: 0,
-          }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -20, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="absolute"
-        >
-          {isFollowing
-            ? "Unfollow"
-            : "Follow"}
-        </motion.span>
-      </motion.button>
+        <div className="absolute">
+          <motion.span
+            key={isFollowing ? "unfollow-text" : "follow-text"}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isFollowing ? "Unfollow" : "Follow"}
+          </motion.span>
+        </div>
+      </MotionButton>
     </AnimatePresence>
   );
 }
