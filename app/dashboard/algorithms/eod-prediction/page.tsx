@@ -9,7 +9,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, TrendingUp, TrendingDown } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { TradingViewChart } from "./components/trading-view-chart"
+import dynamic from "next/dynamic"
+
+const TradingViewChart = dynamic(
+  () => import("./components/trading-view-chart").then((mod) => mod.TradingViewChart),
+  { ssr: false }
+)
+
 import { ForexPairsTable } from "./components/forex-pairs-table"
 
 // Mock data for forex pairs
@@ -116,7 +122,7 @@ const forexPairs = [
 
 export default function EODPredictionDashboard() {
   const [selectedPair, setSelectedPair] = useState("EUR/USD")
-  const [date, setDate] = useState<Date>(new Date("2025-09-12"))
+  const [date, setDate] = useState<Date>(() => new Date("2025-09-12"))
   const [currentData, setCurrentData] = useState(forexPairs[0])
 
   useEffect(() => {
