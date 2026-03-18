@@ -28,7 +28,7 @@ interface CreatePostData {
 }
 
 export async function createPost({ userId, content, mediaUrls }: CreatePostData) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("posts")
@@ -49,7 +49,7 @@ export async function createPost({ userId, content, mediaUrls }: CreatePostData)
 }
 
 export async function fetchPosts(userId: string | undefined, page = 1, pageSize = 10) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   if (!userId) {
     console.error("Error: userId is undefined")
@@ -113,7 +113,7 @@ export async function fetchPosts(userId: string | undefined, page = 1, pageSize 
 }
 
 export async function likePost(postId: string, userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Check if the user has already liked the post
   const { data: existingLike, error: likeCheckError } = await supabase
@@ -164,7 +164,7 @@ export async function likePost(postId: string, userId: string) {
 }
 
 export async function incrementShares(postId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase.rpc("increment_shares", { post_id: postId }).select("shares").single()
 

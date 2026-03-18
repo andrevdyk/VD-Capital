@@ -14,7 +14,7 @@ export type Profile = {
 }
 
 export async function searchUsers(searchTerm: string, currentUserId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   console.log(`Searching for users with term: ${searchTerm}, currentUserId: ${currentUserId}`)
 
@@ -35,7 +35,7 @@ export async function searchUsers(searchTerm: string, currentUserId: string) {
 }
 
 export async function fetchProfiles(): Promise<{ success: boolean; data: Profile[] | null; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase.from("profiles").select("*")
 
@@ -48,7 +48,7 @@ export async function fetchProfiles(): Promise<{ success: boolean; data: Profile
 }
 
 export async function updateProfile(userId: string, updates: Partial<Profile>) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase.from("profiles").update(updates).eq("id", userId).select()
 
@@ -71,7 +71,7 @@ export async function createProfile({
   displayName: string
   avatarUrl?: string
 }) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("profiles")
@@ -93,7 +93,7 @@ export async function createProfile({
 }
 
 export async function getProfile(userId: string): Promise<{ success: boolean; data: Profile | null; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("profiles")
@@ -118,7 +118,7 @@ export async function getProfileStats(userId: string): Promise<{
   data: { followers: number; following: number; posts: number } | null
   error?: string
 }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     // Fetch follower count

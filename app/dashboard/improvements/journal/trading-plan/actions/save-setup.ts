@@ -9,7 +9,7 @@ export async function saveStrategy(strategyData: {
   strategy_name: string;
   strategy_description: string;
 }) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -62,7 +62,7 @@ export async function saveStrategy(strategyData: {
 }
 
 export async function getUserStrategies() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -104,7 +104,7 @@ export async function saveSetup(setupData: {
   strategy_id: string;
   risk_strategy: string | null;
 }) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -163,7 +163,7 @@ export async function saveSetup(setupData: {
 }
 
 export async function getUserSetups() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -211,7 +211,7 @@ export async function getUserSetups() {
 }
 
 export async function deleteSetup(setupId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -247,7 +247,7 @@ export async function deleteSetup(setupId: string) {
 }
 
 export async function getSetupById(setupId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -290,7 +290,7 @@ export async function getSetupById(setupId: string) {
 }
 
 export async function deleteStrategy(strategyId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()

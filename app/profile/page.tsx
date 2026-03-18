@@ -25,6 +25,13 @@ interface UserData {
   }
 }
 
+type SubscriptionData = {
+  status: string
+  plan_name: string
+  current_period_end: string
+  [key: string]: any
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -36,7 +43,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const supabase = createClient()
+      const supabase = await createClient()
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser()
@@ -46,7 +53,7 @@ export default function ProfilePage() {
           .from("subscriptions")
           .select("*")
           .eq("user_id", authUser.id)
-          .maybeSingle()
+          .maybeSingle<SubscriptionData>()
 
         const userData = {
           id: authUser.id,
@@ -81,7 +88,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     if (!user) return
 
-    const supabase = createClient()
+    const supabase = await createClient()
     const { error } = await supabase.auth.updateUser({
       data: {
         full_name: formData.name,

@@ -10,7 +10,7 @@ export type UserProfile = {
 }
 
 export async function searchUserProfiles(searchTerm: string): Promise<UserProfile[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("profiles")

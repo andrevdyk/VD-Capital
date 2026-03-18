@@ -34,7 +34,7 @@ export type MeetingAttendee = {
 }
 
 export async function createMeeting(meeting: Omit<Meeting, "id" | "created_at" | "updated_at">) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("meetings")
@@ -77,7 +77,7 @@ export async function createMeeting(meeting: Omit<Meeting, "id" | "created_at" |
 }
 
 export async function updateMeeting(meeting: Meeting) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("meetings")
@@ -123,7 +123,7 @@ export async function updateMeeting(meeting: Meeting) {
 }
 
 export async function deleteMeeting(meetingId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { error } = await supabase.from("meetings").delete().eq("id", meetingId)
 
@@ -137,7 +137,7 @@ export async function deleteMeeting(meetingId: string) {
 }
 
 export async function fetchMeetings(userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   console.log("Fetching meetings for user:", userId)
 

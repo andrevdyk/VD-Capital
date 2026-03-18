@@ -9,7 +9,7 @@ import {
 import { createClient } from "@/utils/supabase/server";
 
 export async function SelectCurrency() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: assets, error } = await supabase
     .from("cftc_assets")
     .select("symbol")

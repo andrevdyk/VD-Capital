@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function toggleFollow(followerId: string, followingId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Check if the follow relationship already exists
   const { data: existingFollow, error: checkError } = await supabase
@@ -52,7 +52,7 @@ export async function toggleFollow(followerId: string, followingId: string) {
 }
 
 export async function getFollowStatus(followerId: string, followingId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("follows")

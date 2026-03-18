@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server"
 
 export async function getChats(userId: string) {
   console.log("Getting chats for userId:", userId)
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: chats, error } = await supabase
     .from("chat")
@@ -34,7 +34,7 @@ export async function getChats(userId: string) {
 }
 
 export async function getLimitedProfile(userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("limited_profiles")
     .select("id, username, display_name, avatar_url")
@@ -55,7 +55,7 @@ export async function getMessages(chatId: string) {
     console.error("Invalid chatId provided to getMessages")
     return null
   }
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: messages, error } = await supabase
     .from("messages")
     .select(`
@@ -82,7 +82,7 @@ export async function getMessages(chatId: string) {
 }
 
 export async function createChat(userId: string, otherUserId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const newChatData = {
     created_by: userId,
     is_group: false,
@@ -106,7 +106,7 @@ export async function createChat(userId: string, otherUserId: string) {
 
 export async function sendMessage(chatId: string, userId: string, content: string) {
   console.log("Sending message with chatId:", chatId, "userId:", userId, "content:", content)
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("messages")
     .insert({

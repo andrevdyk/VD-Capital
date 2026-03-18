@@ -28,7 +28,7 @@ type CommentResponse = {
 export async function fetchComments(
   postId: string,
 ): Promise<{ success: boolean; data: Comment[] | null; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("comments")
@@ -74,7 +74,7 @@ export async function createComment({
   userId,
   content,
 }: CreateCommentData): Promise<{ success: boolean; data?: Comment; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     // First, ensure the user exists in the public.profiles table
@@ -133,7 +133,7 @@ export async function createComment({
 }
 
 export async function updateComment(commentId: string, content: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { error } = await supabase
     .from("comments")
@@ -150,7 +150,7 @@ export async function updateComment(commentId: string, content: string): Promise
 }
 
 export async function deleteComment(commentId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { error } = await supabase.from("comments").delete().eq("id", commentId)
 

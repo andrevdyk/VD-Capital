@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server"
 import { cookies } from 'next/headers'
 
 export async function submitMarketQuiz({ selectedMarkets, timezone }: { selectedMarkets: string[], timezone: string }) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     // Get the current user
@@ -60,7 +60,7 @@ export async function submitMarketQuiz({ selectedMarkets, timezone }: { selected
 }
 
 export async function getUserMarkets() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()

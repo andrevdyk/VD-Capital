@@ -9,7 +9,7 @@ export async function getReports(
   search: string = '',
   assetClass: string = 'All'
 ): Promise<{ reports: Report[], hasMore: boolean } | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const from = (page - 1) * pageSize
@@ -46,7 +46,7 @@ export async function getReports(
 }
 
 export async function getReportById(id: string): Promise<Report | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data, error } = await supabase

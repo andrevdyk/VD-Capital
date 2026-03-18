@@ -2,7 +2,7 @@
 import { createClient } from "@/utils/supabase/server"
 
 export async function getChats(userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: chats, error } = await supabase.from("chat").select("*").eq("id", userId)
 
   if (error) {
@@ -14,7 +14,7 @@ export async function getChats(userId: string) {
 }
 
 export async function getLimitedProfile(userId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from("limited_profiles")
     .select("id, username, display_name, avatar_url")
@@ -30,7 +30,7 @@ export async function getLimitedProfile(userId: string) {
 }
 
 export async function getMessages(chatId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: messages, error } = await supabase.from("messages").select("*").eq("chat_id", chatId)
 
   if (error) {
@@ -42,7 +42,7 @@ export async function getMessages(chatId: string) {
 }
 
 export async function createChat(userId: string, otherUserId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const newChatData = {
     created_by: userId,
     is_group: false,

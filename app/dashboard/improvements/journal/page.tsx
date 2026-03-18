@@ -5,7 +5,7 @@ import { JournalNavigation } from "./components/journal-navigation"
 import { JournalContent } from "./components/JournalContent"
 
 export default async function TradingUploadPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user) {

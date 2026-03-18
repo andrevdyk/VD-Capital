@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server"
 
 export async function uploadFile(formData: FormData) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const file = formData.get("file") as File
   const path = formData.get("path") as string

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 
 export default async function TradingUploadPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } =
     await supabase.auth.getUser();

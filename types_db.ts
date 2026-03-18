@@ -108,6 +108,48 @@ export interface Database {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string | null
+          paystack_subscription_code: string | null
+          paystack_customer_code: string | null
+          plan_code: string | null
+          plan_name: string | null
+          status: string | null
+          current_period_start: string | null
+          current_period_end: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          paystack_subscription_code?: string | null
+          paystack_customer_code?: string | null
+          plan_code?: string | null
+          plan_name?: string | null
+          status?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          paystack_subscription_code?: string | null
+          paystack_customer_code?: string | null
+          plan_code?: string | null
+          plan_name?: string | null
+          status?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

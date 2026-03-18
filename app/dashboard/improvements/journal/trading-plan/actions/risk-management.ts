@@ -16,7 +16,7 @@ export interface RiskStrategy {
 }
 
 export async function submitRiskPercentage(percentage: number): Promise<number> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -51,7 +51,7 @@ export async function submitRiskPercentage(percentage: number): Promise<number> 
 }
 
 export async function getUserRiskPercentage(): Promise<number | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -86,7 +86,7 @@ export async function getUserRiskPercentage(): Promise<number | null> {
 }
 
 export async function submitRiskStrategy(strategies: RiskStrategy[]): Promise<RiskStrategy[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -131,7 +131,7 @@ export async function submitRiskStrategy(strategies: RiskStrategy[]): Promise<Ri
 }
 
 export async function getUserRiskStrategy(): Promise<RiskStrategy[] | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()

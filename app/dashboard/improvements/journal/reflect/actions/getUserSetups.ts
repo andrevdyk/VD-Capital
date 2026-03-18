@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 
 export async function getUserSetups(strategyId: string) {
   const cookieStore = cookies()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data, error } = await supabase

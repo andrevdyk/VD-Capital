@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server"
 
 export async function getTradingHistory() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()

@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server"
 import { cookies } from 'next/headers'
 
 export async function submitQuiz(answers: Record<string, number>) {
-  const supabase = createClient()
+  const supabase =await createClient()
 
   try {
     // Get the current user
@@ -80,7 +80,7 @@ export async function submitQuiz(answers: Record<string, number>) {
 }
 
 export async function getUserTraderType() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser()
