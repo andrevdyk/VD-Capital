@@ -152,13 +152,13 @@ const SpringAnimatedFeatures = () => {
                 bounce: 0.7,
               }}
               key={project.id}
-              className="mt-5 text-left border p-6 rounded-md dark:bg-[#0a0a0a]"
             >
-              <Link
-                href={project?.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <div className="mt-5 text-left border p-6 rounded-md dark:bg-[#0a0a0a]">
+                <Link
+                  href={project?.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                 <Image
                   src={project.image}
                   width={40}
@@ -170,7 +170,8 @@ const SpringAnimatedFeatures = () => {
                 <div className="max-w-[250px] text-sm font-normal text-gray-600 dark:text-gray-400">
                   {project.description}
                 </div>
-              </Link>
+                </Link>
+              </div>
             </motion.div>
           );
         })}
