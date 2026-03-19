@@ -1,5 +1,5 @@
 "use client";
-import { TITLE_TAILWIND_CLASS } from "@/utils/constants";
+
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -132,7 +132,7 @@ const SpringAnimatedFeatures = () => {
     <div className="flex flex-col justify-center items-center lg:w-[75%]">
       <div className="flex flex-col mb-[3rem]">
         <h2
-          className={`${TITLE_TAILWIND_CLASS} mt-2 font-semibold tracking-tight dark:text-white text-gray-900`}
+          className="mt-2 font-semibold tracking-tight dark:text-white text-gray-900"
         >
           Trading Toolkit for Success.
         </h2>

@@ -10,9 +10,9 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "nobtgazxiggvkrwxugpq.supabase.co/storage/v1/s3",
+        hostname: "nobtgazxiggvkrwxugpq.supabase.co",
         port: "",
-        pathname: "/**",
+        pathname: "/storage/v1/s3/**",
       },
       {
         protocol: "https",
@@ -33,20 +33,16 @@ const nextConfig = {
         pathname: "/**",
       },
       {
-        protocol: 'https',
-        hostname: 'nobtgazxiggvkrwxugpq.supabase.co',
-        port: '',
-        pathname: '/storage/v1/object/**',
+        protocol: "https",
+        hostname: "nobtgazxiggvkrwxugpq.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/**",
       },
     ],
   },
-  experimental: {
-    serverActions: {
-      allowedOrigins: [
-        "obscure-lamp-4wvj64qxwg9h77x-3000.app.github.dev",
-        "localhost:3000",
-      ],
-    },
+  turbopack: {
+    root: __dirname,
   },
 };
+
 module.exports = nextConfig;

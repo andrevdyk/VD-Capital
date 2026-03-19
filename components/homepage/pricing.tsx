@@ -10,7 +10,6 @@ import { useUser } from "@clerk/nextjs"
 import axios from "axios"
 import { loadStripe } from "@stripe/stripe-js"
 import { toast } from "sonner"
-import { TITLE_TAILWIND_CLASS } from "@/utils/constants"
 
 type PricingSwitchProps = {
   onSwitch: (value: string) => void
@@ -34,7 +33,7 @@ type PricingCardProps = {
 
 const PricingHeader = ({ title, subtitle }: { title: string; subtitle: string }) => (
   <section className="text-center">
-    <h1 className={`${TITLE_TAILWIND_CLASS} mt-2 font-semibold tracking-tight dark:text-white text-gray-900`}>{title}</h1>
+    <h1 className="mt-2 font-semibold tracking-tight dark:text-white text-gray-900">{title}</h1>
     <p className="text-gray-600 dark:text-gray-400 pt-1">{subtitle}</p>
     <br />
   </section>
