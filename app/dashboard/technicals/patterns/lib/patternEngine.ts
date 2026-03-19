@@ -49,6 +49,18 @@ export interface PatternScore {
   breakdown:  string[]
 }
 
+export interface RRLevels {
+  entry:  number   // price at which the trade is entered (breakout level)
+  sl:     number   // stop loss
+  tp:     number   // take profit
+  ratio:  number   // reward / risk
+  isBull: boolean
+  /** unix timestamp from which the RR box starts (entry candle time) */
+  fromTime: number
+  /** unix timestamp to which the RR box extends (projected) */
+  toTime:   number
+}
+
 export interface DetectedPattern {
   asset:       string
   pattern:     string
@@ -60,6 +72,7 @@ export interface DetectedPattern {
   endIdx:      number       // index into FULL candle array
   keyLevels:   KeyLevel[]
   shapes:      PatternShape[]  // ← draw these on the chart
+  rr?:         RRLevels        // ← risk/reward box (flags only)
   score:       PatternScore
   regime:      VolatilityRegime
   confirmed:   boolean
@@ -541,6 +554,22 @@ export function detectDoubleBottom(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Linear regression helper (module-level to satisfy strict mode)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function linReg(n: number, ys: number[]): { slope: number; intercept: number } {
+  const xMean = (n - 1) / 2
+  const yMean = ys.reduce((a, b) => a + b, 0) / n
+  let num = 0, den = 0
+  for (let i = 0; i < n; i++) {
+    num += (i - xMean) * (ys[i] - yMean)
+    den += (i - xMean) ** 2
+  }
+  const slope = den === 0 ? 0 : num / den
+  return { slope, intercept: yMean - slope * xMean }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // BULL / BEAR FLAG  (Autochartist-style strict rules)
 //
 // BULL FLAG requirements:
@@ -620,22 +649,9 @@ export function detectFlags(
         // ── 3. Enforce DESCENDING channel for bull flag ───────────────────
         // Fit linear regression to flag highs and lows separately
         const n = flagSlice.length
-        const xs = Array.from({ length: n }, (_, i) => i)
 
-        function linReg(ys: number[]): { slope: number; intercept: number } {
-          const xMean = (n - 1) / 2
-          const yMean = ys.reduce((a, b) => a + b, 0) / n
-          let num = 0, den = 0
-          for (let i = 0; i < n; i++) {
-            num += (xs[i] - xMean) * (ys[i] - yMean)
-            den += (xs[i] - xMean) ** 2
-          }
-          const slope = den === 0 ? 0 : num / den
-          return { slope, intercept: yMean - slope * xMean }
-        }
-
-        const upperReg = linReg(flagHighs)
-        const lowerReg = linReg(flagLows)
+        const upperReg = linReg(n, flagHighs)
+        const lowerReg = linReg(n, flagLows)
 
         // For BULL flag: both slopes MUST be negative (descending channel)
         // For BEAR flag: both slopes MUST be positive (ascending channel)
@@ -749,6 +765,29 @@ export function detectFlags(
           },
         ]
 
+        // ── Risk / Reward levels ─────────────────────────────────────────
+        // Entry  = breakout level (upper flag line end for bull, lower for bear)
+        // SL     = entry ± 50% of pole height (below entry for bull, above for bear)
+        // TP     = entry ± 75% of pole height
+        const entry   = isBull ? upperAtEnd : lowerAtEnd
+        const slDist  = poleHeight * 0.50              // 50% of pole height
+        const sl      = isBull ? entry - slDist : entry + slDist
+        const tpDist  = poleHeight * 0.75              // 75% of pole height
+        const tp      = isBull ? entry + tpDist : entry - tpDist
+        const risk    = Math.abs(entry - sl)
+        const reward  = Math.abs(tp - entry)
+        const rrRatio = risk > 0 ? +(reward / risk).toFixed(2) : 0
+
+        // Project the RR box forward by the same number of candles as the pole
+        const rrEndIdx   = Math.min(lastFlagIdx + poleLen, candles.length - 1)
+        const rrFromTime = candles[lastFlagIdx].time
+        const rrToTime   = candles[rrEndIdx].time
+
+        const rr: RRLevels = {
+          entry, sl, tp, ratio: rrRatio, isBull,
+          fromTime: rrFromTime, toTime: rrToTime,
+        }
+
         return {
           asset,
           pattern:     isBull ? 'Bull Flag' : 'Bear Flag',
@@ -763,9 +802,11 @@ export function detectFlags(
             { label: 'Pole Top',     price: poleTop    },
             { label: 'Flag High',    price: flagH       },
             { label: 'Flag Low',     price: flagL       },
-            { label: 'Breakout Tgt', price: isBull ? poleTop : poleBottom },
+            { label: 'Entry',        price: entry       },
+            { label: 'Stop Loss',    price: sl          },
+            { label: 'Take Profit',  price: tp          },
           ],
-          shapes, score, regime, confirmed,
+          shapes, rr, score, regime, confirmed,
         }
       }
     }

@@ -18,6 +18,7 @@ import {
   type DetectedPattern,
   type Direction,
   type PatternShape,
+  type RRLevels,
 } from './lib/patternEngine'
 
 // ─── Colours ──────────────────────────────────────────────────────────────────
@@ -64,23 +65,140 @@ const lwStyle = (s: PatternShape['style']): LineStyle =>
   : LineStyle.Solid
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Chart overlay renderer
-// Every shape is a polyline of {time,value} points already in chart-time space.
-// We simply create a LineSeries per shape and feed the points directly.
+// Dedup helper — LightweightCharts requires strictly ascending unique timestamps
 // ─────────────────────────────────────────────────────────────────────────────
+
+function dedupPoints(raw: { time: number; value: number }[]) {
+  const seen = new Set<number>()
+  return raw
+    .filter(pt => { if (seen.has(pt.time)) return false; seen.add(pt.time); return true })
+    .sort((a, b) => a.time - b.time)
+    .map(pt => ({ time: pt.time as UTCTimestamp, value: pt.value }))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chart overlay renderer
+// Draws pattern shapes (polylines) + RR zone boxes for flags.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderRRZone(
+  chart: IChartApi,
+  rr:    RRLevels,
+  refs:  React.MutableRefObject<ISeriesApi<any>[]>,
+) {
+  const { entry, sl, tp, isBull, fromTime, toTime } = rr
+
+  // ── Risk zone (entry → SL) — red fill ────────────────────────────────────
+  const riskColor     = 'rgba(255,47,103,0.18)'
+  const riskBorder    = 'rgba(255,47,103,0.7)'
+  const rewardColor   = 'rgba(3,177,152,0.18)'
+  const rewardBorder  = 'rgba(3,177,152,0.7)'
+
+  // Each "zone" needs an AreaSeries whose topColor/bottomColor create the fill.
+  // We draw the TOP price as the area value and set bottomColor = transparent
+  // so it fills down; then we add a floor line to cap it.
+
+  // Risk zone top/bottom
+  const riskTop = isBull ? entry : sl
+  const riskBot = isBull ? sl    : entry
+
+  // Reward zone top/bottom
+  const rewardTop = isBull ? tp    : entry
+  const rewardBot = isBull ? entry : tp
+
+  // ── Risk fill ─────────────────────────────────────────────────────────────
+  const riskFill = chart.addAreaSeries({
+    topColor:              riskColor,
+    bottomColor:           riskColor,
+    lineColor:             riskBorder,
+    lineWidth:             1,
+    priceLineVisible:      false,
+    lastValueVisible:      false,
+    crosshairMarkerVisible: false,
+  })
+  riskFill.setData(dedupPoints([
+    { time: fromTime, value: riskTop },
+    { time: toTime,   value: riskTop },
+  ]))
+  refs.current.push(riskFill)
+
+  // Risk floor line
+  const riskFloor = chart.addLineSeries({
+    color:                 riskBorder,
+    lineWidth:             1,
+    lineStyle:             LineStyle.Dashed,
+    priceLineVisible:      false,
+    lastValueVisible:      true,
+    crosshairMarkerVisible: false,
+    title:                 'SL',
+  })
+  riskFloor.setData(dedupPoints([
+    { time: fromTime, value: riskBot },
+    { time: toTime,   value: riskBot },
+  ]))
+  refs.current.push(riskFloor)
+
+  // ── Reward fill ───────────────────────────────────────────────────────────
+  const rewardFill = chart.addAreaSeries({
+    topColor:              rewardColor,
+    bottomColor:           rewardColor,
+    lineColor:             rewardBorder,
+    lineWidth:             1,
+    priceLineVisible:      false,
+    lastValueVisible:      false,
+    crosshairMarkerVisible: false,
+  })
+  rewardFill.setData(dedupPoints([
+    { time: fromTime, value: rewardTop },
+    { time: toTime,   value: rewardTop },
+  ]))
+  refs.current.push(rewardFill)
+
+  // Reward floor / ceiling line
+  const rewardFloor = chart.addLineSeries({
+    color:                 rewardBorder,
+    lineWidth:             1,
+    lineStyle:             LineStyle.Dashed,
+    priceLineVisible:      false,
+    lastValueVisible:      true,
+    crosshairMarkerVisible: false,
+    title:                 'TP',
+  })
+  rewardFloor.setData(dedupPoints([
+    { time: fromTime, value: rewardBot },
+    { time: toTime,   value: rewardBot },
+  ]))
+  refs.current.push(rewardFloor)
+
+  // Entry line
+  const entryLine = chart.addLineSeries({
+    color:                 'rgba(255,255,255,0.6)',
+    lineWidth:             1,
+    lineStyle:             LineStyle.Solid,
+    priceLineVisible:      false,
+    lastValueVisible:      true,
+    crosshairMarkerVisible: false,
+    title:                 'Entry',
+  })
+  entryLine.setData(dedupPoints([
+    { time: fromTime, value: entry },
+    { time: toTime,   value: entry },
+  ]))
+  refs.current.push(entryLine)
+}
 
 function renderOverlays(
   chart:    IChartApi,
   patterns: DetectedPattern[],
   refs:     React.MutableRefObject<ISeriesApi<any>[]>,
 ) {
-  // Remove previous overlays
   refs.current.forEach(s => { try { chart.removeSeries(s) } catch (_) {} })
   refs.current = []
 
   patterns.forEach(p => {
     const color = dirColor(p.direction)
 
+    // ── Pattern shape polylines ──────────────────────────────────────────────
     p.shapes.forEach(shape => {
       if (shape.points.length < 2) return
 
@@ -94,16 +212,14 @@ function renderOverlays(
         title:                 shape.label ?? '',
       })
 
-      // Feed points directly — time values come straight from candles[i].time
-      series.setData(
-        shape.points.map(pt => ({
-          time:  pt.time as UTCTimestamp,
-          value: pt.value,
-        }))
-      )
-
+      const pts = dedupPoints(shape.points)
+      if (pts.length < 2) return
+      series.setData(pts)
       refs.current.push(series)
     })
+
+    // ── RR zone (flags only) ─────────────────────────────────────────────────
+    if (p.rr) renderRRZone(chart, p.rr, refs)
   })
 }
 
@@ -533,6 +649,43 @@ export default function PatternRecognitionPage() {
                           </div>
                         ))}
                       </div>
+
+                      {/* RR summary for flags */}
+                      {patterns[selectedIdx].rr && (() => {
+                        const rr = patterns[selectedIdx].rr!
+                        return (
+                          <>
+                            <Separator className="bg-zinc-800/60 my-3" />
+                            <p className="text-[10px] font-bold tracking-widest text-zinc-600 uppercase mb-2">Risk / Reward</p>
+                            <div className="rounded-md border border-zinc-800 overflow-hidden mb-1">
+                              {/* Reward bar */}
+                              <div className="flex justify-between items-center px-3 py-1.5 bg-[#03b198]/10 border-b border-zinc-800">
+                                <span className="text-[10px] text-[#03b198] font-semibold">Take Profit</span>
+                                <span className="text-[11px] text-[#03b198] font-bold tabular-nums">{rr.tp.toFixed(5)}</span>
+                              </div>
+                              {/* Entry */}
+                              <div className="flex justify-between items-center px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
+                                <span className="text-[10px] text-zinc-400 font-semibold">Entry</span>
+                                <span className="text-[11px] text-zinc-300 font-bold tabular-nums">{rr.entry.toFixed(5)}</span>
+                              </div>
+                              {/* SL */}
+                              <div className="flex justify-between items-center px-3 py-1.5 bg-[#ff2f67]/10">
+                                <span className="text-[10px] text-[#ff2f67] font-semibold">Stop Loss</span>
+                                <span className="text-[11px] text-[#ff2f67] font-bold tabular-nums">{rr.sl.toFixed(5)}</span>
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center px-1 mt-2">
+                              <span className="text-[10px] text-zinc-600">Risk / Reward Ratio</span>
+                              <span className={cn(
+                                "text-[12px] font-bold tabular-nums",
+                                rr.ratio >= 2 ? "text-[#03b198]" : rr.ratio >= 1 ? "text-yellow-400" : "text-[#ff2f67]"
+                              )}>
+                                1 : {rr.ratio.toFixed(2)}
+                              </span>
+                            </div>
+                          </>
+                        )
+                      })()}
 
                       <Separator className="bg-zinc-800/60 my-3" />
                       <p className="text-[10px] font-bold tracking-widest text-zinc-600 uppercase mb-2">Score Breakdown</p>
