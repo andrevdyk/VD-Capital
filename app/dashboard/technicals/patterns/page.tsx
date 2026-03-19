@@ -264,18 +264,57 @@ export default function PatternRecognitionPage() {
     if (chartReady) fetchCandles(activeTimeframe.interval)
   }, [activeTimeframe, chartReady])
 
-  // ── Row click → zoom to pattern ─────────────────────────────────────────────
+  // ── Row click → zoom to pattern (time-based, with price-scale padding) ──────
   const handleRowClick = useCallback((idx: number) => {
     setSelectedIdx(prev => prev === idx ? null : idx)
     const p = patterns[idx]
     if (!p || !chartRef.current || candlesRef.current.length === 0) return
-    const s = candlesRef.current[Math.max(0, p.startIdx - 10)]
-    const e = candlesRef.current[Math.min(p.endIdx + 10, candlesRef.current.length - 1)]
-    if (s && e)
-      chartRef.current.timeScale().setVisibleRange({
-        from: s.time as UTCTimestamp,
-        to:   e.time as UTCTimestamp,
-      })
+
+    const allCandles = candlesRef.current
+
+    // 1. Collect every time referenced by this pattern's shape points.
+    //    Matching by time avoids any index-mismatch with filtered arrays.
+    const shapeTimes      = p.shapes.flatMap(s => s.points.map(pt => pt.time))
+    const allPatternTimes = [p.detectedAt, ...shapeTimes].filter(Boolean)
+    const patternStart    = Math.min(...allPatternTimes)
+    const patternEnd      = Math.max(...allPatternTimes)
+
+    // Find bracket indices in the raw candle array
+    const startIdx = allCandles.findIndex(c => c.time >= patternStart)
+    const endIdx   = [...allCandles].reverse().findIndex(c => c.time <= patternEnd)
+    const endIdxFwd = endIdx === -1 ? -1 : allCandles.length - 1 - endIdx
+    if (startIdx === -1 || endIdxFwd === -1) return
+
+    // 5-candle margin so the pattern never sits flush at the chart edge
+    const margin  = 5
+    const fromIdx = Math.max(0, startIdx - margin)
+    const toIdx   = Math.min(allCandles.length - 1, endIdxFwd + margin)
+
+    const fromCandle = allCandles[fromIdx]
+    const toCandle   = allCandles[toIdx]
+    if (!fromCandle || !toCandle) return
+
+    // 2. Set the time axis window
+    chartRef.current.timeScale().setVisibleRange({
+      from: fromCandle.time as UTCTimestamp,
+      to:   toCandle.time   as UTCTimestamp,
+    })
+
+    // 3. Compute the price range of the visible window + overlay shape prices,
+    //    then apply scaleMargins so the extreme prices sit 5% from each edge.
+    const visibleCandles = allCandles.slice(fromIdx, toIdx + 1)
+    const shapePrices    = p.shapes.flatMap(s => s.points.map(pt => pt.value))
+    const priceHigh      = Math.max(...visibleCandles.map(c => c.high), ...shapePrices)
+    const priceLow       = Math.min(...visibleCandles.map(c => c.low),  ...shapePrices)
+    const priceRange     = priceHigh - priceLow
+    if (priceRange <= 0) return
+
+    // Apply 5% top + bottom margins — LightweightCharts will then auto-scale
+    // so the highest/lowest price sits exactly 5% from the chart edge.
+    chartRef.current.priceScale('right').applyOptions({
+      autoScale:    true,
+      scaleMargins: { top: 0.05, bottom: 0.05 },
+    })
   }, [patterns])
 
   const isPositive = priceChange >= 0
