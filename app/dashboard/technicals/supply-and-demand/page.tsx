@@ -19,7 +19,7 @@ const TIMEFRAMES = [
   { label: '15m', interval: '15min', description: '30 days · 15min'       },
   { label: '1H',  interval: '1h',    description: '60 days · 1h'          },
   { label: '4H',  interval: '4h',    description: '120 days · 4h'         },
-  { label: '12H', interval: '12h',   description: '365 days · 12h'        },
+  { label: '8H', interval: '8h',   description: '365 days · 8h'        },
   { label: '1D',  interval: '1day',  description: '5 years · daily'       },
 ]
 
