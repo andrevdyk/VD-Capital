@@ -35,7 +35,7 @@ const TIMEFRAMES = [
   { label: '15m', interval: '15min', description: '30d · 15min'  },
   { label: '1H',  interval: '1h',    description: '60d · 1h'     },
   { label: '4H',  interval: '4h',    description: '120d · 4h'    },
-  { label: '8H', interval: '8h',   description: '365d · 8h'   },
+  { label: '12H', interval: '12h',   description: '365d · 12h'   },
   { label: '1D',  interval: '1day',  description: '5yr · daily'  },
 ]
 
@@ -88,89 +88,64 @@ function renderRRZone(
 ) {
   const { entry, sl, tp, isBull, fromTime, toTime } = rr
 
-  // Colours — matched opacity for both zones
-  const riskFill   = 'rgba(255,47,103,0.18)'
-  const riskLine   = 'rgba(255,47,103,0.8)'
-  const rewardFill = 'rgba(3,177,152,0.18)'
-  const rewardLine = 'rgba(3,177,152,0.8)'
+  const RISK_FILL   = 'rgba(255,47,103,0.15)'
+  const RISK_BORDER = 'rgba(255,47,103,0.85)'
+  const RWD_FILL    = 'rgba(3,177,152,0.15)'
+  const RWD_BORDER  = 'rgba(3,177,152,0.85)'
 
-  // ── Helper: draw a filled rectangle between two price levels ─────────────
-  // LightweightCharts AreaSeries fills from its value DOWN to the chart bottom,
-  // so we can't use it for a capped box. Instead we use TWO AreaSeries stacked:
-  //   • top area  → fills topPrice downward with the zone colour
-  //   • mask area → fills botPrice downward with the chart background colour,
-  //                 effectively clipping the top area below botPrice.
-  // This gives a pixel-perfect filled rectangle between topPrice and botPrice.
-  const BG = '#09090b'
-
-  function drawBox(
-    topPrice: number,
-    botPrice: number,
-    fillColor: string,
+  // ── Draw a zone using only LineSeries — zero bleed, zero gradients ─────────
+  // We draw N evenly-spaced horizontal lines between topPrice and botPrice.
+  // Each line is a 2-point LineSeries at that exact price, spanning fromTime→toTime.
+  // This gives a uniform semi-transparent fill with no AreaSeries artifacts.
+  function drawZone(
+    topPrice:    number,
+    botPrice:    number,
+    fillColor:   string,
     borderColor: string,
-    topLabel: string,
-    botLabel: string,
+    topLabel:    string,
+    botLabel:    string,
   ) {
-    // Top border line (solid)
-    const topLine = chart.addLineSeries({
-      color: borderColor, lineWidth: 1, lineStyle: LineStyle.Solid,
-      priceLineVisible: false, lastValueVisible: true,
-      crosshairMarkerVisible: false, title: topLabel,
-    })
-    topLine.setData(dedupPoints([
-      { time: fromTime, value: topPrice },
-      { time: toTime,   value: topPrice },
-    ]))
-    refs.current.push(topLine)
+    const STEPS = 30   // number of fill lines — enough for smooth fill, not too heavy
 
-    // Bottom border line (dashed)
-    const botLine = chart.addLineSeries({
-      color: borderColor, lineWidth: 1, lineStyle: LineStyle.Dashed,
-      priceLineVisible: false, lastValueVisible: true,
-      crosshairMarkerVisible: false, title: botLabel,
-    })
-    botLine.setData(dedupPoints([
-      { time: fromTime, value: botPrice },
-      { time: toTime,   value: botPrice },
-    ]))
-    refs.current.push(botLine)
+    for (let i = 0; i <= STEPS; i++) {
+      const price  = botPrice + (topPrice - botPrice) * (i / STEPS)
+      const isTop  = i === STEPS
+      const isBot  = i === 0
+      const color  = isTop ? borderColor : isBot ? borderColor : fillColor
+      const style  = isBot ? LineStyle.Dashed : LineStyle.Solid
+      const label  = isTop ? topLabel : isBot ? botLabel : ''
+      const showLV = isTop || isBot
 
-    // Fill: top area (fills from topPrice downward with zone colour)
-    const areaTop = chart.addAreaSeries({
-      topColor: fillColor, bottomColor: fillColor,
-      lineColor: 'transparent', lineWidth: 1,
-      priceLineVisible: false, lastValueVisible: false,
-      crosshairMarkerVisible: false,
-    })
-    areaTop.setData(dedupPoints([
-      { time: fromTime, value: topPrice },
-      { time: toTime,   value: topPrice },
-    ]))
-    refs.current.push(areaTop)
-
-    // Mask: background-coloured area from botPrice downward — clips the fill
-    const areaMask = chart.addAreaSeries({
-      topColor: BG, bottomColor: BG,
-      lineColor: 'transparent', lineWidth: 1,
-      priceLineVisible: false, lastValueVisible: false,
-      crosshairMarkerVisible: false,
-    })
-    areaMask.setData(dedupPoints([
-      { time: fromTime, value: botPrice },
-      { time: toTime,   value: botPrice },
-    ]))
-    refs.current.push(areaMask)
+      const line = chart.addLineSeries({
+        color,
+        lineWidth:             1 as const,
+        lineStyle:             style,
+        priceLineVisible:      false,
+        lastValueVisible:      showLV,
+        crosshairMarkerVisible: false,
+        title:                 label,
+      })
+      line.setData(dedupPoints([
+        { time: fromTime, value: price },
+        { time: toTime,   value: price },
+      ]))
+      refs.current.push(line)
+    }
   }
 
-  // ── Risk zone (entry ↔ SL) ────────────────────────────────────────────────
+  // ── Risk zone (entry ↔ SL) — red ─────────────────────────────────────────
   const riskTop = isBull ? entry : sl
   const riskBot = isBull ? sl    : entry
-  drawBox(riskTop, riskBot, riskFill, riskLine, isBull ? 'Entry' : 'SL', isBull ? 'SL' : 'Entry')
+  drawZone(riskTop, riskBot, RISK_FILL, RISK_BORDER,
+    isBull ? 'Entry' : 'SL',
+    isBull ? 'SL'    : 'Entry')
 
-  // ── Reward zone (entry ↔ TP) ──────────────────────────────────────────────
-  const rewardTop = isBull ? tp    : entry
-  const rewardBot = isBull ? entry : tp
-  drawBox(rewardTop, rewardBot, rewardFill, rewardLine, isBull ? 'TP' : 'Entry', isBull ? 'Entry' : 'TP')
+  // ── Reward zone (entry ↔ TP) — green ─────────────────────────────────────
+  const rwdTop = isBull ? tp    : entry
+  const rwdBot = isBull ? entry : tp
+  drawZone(rwdTop, rwdBot, RWD_FILL, RWD_BORDER,
+    isBull ? 'TP'    : 'Entry',
+    isBull ? 'Entry' : 'TP')
 }
 
 function renderOverlays(
@@ -211,7 +186,7 @@ function renderOverlays(
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const SYMBOL  = 'EUR/USD'
+const SYMBOL  = 'GBP/USD'
 const API_KEY = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY!
 
 export default function PatternRecognitionPage() {

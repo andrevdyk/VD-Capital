@@ -228,10 +228,10 @@ export default function DashboardAccordion() {
                   "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
-                      pathname === "/dashboard/technicals/page4",
+                      pathname === "/dashboard/technicals/order-flow",
                   }
                 )}
-                href="/dashboard/technicals/page4"
+                href="/dashboard/technicals/order-flow"
               >
                 <div className="p-1 bg-transparent">
                   <ArrowLeftRight className="h-4 w-4" />
@@ -246,10 +246,10 @@ export default function DashboardAccordion() {
                   "flex items-center gap-2 rounded-lg px-5 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-gray-50",
                   {
                     "bg-gray-100 text-gray-900 dark:bg-gray-500/25 dark:text-white":
-                      pathname === "/dashboard/technicals/page5",
+                      pathname === "/dashboard/technicals/volume-profile",
                   }
                 )}
-                href="/dashboard/technicals/page5"
+                href="/dashboard/technicals/volume-profile"
               >
                 <div className="p-1 bg-transparent">
                   <AlignLeft className="h-4 w-4" />

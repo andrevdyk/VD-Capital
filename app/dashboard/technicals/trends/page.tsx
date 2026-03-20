@@ -34,7 +34,7 @@ const TIMEFRAMES = [
   { label: '15m', interval: '15min', description: '30d · 15min' },
   { label: '1H',  interval: '1h',    description: '60d · 1H'    },
   { label: '4H',  interval: '4h',    description: '120d · 4H'   },
-  { label: '12H', interval: '12h',   description: '365d · 12H'  },
+  { label: '8H', interval: '8h',   description: '365d · 8H'  },
   { label: '1D',  interval: '1day',  description: '5yr · 1D'    },
 ]
 
