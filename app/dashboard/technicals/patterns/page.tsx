@@ -88,103 +88,89 @@ function renderRRZone(
 ) {
   const { entry, sl, tp, isBull, fromTime, toTime } = rr
 
-  // ── Risk zone (entry → SL) — red fill ────────────────────────────────────
-  const riskColor     = 'rgba(255,47,103,0.18)'
-  const riskBorder    = 'rgba(255,47,103,0.7)'
-  const rewardColor   = 'rgba(3,177,152,0.18)'
-  const rewardBorder  = 'rgba(3,177,152,0.7)'
+  // Colours — matched opacity for both zones
+  const riskFill   = 'rgba(255,47,103,0.18)'
+  const riskLine   = 'rgba(255,47,103,0.8)'
+  const rewardFill = 'rgba(3,177,152,0.18)'
+  const rewardLine = 'rgba(3,177,152,0.8)'
 
-  // Each "zone" needs an AreaSeries whose topColor/bottomColor create the fill.
-  // We draw the TOP price as the area value and set bottomColor = transparent
-  // so it fills down; then we add a floor line to cap it.
+  // ── Helper: draw a filled rectangle between two price levels ─────────────
+  // LightweightCharts AreaSeries fills from its value DOWN to the chart bottom,
+  // so we can't use it for a capped box. Instead we use TWO AreaSeries stacked:
+  //   • top area  → fills topPrice downward with the zone colour
+  //   • mask area → fills botPrice downward with the chart background colour,
+  //                 effectively clipping the top area below botPrice.
+  // This gives a pixel-perfect filled rectangle between topPrice and botPrice.
+  const BG = '#09090b'
 
-  // Risk zone top/bottom
+  function drawBox(
+    topPrice: number,
+    botPrice: number,
+    fillColor: string,
+    borderColor: string,
+    topLabel: string,
+    botLabel: string,
+  ) {
+    // Top border line (solid)
+    const topLine = chart.addLineSeries({
+      color: borderColor, lineWidth: 1, lineStyle: LineStyle.Solid,
+      priceLineVisible: false, lastValueVisible: true,
+      crosshairMarkerVisible: false, title: topLabel,
+    })
+    topLine.setData(dedupPoints([
+      { time: fromTime, value: topPrice },
+      { time: toTime,   value: topPrice },
+    ]))
+    refs.current.push(topLine)
+
+    // Bottom border line (dashed)
+    const botLine = chart.addLineSeries({
+      color: borderColor, lineWidth: 1, lineStyle: LineStyle.Dashed,
+      priceLineVisible: false, lastValueVisible: true,
+      crosshairMarkerVisible: false, title: botLabel,
+    })
+    botLine.setData(dedupPoints([
+      { time: fromTime, value: botPrice },
+      { time: toTime,   value: botPrice },
+    ]))
+    refs.current.push(botLine)
+
+    // Fill: top area (fills from topPrice downward with zone colour)
+    const areaTop = chart.addAreaSeries({
+      topColor: fillColor, bottomColor: fillColor,
+      lineColor: 'transparent', lineWidth: 1,
+      priceLineVisible: false, lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    })
+    areaTop.setData(dedupPoints([
+      { time: fromTime, value: topPrice },
+      { time: toTime,   value: topPrice },
+    ]))
+    refs.current.push(areaTop)
+
+    // Mask: background-coloured area from botPrice downward — clips the fill
+    const areaMask = chart.addAreaSeries({
+      topColor: BG, bottomColor: BG,
+      lineColor: 'transparent', lineWidth: 1,
+      priceLineVisible: false, lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    })
+    areaMask.setData(dedupPoints([
+      { time: fromTime, value: botPrice },
+      { time: toTime,   value: botPrice },
+    ]))
+    refs.current.push(areaMask)
+  }
+
+  // ── Risk zone (entry ↔ SL) ────────────────────────────────────────────────
   const riskTop = isBull ? entry : sl
   const riskBot = isBull ? sl    : entry
+  drawBox(riskTop, riskBot, riskFill, riskLine, isBull ? 'Entry' : 'SL', isBull ? 'SL' : 'Entry')
 
-  // Reward zone top/bottom
+  // ── Reward zone (entry ↔ TP) ──────────────────────────────────────────────
   const rewardTop = isBull ? tp    : entry
   const rewardBot = isBull ? entry : tp
-
-  // ── Risk fill ─────────────────────────────────────────────────────────────
-  const riskFill = chart.addAreaSeries({
-    topColor:              riskColor,
-    bottomColor:           riskColor,
-    lineColor:             riskBorder,
-    lineWidth:             1,
-    priceLineVisible:      false,
-    lastValueVisible:      false,
-    crosshairMarkerVisible: false,
-  })
-  riskFill.setData(dedupPoints([
-    { time: fromTime, value: riskTop },
-    { time: toTime,   value: riskTop },
-  ]))
-  refs.current.push(riskFill)
-
-  // Risk floor line
-  const riskFloor = chart.addLineSeries({
-    color:                 riskBorder,
-    lineWidth:             1,
-    lineStyle:             LineStyle.Dashed,
-    priceLineVisible:      false,
-    lastValueVisible:      true,
-    crosshairMarkerVisible: false,
-    title:                 'SL',
-  })
-  riskFloor.setData(dedupPoints([
-    { time: fromTime, value: riskBot },
-    { time: toTime,   value: riskBot },
-  ]))
-  refs.current.push(riskFloor)
-
-  // ── Reward fill ───────────────────────────────────────────────────────────
-  const rewardFill = chart.addAreaSeries({
-    topColor:              rewardColor,
-    bottomColor:           rewardColor,
-    lineColor:             rewardBorder,
-    lineWidth:             1,
-    priceLineVisible:      false,
-    lastValueVisible:      false,
-    crosshairMarkerVisible: false,
-  })
-  rewardFill.setData(dedupPoints([
-    { time: fromTime, value: rewardTop },
-    { time: toTime,   value: rewardTop },
-  ]))
-  refs.current.push(rewardFill)
-
-  // Reward floor / ceiling line
-  const rewardFloor = chart.addLineSeries({
-    color:                 rewardBorder,
-    lineWidth:             1,
-    lineStyle:             LineStyle.Dashed,
-    priceLineVisible:      false,
-    lastValueVisible:      true,
-    crosshairMarkerVisible: false,
-    title:                 'TP',
-  })
-  rewardFloor.setData(dedupPoints([
-    { time: fromTime, value: rewardBot },
-    { time: toTime,   value: rewardBot },
-  ]))
-  refs.current.push(rewardFloor)
-
-  // Entry line
-  const entryLine = chart.addLineSeries({
-    color:                 'rgba(255,255,255,0.6)',
-    lineWidth:             1,
-    lineStyle:             LineStyle.Solid,
-    priceLineVisible:      false,
-    lastValueVisible:      true,
-    crosshairMarkerVisible: false,
-    title:                 'Entry',
-  })
-  entryLine.setData(dedupPoints([
-    { time: fromTime, value: entry },
-    { time: toTime,   value: entry },
-  ]))
-  refs.current.push(entryLine)
+  drawBox(rewardTop, rewardBot, rewardFill, rewardLine, isBull ? 'TP' : 'Entry', isBull ? 'Entry' : 'TP')
 }
 
 function renderOverlays(
