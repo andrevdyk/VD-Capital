@@ -9,13 +9,14 @@ import { Disaster } from "@/app/dashboard/fundamentals/disasters/types/disaster"
 //   ollama pull llama3.3:70b     → best quality, needs strong GPU (~40GB)
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
-const OLLAMA_MODEL    = process.env.OLLAMA_MODEL    ?? "mistral";
+const OLLAMA_MODEL    = process.env.OLLAMA_MODEL    ?? "llama3.1:8b";
 
 function buildPrompt(disaster: Disaster): string {
-  const avg = (
-    (disaster.model_breakdown.xgboost +
-      disaster.model_breakdown.lightgbm +
-      disaster.model_breakdown.pytorch) / 3
+  const avgProb = Math.round(
+    disaster.ai_models.reduce((s, m) => s + m.probability, 0) / disaster.ai_models.length
+  );
+  const avgPred = (
+    disaster.ai_models.reduce((s, m) => s + m.prediction, 0) / disaster.ai_models.length
   ).toFixed(1);
 
   return `You are a senior quantitative analyst at a top macro hedge fund specializing in disaster-driven market analysis.
@@ -23,25 +24,25 @@ function buildPrompt(disaster: Disaster): string {
 Analyze this event with precision:
 
 EVENT: ${disaster.type} | ${disaster.location} | ${disaster.severity} | ${disaster.date}
+SOURCE: ${disaster.source}
 PRIMARY COMMODITY: ${disaster.primary} (${disaster.primary_pct}% of global supply at risk)
 
-ML MODEL PREDICTIONS:
-  XGBoost:  +${disaster.model_breakdown.xgboost}%
-  LightGBM: +${disaster.model_breakdown.lightgbm}%
-  PyTorch:  +${disaster.model_breakdown.pytorch}%
-  Average:  +${avg}% | Confidence: ${Math.round(disaster.confidence * 100)}%
+AI MODEL PREDICTIONS:
+${disaster.ai_models.map((m) => `  ${m.name}: ${m.probability}% probability of price ${disaster.direction === "UP" ? "increase" : "decrease"}, predicted move: ${disaster.direction === "UP" ? "+" : "-"}${m.prediction}%`).join("\n")}
+  Consensus: ${avgProb}% probability | Average predicted move: ${disaster.direction === "UP" ? "+" : "-"}${avgPred}%
+  Confidence: ${Math.round(disaster.confidence * 100)}%
 
 DESCRIPTION: ${disaster.description}
 
 PREDICTED INDIRECT IMPACTS:
-${disaster.indirect.map((i) => `  • ${i.asset}: ${i.impact}`).join("\n")}
+${disaster.indirect.map((i) => `  • ${i.asset} (${i.category}): ${i.impact}`).join("\n")}
 
 Write exactly 4 tight paragraphs:
 
-1. SUPPLY CHAIN MECHANISM — Why does this disaster disrupt ${disaster.primary}? Specific geography, infrastructure, production timelines.
-2. MODEL CONSENSUS — Why do the three ML models agree or diverge? What historical analogues support this prediction?
-3. INDIRECT CONTAGION — Trace the exact transmission mechanism from disaster → primary commodity → each indirect asset.
-4. RISK & TIMING — What invalidates this prediction? When does the price impact materialize (hours/days/weeks)? What should traders watch?
+1. SUPPLY CHAIN MECHANISM — Why does this ${disaster.type} disrupt ${disaster.primary}? Specific geography, infrastructure, production timelines.
+2. AI CONSENSUS — Why do AI Alpha, AI Beta, and AI Gamma agree or diverge? What historical analogues support this prediction?
+3. INDIRECT CONTAGION — Trace the exact transmission mechanism from disaster → ${disaster.primary} → each indirect asset.
+4. RISK & TIMING — What invalidates this prediction? When does price impact materialize (hours/days/weeks)? What should traders watch?
 
 Be specific and quantitative. Write like a Bloomberg Intelligence analyst. No generic statements.`;
 }

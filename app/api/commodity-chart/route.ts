@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const commodity  = searchParams.get("commodity")  ?? "Copper";
   const interval   = searchParams.get("interval")   ?? "15min";
-  const outputsize = parseInt(searchParams.get("outputsize") ?? "96");
+  const outputsize = parseInt(searchParams.get("outputsize") ?? "10000");
 
   const symbol      = SYMBOL_MAP[commodity] ?? "XCUUSD";
   const intervalMin = INTERVAL_MAP[interval] ?? "15";

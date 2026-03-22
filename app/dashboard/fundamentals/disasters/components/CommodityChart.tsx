@@ -18,10 +18,10 @@ const CHART_COLORS = {
 };
 
 const TIMEFRAMES = [
-  { label: "15m", interval: "15min", outputsize: "96"  },
-  { label: "1H",  interval: "1h",    outputsize: "120" },
-  { label: "4H",  interval: "4h",    outputsize: "120" },
-  { label: "1D",  interval: "1day",  outputsize: "180" },
+  { label: "15m", interval: "15min", outputsize: "2880" }, // 30 days × 96 candles/day
+  { label: "1H",  interval: "1h",    outputsize: "1440" }, // 60 days × 24 candles/day
+  { label: "4H",  interval: "4h",    outputsize: "720"  }, // 120 days × 6 candles/day
+  { label: "1D",  interval: "1day",  outputsize: "365"  }, // 1 year daily
 ];
 
 export function CommodityChart({ disaster }: { disaster: Disaster }) {
@@ -68,7 +68,7 @@ export function CommodityChart({ disaster }: { disaster: Disaster }) {
     extraRefs.current.push(tgt);
 
     const now = chartRef.current.addLineSeries({ color: predColor + "44", lineWidth: 1, lineStyle: LineStyle.Dotted, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
-    now.setData([{ time: last, value: bottom }, { time: last, value: top }]);
+    now.setData([{ time: last, value: bottom }, { time: (last + 1) as UTCTimestamp, value: top }]);
     extraRefs.current.push(now);
 
     chartRef.current.timeScale().fitContent();

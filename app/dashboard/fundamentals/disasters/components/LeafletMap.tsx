@@ -6,7 +6,7 @@ import { ALERT_CONFIG, TYPE_ICONS } from "../lib/disasters";
 
 interface LeafletMapProps {
   disasters: Disaster[];
-  selected:  Disaster;
+  selected:  Disaster | null;
   onSelect:  (d: Disaster) => void;
 }
 
@@ -74,7 +74,7 @@ export function LeafletMap({ disasters, selected, onSelect }: LeafletMapProps) {
       mapRef.current = map;
 
       // Add markers
-      disasters.forEach((d) => addMarker(L, map, d, d.id === selected.id));
+      disasters.forEach((d) => addMarker(L, map, d, d.id === selected?.id));
     });
 
     return () => {
@@ -125,7 +125,8 @@ export function LeafletMap({ disasters, selected, onSelect }: LeafletMapProps) {
   useEffect(() => {
     if (!mapRef.current) return;
     import("leaflet").then((L) => {
-      disasters.forEach((d) => {
+      if (!selected) return;
+    disasters.forEach((d) => {
         const marker = markersRef.current.get(d.id);
         if (!marker) return;
         const isSelected = d.id === selected.id;
@@ -158,9 +159,9 @@ export function LeafletMap({ disasters, selected, onSelect }: LeafletMapProps) {
       });
 
       // Pan to selected
-      mapRef.current.panTo([selected.lat, selected.lng], { animate: true, duration: 0.5 });
+      if (selected) mapRef.current.panTo([selected.lat, selected.lng], { animate: true, duration: 0.5 });
     });
-  }, [selected.id]); // eslint-disable-line
+  }, [selected?.id]); // eslint-disable-line
 
   return (
     <>
