@@ -1,5 +1,5 @@
 VMAP - Tracks vessels with fuel, any delays, cargo tracking
-WMap - Shows natural disasters around the world, fires, crops burning relate tht to commodities
+WMap - Shows natural disasters around the world, fires, crops burning relate that to commodities
 FMOD - Financial Modelling
 
 ANR - Analyst recommendations.
