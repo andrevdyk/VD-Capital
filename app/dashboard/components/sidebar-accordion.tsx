@@ -40,7 +40,8 @@ import {
   CircleAlert,
   BriefcaseBusiness,
   Play,
-  ChartArea
+  ChartArea,
+  Earth
 } from "lucide-react";
 
 export default function DashboardAccordion() {
@@ -375,7 +376,7 @@ export default function DashboardAccordion() {
                 href="/dashboard/fundamentals/disasters"
               >
                 <div className="p-1 bg-transparent">
-                  <Percent className="h-4 w-4" />
+                  <Earth className="h-4 w-4" />
                 </div>
                 Disasters Analysis
               </Link>

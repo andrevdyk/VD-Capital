@@ -1,132 +1,113 @@
-import { NextRequest } from "next/server";
-import { Disaster } from "@/types/disaster";
+import { NextRequest, NextResponse } from "next/server";
 
-// This route calls your LOCAL Ollama instance
-// Make sure Ollama is running: `ollama serve`
-// And you have a model pulled: `ollama pull llama3.2` or `ollama pull mistral`
+// Twelve Data symbol mapping for commodities/assets
+const SYMBOL_MAP: Record<string, string> = {
+  // Commodities
+  "Soybeans":           "SOYBN",
+  "Corn":               "CORN",
+  "Wheat":              "WHEAT",
+  "Copper":             "COPPER",
+  "Crude Oil":          "WTI",
+  "Natural Gas":        "NATGAS",
+  "Lithium":            "LIT",       // ETF proxy
+  "Nickel":             "NICKEL",
+  "Rare Earth Metals":  "REMX",      // ETF proxy
+  "Palm Oil":           "PALM",
+  "Barley":             "WHEAT",     // proxy
+  // Equities
+  "Freeport-McMoRan":   "FCX",
+  "ADM":                "ADM",
+  "XOM":                "XOM",
+  "HAL":                "HAL",
+  "Apple Inc.":         "AAPL",
+  // ETFs
+  "Semiconductors (SOXX)": "SOXX",
+  "Renewable Energy ETF":  "ICLN",
+  // Forex
+  "BRL/USD":            "USD/BRL",
+  "CLP/USD":            "USD/CLP",
+  "AUD/USD":            "AUD/USD",
+  "CNY/USD":            "USD/CNY",
+  "USD/MXN":            "USD/MXN",
+};
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? "llama3.2";
+const TWELVE_API_KEY = process.env.TWELVE_DATA_API_KEY;
 
-function buildPrompt(disaster: Disaster): string {
-  const avgModel = (
-    (disaster.model_breakdown.xgboost +
-      disaster.model_breakdown.lightgbm +
-      disaster.model_breakdown.pytorch) /
-    3
-  ).toFixed(1);
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const commodity = searchParams.get("commodity") ?? "Copper";
+  const interval  = searchParams.get("interval")  ?? "15min";
+  const outputsize = searchParams.get("outputsize") ?? "96"; // 24h of 15min candles
 
-  return `You are a quantitative commodity and macro trader specializing in disaster-driven market analysis.
+  const symbol = SYMBOL_MAP[commodity] ?? commodity;
 
-Analyze this natural disaster event and provide a concise, expert-level market impact assessment:
+  if (!TWELVE_API_KEY) {
+    // Return mock data if no API key configured
+    return NextResponse.json(mockData(symbol, interval, parseInt(outputsize)));
+  }
 
-EVENT: ${disaster.type}
-LOCATION: ${disaster.location}
-SEVERITY: ${disaster.severity}
-DATE: ${disaster.date}
-PRIMARY COMMODITY: ${disaster.primary} (${disaster.primary_pct}% of global production at risk)
-ML MODEL CONSENSUS: +${disaster.magnitude.toFixed(1)}% price prediction
-  - XGBoost: +${disaster.model_breakdown.xgboost}%
-  - LightGBM: +${disaster.model_breakdown.lightgbm}%
-  - PyTorch: +${disaster.model_breakdown.pytorch}%
-  - Average: +${avgModel}%
-
-Event description: ${disaster.description}
-
-Indirect asset impacts predicted:
-${disaster.indirect.map((i) => `- ${i.asset}: ${i.impact}`).join("\n")}
-
-Provide a 3-4 paragraph analysis covering:
-1. Why the ML models agree/diverge and what drives the consensus
-2. The key supply chain mechanism behind the primary commodity price move
-3. The 2-3 most important indirect market impacts and the causal chain
-4. Key risks that could invalidate the prediction and expected timeframe (hours/days/weeks)
-
-Write like a Bloomberg Intelligence analyst — specific, quantitative, no generic commentary.`;
-}
-
-export async function POST(req: NextRequest) {
   try {
-    const disaster: Disaster = await req.json();
+    const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputsize}&apikey=${TWELVE_API_KEY}`;
+    const res  = await fetch(url, { next: { revalidate: 60 } });
+    const json = await res.json();
 
-    const prompt = buildPrompt(disaster);
-
-    // Call Ollama's streaming API
-    const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        prompt,
-        stream: true,
-        options: {
-          temperature: 0.7,
-          top_p: 0.9,
-          num_predict: 800,
-        },
-      }),
-    });
-
-    if (!ollamaRes.ok) {
-      const error = await ollamaRes.text();
-      return new Response(
-        JSON.stringify({
-          error: `Ollama error: ${ollamaRes.status} — ${error}. Is Ollama running? Try: ollama serve`,
-        }),
-        { status: 502, headers: { "Content-Type": "application/json" } }
-      );
+    if (json.status === "error") {
+      console.warn(`[commodity-chart] Twelve Data error for ${symbol}:`, json.message);
+      // Fall back to mock data
+      return NextResponse.json(mockData(symbol, interval, parseInt(outputsize)));
     }
 
-    // Stream the response back to the client
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = ollamaRes.body!.getReader();
-        const decoder = new TextDecoder();
+    const candles = (json.values ?? [])
+      .reverse()
+      .map((v: any) => ({
+        time:  v.datetime,
+        open:  parseFloat(v.open),
+        high:  parseFloat(v.high),
+        low:   parseFloat(v.low),
+        close: parseFloat(v.close),
+      }));
 
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n").filter(Boolean);
-
-            for (const line of lines) {
-              try {
-                const json = JSON.parse(line);
-                if (json.response) {
-                  // Send just the text token
-                  controller.enqueue(new TextEncoder().encode(json.response));
-                }
-                if (json.done) {
-                  controller.close();
-                  return;
-                }
-              } catch {
-                // Skip malformed JSON lines
-              }
-            }
-          }
-        } catch (err) {
-          controller.error(err);
-        } finally {
-          reader.releaseLock();
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Transfer-Encoding": "chunked",
-        "Cache-Control": "no-cache",
-      },
-    });
+    return NextResponse.json({ symbol, candles });
   } catch (err) {
-    console.error("Disaster analysis API error:", err);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    console.error("[commodity-chart]", err);
+    return NextResponse.json(mockData(symbol, interval, parseInt(outputsize)));
   }
+}
+
+// ── Mock data generator (used when no API key or symbol unavailable) ─────────
+function mockData(symbol: string, interval: string, count: number) {
+  const intervalMs: Record<string, number> = {
+    "1min": 60_000, "5min": 300_000, "15min": 900_000,
+    "1h": 3_600_000, "4h": 14_400_000, "1day": 86_400_000,
+  };
+  const ms   = intervalMs[interval] ?? 900_000;
+  const now  = Date.now();
+
+  // Seed price based on symbol
+  const seeds: Record<string, number> = {
+    COPPER: 4.2, WTI: 78, NATGAS: 2.8, SOYBN: 12.4, CORN: 4.8,
+    WHEAT: 5.6, FCX: 42, ADM: 58, XOM: 112, AAPL: 187, SOXX: 198,
+    "USD/BRL": 4.95, "AUD/USD": 0.652, "USD/CNY": 7.24,
+  };
+  let price = seeds[symbol] ?? 100;
+
+  const candles = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const t     = new Date(now - i * ms);
+    const drift = (Math.random() - 0.48) * price * 0.003;
+    const open  = price;
+    const close = price + drift;
+    const high  = Math.max(open, close) + Math.random() * price * 0.002;
+    const low   = Math.min(open, close) - Math.random() * price * 0.002;
+    candles.push({
+      time:  t.toISOString().replace("T", " ").slice(0, 19),
+      open:  parseFloat(open.toFixed(4)),
+      high:  parseFloat(high.toFixed(4)),
+      low:   parseFloat(low.toFixed(4)),
+      close: parseFloat(close.toFixed(4)),
+    });
+    price = close;
+  }
+
+  return { symbol, candles, mock: true };
 }
