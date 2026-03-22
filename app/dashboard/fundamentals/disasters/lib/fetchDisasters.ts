@@ -153,11 +153,11 @@ export async function fetchNASAFIRMS(): Promise<Disaster[]> {
     }
 
     // Sort clusters by total fire radiative power, take top 6
-    const sorted = [...clusters.entries()]
+    const sorted = Array.from(clusters.entries())
       .map(([, v]) => ({
-        lat:  v.lats.reduce((a, b) => a + b, 0) / v.lats.length,
-        lng:  v.lngs.reduce((a, b) => a + b, 0) / v.lngs.length,
-        frp:  v.frp.reduce((a, b) => a + b, 0),
+        lat:  v.lats.reduce((a: number, b: number) => a + b, 0) / v.lats.length,
+        lng:  v.lngs.reduce((a: number, b: number) => a + b, 0) / v.lngs.length,
+        frp:  v.frp.reduce((a: number, b: number) => a + b, 0),
         count: v.lats.length,
         confidence: v.confidence,
         date: v.date,
