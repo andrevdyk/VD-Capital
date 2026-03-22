@@ -1,113 +1,109 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { Disaster } from "@/app/dashboard/fundamentals/disasters/types/disaster";
 
-// Twelve Data symbol mapping for commodities/assets
-const SYMBOL_MAP: Record<string, string> = {
-  // Commodities
-  "Soybeans":           "SOYBN",
-  "Corn":               "CORN",
-  "Wheat":              "WHEAT",
-  "Copper":             "COPPER",
-  "Crude Oil":          "WTI",
-  "Natural Gas":        "NATGAS",
-  "Lithium":            "LIT",       // ETF proxy
-  "Nickel":             "NICKEL",
-  "Rare Earth Metals":  "REMX",      // ETF proxy
-  "Palm Oil":           "PALM",
-  "Barley":             "WHEAT",     // proxy
-  // Equities
-  "Freeport-McMoRan":   "FCX",
-  "ADM":                "ADM",
-  "XOM":                "XOM",
-  "HAL":                "HAL",
-  "Apple Inc.":         "AAPL",
-  // ETFs
-  "Semiconductors (SOXX)": "SOXX",
-  "Renewable Energy ETF":  "ICLN",
-  // Forex
-  "BRL/USD":            "USD/BRL",
-  "CLP/USD":            "USD/CLP",
-  "AUD/USD":            "AUD/USD",
-  "CNY/USD":            "USD/CNY",
-  "USD/MXN":            "USD/MXN",
-};
+// ── Model config ─────────────────────────────────────────────────────────────
+// Set OLLAMA_MODEL in .env.local. Recommended upgrade path:
+//   ollama pull mistral          → great analysis, fast (~4GB)
+//   ollama pull llama3.1:8b      → smarter reasoning (~5GB)
+//   ollama pull deepseek-r1:8b   → chain-of-thought reasoning (~5GB)
+//   ollama pull llama3.3:70b     → best quality, needs strong GPU (~40GB)
 
-const TWELVE_API_KEY = process.env.TWELVE_DATA_API_KEY;
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
+const OLLAMA_MODEL    = process.env.OLLAMA_MODEL    ?? "mistral";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const commodity = searchParams.get("commodity") ?? "Copper";
-  const interval  = searchParams.get("interval")  ?? "15min";
-  const outputsize = searchParams.get("outputsize") ?? "96"; // 24h of 15min candles
+function buildPrompt(disaster: Disaster): string {
+  const avg = (
+    (disaster.model_breakdown.xgboost +
+      disaster.model_breakdown.lightgbm +
+      disaster.model_breakdown.pytorch) / 3
+  ).toFixed(1);
 
-  const symbol = SYMBOL_MAP[commodity] ?? commodity;
+  return `You are a senior quantitative analyst at a top macro hedge fund specializing in disaster-driven market analysis.
 
-  if (!TWELVE_API_KEY) {
-    // Return mock data if no API key configured
-    return NextResponse.json(mockData(symbol, interval, parseInt(outputsize)));
-  }
+Analyze this event with precision:
 
-  try {
-    const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputsize}&apikey=${TWELVE_API_KEY}`;
-    const res  = await fetch(url, { next: { revalidate: 60 } });
-    const json = await res.json();
+EVENT: ${disaster.type} | ${disaster.location} | ${disaster.severity} | ${disaster.date}
+PRIMARY COMMODITY: ${disaster.primary} (${disaster.primary_pct}% of global supply at risk)
 
-    if (json.status === "error") {
-      console.warn(`[commodity-chart] Twelve Data error for ${symbol}:`, json.message);
-      // Fall back to mock data
-      return NextResponse.json(mockData(symbol, interval, parseInt(outputsize)));
-    }
+ML MODEL PREDICTIONS:
+  XGBoost:  +${disaster.model_breakdown.xgboost}%
+  LightGBM: +${disaster.model_breakdown.lightgbm}%
+  PyTorch:  +${disaster.model_breakdown.pytorch}%
+  Average:  +${avg}% | Confidence: ${Math.round(disaster.confidence * 100)}%
 
-    const candles = (json.values ?? [])
-      .reverse()
-      .map((v: any) => ({
-        time:  v.datetime,
-        open:  parseFloat(v.open),
-        high:  parseFloat(v.high),
-        low:   parseFloat(v.low),
-        close: parseFloat(v.close),
-      }));
+DESCRIPTION: ${disaster.description}
 
-    return NextResponse.json({ symbol, candles });
-  } catch (err) {
-    console.error("[commodity-chart]", err);
-    return NextResponse.json(mockData(symbol, interval, parseInt(outputsize)));
-  }
+PREDICTED INDIRECT IMPACTS:
+${disaster.indirect.map((i) => `  • ${i.asset}: ${i.impact}`).join("\n")}
+
+Write exactly 4 tight paragraphs:
+
+1. SUPPLY CHAIN MECHANISM — Why does this disaster disrupt ${disaster.primary}? Specific geography, infrastructure, production timelines.
+2. MODEL CONSENSUS — Why do the three ML models agree or diverge? What historical analogues support this prediction?
+3. INDIRECT CONTAGION — Trace the exact transmission mechanism from disaster → primary commodity → each indirect asset.
+4. RISK & TIMING — What invalidates this prediction? When does the price impact materialize (hours/days/weeks)? What should traders watch?
+
+Be specific and quantitative. Write like a Bloomberg Intelligence analyst. No generic statements.`;
 }
 
-// ── Mock data generator (used when no API key or symbol unavailable) ─────────
-function mockData(symbol: string, interval: string, count: number) {
-  const intervalMs: Record<string, number> = {
-    "1min": 60_000, "5min": 300_000, "15min": 900_000,
-    "1h": 3_600_000, "4h": 14_400_000, "1day": 86_400_000,
-  };
-  const ms   = intervalMs[interval] ?? 900_000;
-  const now  = Date.now();
+export async function POST(req: NextRequest) {
+  try {
+    const disaster: Disaster = await req.json();
 
-  // Seed price based on symbol
-  const seeds: Record<string, number> = {
-    COPPER: 4.2, WTI: 78, NATGAS: 2.8, SOYBN: 12.4, CORN: 4.8,
-    WHEAT: 5.6, FCX: 42, ADM: 58, XOM: 112, AAPL: 187, SOXX: 198,
-    "USD/BRL": 4.95, "AUD/USD": 0.652, "USD/CNY": 7.24,
-  };
-  let price = seeds[symbol] ?? 100;
-
-  const candles = [];
-  for (let i = count - 1; i >= 0; i--) {
-    const t     = new Date(now - i * ms);
-    const drift = (Math.random() - 0.48) * price * 0.003;
-    const open  = price;
-    const close = price + drift;
-    const high  = Math.max(open, close) + Math.random() * price * 0.002;
-    const low   = Math.min(open, close) - Math.random() * price * 0.002;
-    candles.push({
-      time:  t.toISOString().replace("T", " ").slice(0, 19),
-      open:  parseFloat(open.toFixed(4)),
-      high:  parseFloat(high.toFixed(4)),
-      low:   parseFloat(low.toFixed(4)),
-      close: parseFloat(close.toFixed(4)),
+    const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model:  OLLAMA_MODEL,
+        prompt: buildPrompt(disaster),
+        stream: true,
+        options: {
+          temperature:    0.65,
+          top_p:          0.9,
+          num_predict:    1200,
+          repeat_penalty: 1.1,
+        },
+      }),
     });
-    price = close;
-  }
 
-  return { symbol, candles, mock: true };
+    if (!ollamaRes.ok) {
+      const txt = await ollamaRes.text();
+      return new Response(
+        JSON.stringify({ error: `Ollama ${ollamaRes.status}: ${txt}. Run: ollama serve` }),
+        { status: 502, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader  = ollamaRes.body!.getReader();
+        const decoder = new TextDecoder();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            for (const line of decoder.decode(value, { stream: true }).split("\n").filter(Boolean)) {
+              try {
+                const j = JSON.parse(line);
+                if (j.response) controller.enqueue(new TextEncoder().encode(j.response));
+                if (j.done)     { controller.close(); return; }
+              } catch { /* skip */ }
+            }
+          }
+        } catch (err) { controller.error(err); }
+        finally { reader.releaseLock(); }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type":      "text/plain; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+        "Cache-Control":     "no-cache",
+      },
+    });
+  } catch (err) {
+    console.error("[disaster-analysis]", err);
+    return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
+  }
 }
