@@ -40,6 +40,7 @@ export const DISASTERS: Disaster[] = [
       { asset: "Cattle",       impact: "+2.6%", direction: "up",   category: "commodity" },
       { asset: "Palm Oil",     impact: "+1.9%", direction: "up",   category: "commodity" },
     ],
+        hasMarketImpact: true,
   },
   {
     id: 2,
@@ -70,6 +71,7 @@ export const DISASTERS: Disaster[] = [
       { asset: "Nickel",           impact: "+2.1%", direction: "up",   category: "commodity" },
       { asset: "ICLN ETF",         impact: "+1.3%", direction: "up",   category: "index"     },
     ],
+        hasMarketImpact: true,
   },
   {
     id: 3,
@@ -100,6 +102,7 @@ export const DISASTERS: Disaster[] = [
       { asset: "Airlines UAL", impact: "-1.6%", direction: "down", category: "equity"    },
       { asset: "USD/MXN",      impact: "+1.1%", direction: "up",   category: "forex"     },
     ],
+        hasMarketImpact: true,
   },
   {
     id: 4,
@@ -129,6 +132,7 @@ export const DISASTERS: Disaster[] = [
       { asset: "Flour Futures",  impact: "+2.8%", direction: "up",   category: "commodity" },
       { asset: "Feed Costs",     impact: "+2.1%", direction: "up",   category: "commodity" },
     ],
+        hasMarketImpact: true,
   },
   {
     id: 5,
@@ -159,6 +163,7 @@ export const DISASTERS: Disaster[] = [
       { asset: "Solar ETF",  impact: "+5.2%", direction: "up",   category: "index"     },
       { asset: "AAPL",       impact: "-1.8%", direction: "down", category: "equity"    },
     ],
+        hasMarketImpact: true,
   },
   {
     id: 6,
@@ -190,6 +195,7 @@ export const DISASTERS: Disaster[] = [
       { asset: "Defense ETF",   impact: "+7.8%", direction: "up",   category: "index"     },
       { asset: "Fertilizer",    impact: "+11.2%",direction: "up",   category: "commodity" },
     ],
+        hasMarketImpact: true,
   },
   {
     id: 7,
@@ -221,6 +227,7 @@ export const DISASTERS: Disaster[] = [
       { asset: "USD/JPY",       impact: "-3.1%", direction: "down", category: "forex"     },
       { asset: "Airlines",      impact: "-8.2%", direction: "down", category: "equity"    },
     ],
+        hasMarketImpact: true,
   },
 ];
 

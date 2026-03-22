@@ -31,48 +31,88 @@ export function CommodityChart({ disaster }: { disaster: Disaster }) {
   const extraRefs    = useRef<ISeriesApi<any>[]>([]);
   const candlesRef   = useRef<Candle[]>([]);
 
-  const [loading,    setLoading]    = useState(true);
-  const [isMock,     setIsMock]     = useState(false);
-  const [tf,         setTf]         = useState(TIMEFRAMES[0]);
-  const [lastPrice,  setLastPrice]  = useState<number | null>(null);
-  const [startPrice, setStartPrice] = useState<number | null>(null);
+  const [loading,     setLoading]    = useState(true);
+  const [isMock,      setIsMock]     = useState(false);
+  const [tf,          setTf]         = useState(TIMEFRAMES[0]);
+  const [lastPrice,   setLastPrice]  = useState<number | null>(null);
+  const [startPrice,  setStartPrice] = useState<number | null>(null);
+  const [eventPrice,  setEventPrice] = useState<number | null>(null); // price at disaster event date
 
   const isUp      = disaster.direction === "UP";
   const predColor = isUp ? CHART_COLORS.up : CHART_COLORS.down;
   const predFill  = isUp ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)";
 
-  const drawPredBox = useCallback((candles: Candle[], price: number) => {
+  const drawPredBox = useCallback((candles: Candle[]) => {
     if (!chartRef.current || candles.length < 2) return;
     extraRefs.current.forEach((s) => { try { chartRef.current?.removeSeries(s); } catch {} });
     extraRefs.current = [];
+
+    // ── Find the candle closest to the disaster event date ────────────────────
+    // Convert disaster.date (YYYY-MM-DD) to a unix timestamp (start of that day UTC)
+    const eventTs = Math.floor(new Date(disaster.date + "T00:00:00Z").getTime() / 1000) as UTCTimestamp;
+
+    // Find the candle whose time is closest to the event timestamp
+    let eventCandle = candles[0];
+    let minDiff     = Math.abs(candles[0].time - eventTs);
+    for (const candle of candles) {
+      const diff = Math.abs(candle.time - eventTs);
+      if (diff < minDiff) { minDiff = diff; eventCandle = candle; }
+    }
+
+    const entryPrice = eventCandle.close;
+    const entryTime  = eventCandle.time;
 
     const last    = candles[candles.length - 1].time;
     const prev    = candles[candles.length - 2].time;
     const gap     = last - prev;
     const future  = (last + gap * 12) as UTCTimestamp;
-    const first   = candles[0].time;
-    const target  = parseFloat((price * (1 + (isUp ? disaster.magnitude : -disaster.magnitude) / 100)).toFixed(6));
-    const top     = Math.max(price, target) * 1.001;
-    const bottom  = Math.min(price, target) * 0.999;
 
-    const fill = chartRef.current.addAreaSeries({ topColor: predFill, bottomColor: predFill, lineColor: "transparent", priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
-    fill.setData([{ time: last, value: top }, { time: future, value: top }]);
+    // Target is calculated FROM the event-date price, not the current price
+    const target  = parseFloat((entryPrice * (1 + (isUp ? disaster.magnitude : -disaster.magnitude) / 100)).toFixed(6));
+    const top     = Math.max(entryPrice, target) * 1.001;
+    const bottom  = Math.min(entryPrice, target) * 0.999;
+
+    const decimals = entryPrice < 10 ? 4 : 2;
+
+    // Filled prediction zone — from event date forward
+    const fill = chartRef.current.addAreaSeries({
+      topColor: predFill, bottomColor: predFill, lineColor: "transparent",
+      priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+    });
+    fill.setData([{ time: entryTime, value: top }, { time: future, value: top }]);
     extraRefs.current.push(fill);
 
-    const entry = chartRef.current.addLineSeries({ color: predColor, lineWidth: 2, lineStyle: LineStyle.Solid,  priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false, title: `Entry ${price.toFixed(4)}` });
-    entry.setData([{ time: first, value: price }, { time: future, value: price }]);
+    // Entry line — horizontal from event date candle to future
+    const entry = chartRef.current.addLineSeries({
+      color: predColor, lineWidth: 2, lineStyle: LineStyle.Solid,
+      priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false,
+      title: `Entry ${entryPrice.toFixed(decimals)}`,
+    });
+    entry.setData([{ time: entryTime, value: entryPrice }, { time: future, value: entryPrice }]);
     extraRefs.current.push(entry);
 
-    const tgt = chartRef.current.addLineSeries({ color: predColor, lineWidth: 2, lineStyle: LineStyle.Dashed, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false, title: `Target ${target.toFixed(4)}` });
-    tgt.setData([{ time: last, value: target }, { time: future, value: target }]);
+    // Target line — dashed, from event date forward
+    const tgt = chartRef.current.addLineSeries({
+      color: predColor, lineWidth: 2, lineStyle: LineStyle.Dashed,
+      priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false,
+      title: `Target ${target.toFixed(decimals)}`,
+    });
+    tgt.setData([{ time: entryTime, value: target }, { time: future, value: target }]);
     extraRefs.current.push(tgt);
 
-    const now = chartRef.current.addLineSeries({ color: predColor + "44", lineWidth: 1, lineStyle: LineStyle.Dotted, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
-    now.setData([{ time: last, value: bottom }, { time: (last + 1) as UTCTimestamp, value: top }]);
-    extraRefs.current.push(now);
+    // Vertical marker at event date
+    const marker = chartRef.current.addLineSeries({
+      color: predColor + "66", lineWidth: 1, lineStyle: LineStyle.Dotted,
+      priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+    });
+    marker.setData([
+      { time: entryTime,          value: bottom },
+      { time: (entryTime + 1) as UTCTimestamp, value: top   },
+    ]);
+    extraRefs.current.push(marker);
 
     chartRef.current.timeScale().fitContent();
-  }, [disaster.magnitude, isUp, predColor, predFill]);
+  }, [disaster.magnitude, disaster.date, isUp, predColor, predFill]);
 
   // Init chart — hex colors only, no hsl()
   useEffect(() => {
@@ -118,10 +158,21 @@ export function CommodityChart({ disaster }: { disaster: Disaster }) {
       if (!candles.length) throw new Error("empty");
       candlesRef.current = candles;
       seriesRef.current?.setData(candles);
-      const cur = candles[candles.length - 1].close;
+      const cur      = candles[candles.length - 1].close;
       setLastPrice(cur);
       setStartPrice(candles[0].close);
-      drawPredBox(candles, cur);
+
+      // Find the candle closest to the disaster event date for header display
+      const eventTs = Math.floor(new Date(disaster.date + "T00:00:00Z").getTime() / 1000);
+      let evCandle  = candles[0];
+      let minDiff   = Math.abs(candles[0].time - eventTs);
+      for (const candle of candles) {
+        const diff = Math.abs(candle.time - eventTs);
+        if (diff < minDiff) { minDiff = diff; evCandle = candle; }
+      }
+      setEventPrice(evCandle.close);
+
+      drawPredBox(candles);
     } catch (e) {
       console.error("[CommodityChart]", e);
     } finally { setLoading(false); }
@@ -130,7 +181,8 @@ export function CommodityChart({ disaster }: { disaster: Disaster }) {
   useEffect(() => { fetchCandles(); }, [fetchCandles]);
 
   const pct      = lastPrice && startPrice ? ((lastPrice - startPrice) / startPrice) * 100 : null;
-  const target   = lastPrice ? lastPrice * (1 + (isUp ? disaster.magnitude : -disaster.magnitude) / 100) : null;
+  // Target is always calculated from the event-date price, not today's price
+  const target   = eventPrice ? eventPrice * (1 + (isUp ? disaster.magnitude : -disaster.magnitude) / 100) : null;
   const decimals = lastPrice && lastPrice < 10 ? 4 : 2;
 
   return (
@@ -157,11 +209,21 @@ export function CommodityChart({ disaster }: { disaster: Disaster }) {
         </div>
 
         <div className="flex items-center gap-2">
-          {target != null && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold"
-              style={{ background: predFill, borderColor: predColor + "44", color: predColor }}>
-              {isUp ? "▲" : "▼"} Target {target.toFixed(decimals)}
-              <span className="opacity-60 font-normal ml-1">({isUp ? "+" : "-"}{disaster.magnitude.toFixed(1)}%)</span>
+          {eventPrice != null && target != null && (
+            <div className="flex flex-col items-end gap-0.5">
+              {/* Entry — price at disaster event date */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono"
+                style={{ background: "rgba(255,255,255,0.04)", borderColor: predColor + "33", color: predColor }}>
+                <span className="opacity-50">Entry</span>
+                <span className="font-bold">{eventPrice.toFixed(decimals)}</span>
+                <span className="opacity-40 text-[9px]">{disaster.date}</span>
+              </div>
+              {/* Target — calculated from entry price */}
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold"
+                style={{ background: predFill, borderColor: predColor + "55", color: predColor }}>
+                {isUp ? "▲" : "▼"} Target {target.toFixed(decimals)}
+                <span className="opacity-60 font-normal ml-1">({isUp ? "+" : "-"}{disaster.magnitude.toFixed(1)}%)</span>
+              </div>
             </div>
           )}
           <div className="flex gap-0.5 bg-muted rounded-lg p-0.5">

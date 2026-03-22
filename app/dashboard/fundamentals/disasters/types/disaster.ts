@@ -35,5 +35,6 @@ export interface Disaster {
   confidence:  number;       // 0-1
   indirect:    IndirectAsset[];
   ai_models:   AIModel[];
-  description: string;
+  description:    string;
+  hasMarketImpact: boolean;  // false = ocean/remote event with no commodity exposure
 }

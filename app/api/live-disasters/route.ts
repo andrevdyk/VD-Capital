@@ -44,8 +44,11 @@ export async function GET() {
     // Deduplicate by proximity (within ~2° lat/lng) and type
     const deduped = deduplicateByProximity(all);
 
-    // Sort: CRITICAL first, then by magnitude descending
+    // Sort: market-impacting events first, then by severity, then magnitude
     const sorted = deduped.sort((a, b) => {
+      // No-impact events always go to the bottom
+      if (a.hasMarketImpact !== b.hasMarketImpact)
+        return a.hasMarketImpact ? -1 : 1;
       const severityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
       const sd = severityOrder[a.severity] - severityOrder[b.severity];
       if (sd !== 0) return sd;
