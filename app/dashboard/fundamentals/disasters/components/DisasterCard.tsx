@@ -43,7 +43,7 @@ export function DisasterCard({ disaster, isSelected, onClick }: DisasterCardProp
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          {disaster.hasMarketImpact ? (
+          {disaster.hasMarketImpact && disaster.magnitude != null ? (
             <p className="text-sm font-black text-emerald-400 font-mono leading-none">
               +{disaster.magnitude.toFixed(1)}%
             </p>
