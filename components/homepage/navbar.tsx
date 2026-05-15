@@ -88,7 +88,7 @@ export default function NavBar() {
             <a href="#" className="hover:text-white transition-colors">
               VD CAPITAL
             </a>
-            <a href="#" className="hover:text-white transition-colors">
+            <a href="/dashboard" className="hover:text-white transition-colors">
               TRADING TERMINAL
             </a>
             <a href="#" className="hover:text-white transition-colors">
@@ -115,7 +115,7 @@ export default function NavBar() {
             <a href="#" className="hover:text-white transition-colors">
               VD CAPITAL
             </a>
-            <a href="#" className="hover:text-white transition-colors">
+            <a href="/dashboard" className="hover:text-white transition-colors">
               TRADING TERMINAL
             </a>
             <a href="#" className="hover:text-white transition-colors">
@@ -143,7 +143,7 @@ export default function NavBar() {
           <a href="#" className="hover:text-white transition-colors">
             VD CAPITAL
           </a>
-          <a href="#" className="hover:text-white transition-colors">
+          <a href="/dashboard" className="hover:text-white transition-colors">
             TRADING TERMINAL
           </a>
           <a href="#" className="hover:text-white transition-colors">

@@ -9,8 +9,10 @@ const INTERVAL_CONFIG: Record<string, { outputsize: number; cacheTTLMinutes: num
   '15min': { outputsize: 2880, cacheTTLMinutes: 15   },
   '1h':    { outputsize: 1440, cacheTTLMinutes: 60   },
   '4h':    { outputsize: 720,  cacheTTLMinutes: 240  },
+  '8h':    { outputsize: 500,  cacheTTLMinutes: 480  },
   '12h':   { outputsize: 730,  cacheTTLMinutes: 720  },
   '1day':  { outputsize: 1825, cacheTTLMinutes: 1440 },
+  '1week': { outputsize: 260,  cacheTTLMinutes: 10080 }, // 5 years weekly, cache 1 week
 }
 
 export async function GET(req: NextRequest) {
